@@ -3,11 +3,14 @@ from datetime import date, datetime, timezone
 from fx_holiday_calculator.calendars.rtgs import RtgsCalendar
 from fx_holiday_calculator.calendars.types import HolidayEntry, SourceRef
 from fx_holiday_calculator.conventions.business_day import (
+    AdjustmentStep,
     CalendarSet,
-    is_good_business_day,
     apply_eom,
+    apply_eom_with_trace,
+    is_good_business_day,
     last_business_day_of_month,
     roll,
+    roll_with_trace,
 )
 
 
@@ -71,3 +74,56 @@ def test_apply_eom_passes_through_when_spot_not_month_end():
     spot = date(2026, 5, 14)  # mid-month
     raw_far = date(2026, 8, 14)
     assert apply_eom(spot, raw_far, cs) == raw_far
+
+
+def test_roll_with_trace_already_good():
+    cs = CalendarSet({"EUR": _cal("EUR", [])})
+    result_date, trace = roll_with_trace(date(2026, 5, 11), cs, mode="following")
+    # 2026-05-11 is Mon, no holidays → already good
+    assert result_date == date(2026, 5, 11)
+    assert len(trace) == 1
+    assert trace[0].decision == "accepted"
+
+
+def test_roll_with_trace_weekend_rejection():
+    cs = CalendarSet({"EUR": _cal("EUR", [])})
+    result_date, trace = roll_with_trace(date(2026, 5, 9), cs, mode="following")
+    # Sat → Sun → Mon
+    assert result_date == date(2026, 5, 11)
+    assert len(trace) == 3
+    assert trace[0].decision == "reject_weekend"
+    assert trace[1].decision == "reject_weekend"
+    assert trace[2].decision == "accepted"
+
+
+def test_roll_with_trace_holiday_rejection():
+    cs = CalendarSet({"EUR": _cal("EUR", [date(2026, 5, 11)])})
+    result_date, trace = roll_with_trace(date(2026, 5, 11), cs, mode="following")
+    # Mon is holiday → Tue accepted
+    assert result_date == date(2026, 5, 12)
+    assert trace[0].decision == "reject_holiday"
+    assert trace[-1].decision == "accepted"
+
+
+def test_apply_eom_with_trace_passes_through():
+    cs = CalendarSet({"EUR": _cal("EUR", [])})
+    spot = date(2026, 5, 14)  # mid-month
+    raw_far = date(2026, 8, 14)  # Fri, no holidays → already good
+    result_date, trace = apply_eom_with_trace(spot, raw_far, cs)
+    assert result_date == raw_far
+    assert len(trace) == 1
+    assert trace[0].decision == "accepted"
+
+
+def test_apply_eom_with_trace_eom_kick_in():
+    cs = CalendarSet({"EUR": _cal("EUR", [])})
+    # Spot 2026-05-29 (Fri) is last BD of May.
+    # Raw far 2026-08-29 (Sat). EOM rule → last BD of Aug = 2026-08-31 Mon.
+    spot = date(2026, 5, 29)
+    raw_far = date(2026, 8, 29)
+    result_date, trace = apply_eom_with_trace(spot, raw_far, cs)
+    assert result_date == date(2026, 8, 31)
+    # Two steps: rolled_eom at raw_far, accepted at target
+    assert len(trace) == 2
+    assert trace[0].decision == "rolled_eom"
+    assert trace[1].decision == "accepted"

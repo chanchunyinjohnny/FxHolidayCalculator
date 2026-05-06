@@ -76,22 +76,24 @@ def render() -> None:
 
     col1, col2, col3 = st.columns(3)
     default_idx = pair_codes.index("EUR/USD") if "EUR/USD" in pair_codes else 0
-    pair_code = col1.selectbox("Currency pair", pair_codes, index=default_idx)
-    trade_date = col2.date_input("Trade date", value=date.today())
+    pair_code = col1.selectbox("Currency pair", pair_codes, index=default_idx, key="swap_pair")
+    trade_date = col2.date_input("Trade date", value=date.today(), key="swap_trade_date")
     swap_kind = col3.radio(
         "Swap kind",
         ["Standard (single tenor)", "Forward-forward (two tenors)"],
+        key="swap_kind",
     )
 
     near_tenor_str: str | None = None
     if swap_kind.startswith("Standard"):
         far_tenor_str = st.text_input(
-            "Tenor (e.g. SPOT, ON, 3M, IMM1, 2026-08-15)", value="3M"
+            "Tenor (e.g. SPOT, ON, 3M, IMM1, 2026-08-15)", value="3M",
+            key="swap_far_tenor_std",
         )
     else:
         c1, c2 = st.columns(2)
-        near_tenor_str = c1.text_input("Near tenor (e.g. 1M)", value="1M")
-        far_tenor_str = c2.text_input("Far tenor (e.g. 3M)", value="3M")
+        near_tenor_str = c1.text_input("Near tenor (e.g. 1M)", value="1M", key="swap_near_tenor")
+        far_tenor_str = c2.text_input("Far tenor (e.g. 3M)", value="3M", key="swap_far_tenor_ffs")
 
     pair = parse_pair(pair_code)
 
@@ -105,6 +107,7 @@ def render() -> None:
         index=ref_options.index(default_ref),
         horizontal=True,
         help="In v1, HKD and CNH refs are not available (calendars deferred).",
+        key="swap_ref",
     )
 
     cal_mode = st.radio(
@@ -113,6 +116,7 @@ def render() -> None:
         index=0,
         horizontal=True,
         help="v1 has no Exchange calendars loaded; Exchange/Both will fall back to FX-only.",
+        key="swap_cal_mode",
     )
     cal_mode_key = {
         "FX (RTGS) only": "FX",

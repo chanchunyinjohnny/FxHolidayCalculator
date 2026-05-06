@@ -37,7 +37,7 @@ def render() -> None:
 
     col1, col2 = st.columns(2)
     default_idx = pair_codes.index("EUR/USD") if "EUR/USD" in pair_codes else 0
-    pair_code = col1.selectbox("Currency pair", pair_codes, index=default_idx)
+    pair_code = col1.selectbox("Currency pair", pair_codes, index=default_idx, key="hol_pair")
     pair = parse_pair(pair_code)
 
     has_usd = "USD" in {pair.base, pair.quote}
@@ -48,6 +48,7 @@ def render() -> None:
         ref_options,
         index=ref_options.index(default_ref),
         horizontal=True,
+        key="hol_ref",
     )
 
     cal_mode = st.radio(
@@ -56,6 +57,7 @@ def render() -> None:
         index=0,
         horizontal=True,
         help="v1 has no Exchange calendars loaded; Exchange/Both shows only FX-RTGS rows.",
+        key="hol_cal_mode",
     )
     cal_mode_key = {
         "FX (RTGS) only": "FX",
@@ -64,13 +66,13 @@ def render() -> None:
     }[cal_mode]
 
     include_national = st.checkbox(
-        "Include national holidays (reference only)", value=False
+        "Include national holidays (reference only)", value=False, key="hol_national"
     )
 
     today = date.today()
     c3, c4 = st.columns(2)
-    start = c3.date_input("Start date", value=date(today.year, 1, 1))
-    end = c4.date_input("End date", value=date(today.year, 12, 31))
+    start = c3.date_input("Start date", value=date(today.year, 1, 1), key="hol_start")
+    end = c4.date_input("End date", value=date(today.year, 12, 31), key="hol_end")
 
     needed_rtgs = {pair.base, pair.quote}
     if ref != "none":

@@ -3,10 +3,15 @@ from datetime import date, timedelta
 from typing import Literal
 
 from fx_holiday_calculator.calendars.rtgs import RtgsCalendar
-from fx_holiday_calculator.conventions.business_day import apply_eom, is_good_business_day, roll
+from fx_holiday_calculator.conventions.business_day import (
+    AdjustmentStep,
+    apply_eom_with_trace,
+    is_good_business_day,
+    roll_with_trace,
+)
 from fx_holiday_calculator.conventions.cross import RefCurrency, rtgs_calendar_set
 from fx_holiday_calculator.conventions.dates import add_period, next_imm_date
-from fx_holiday_calculator.conventions.spot_offset import AdjustmentStep, apply_spot_offset
+from fx_holiday_calculator.conventions.spot_offset import apply_spot_offset
 from fx_holiday_calculator.pairs import Pair
 from fx_holiday_calculator.tenor import Tenor
 
@@ -63,17 +68,24 @@ def calculate_swap_dates(
         if far_tenor.kind == "ON":
             base.near_date = trade_date
             cur = trade_date + timedelta(days=1)
-            base.far_date = cur if is_good_business_day(cur, cs) else roll(cur, cs, "following")
+            far_date, far_trace = roll_with_trace(cur, cs, "following")
+            base.far_date = far_date
+            base.far_trace = far_trace
             return base
         if far_tenor.kind == "TN":
             cur = trade_date + timedelta(days=1)
-            base.near_date = cur if is_good_business_day(cur, cs) else roll(cur, cs, "following")
+            near_date, near_trace = roll_with_trace(cur, cs, "following")
+            base.near_date = near_date
+            base.near_trace = near_trace
             base.far_date = spot.spot_date
+            # far is just the spot — no separate trace needed beyond spot_trace.
             return base
         if far_tenor.kind == "SN":
             base.near_date = spot.spot_date
             cur = spot.spot_date + timedelta(days=1)
-            base.far_date = cur if is_good_business_day(cur, cs) else roll(cur, cs, "following")
+            far_date, far_trace = roll_with_trace(cur, cs, "following")
+            base.far_date = far_date
+            base.far_trace = far_trace
             return base
 
     # PERIOD / IMM / BROKEN — standard far-only forward
@@ -81,16 +93,22 @@ def calculate_swap_dates(
         if far_tenor.kind == "PERIOD":
             raw_far = add_period(spot.spot_date, far_tenor.period_unit, far_tenor.period_n)
             base.near_date = spot.spot_date
-            base.far_date = apply_eom(spot.spot_date, raw_far, cs)
+            far_date, far_trace = apply_eom_with_trace(spot.spot_date, raw_far, cs)
+            base.far_date = far_date
+            base.far_trace = far_trace
             return base
         if far_tenor.kind == "IMM":
             raw_far = next_imm_date(spot.spot_date, far_tenor.imm_index)
             base.near_date = spot.spot_date
-            base.far_date = roll(raw_far, cs, "modified_following")
+            far_date, far_trace = roll_with_trace(raw_far, cs, "modified_following")
+            base.far_date = far_date
+            base.far_trace = far_trace
             return base
         if far_tenor.kind == "BROKEN":
             base.near_date = spot.spot_date
-            base.far_date = roll(far_tenor.target_date, cs, "modified_following")
+            far_date, far_trace = roll_with_trace(far_tenor.target_date, cs, "modified_following")
+            base.far_date = far_date
+            base.far_trace = far_trace
             return base
 
     # Forward-forward swap (FFS)
@@ -102,17 +120,21 @@ def calculate_swap_dates(
                 f"near={near_tenor.kind} far={far_tenor.kind}"
             )
 
-        def _resolve(t: Tenor) -> date:
+        def _resolve_with_trace(t: Tenor) -> tuple[date, list]:
             if t.kind == "PERIOD":
                 raw = add_period(spot.spot_date, t.period_unit, t.period_n)
-                return apply_eom(spot.spot_date, raw, cs)
+                return apply_eom_with_trace(spot.spot_date, raw, cs)
             if t.kind == "IMM":
                 raw = next_imm_date(spot.spot_date, t.imm_index)
-                return roll(raw, cs, "modified_following")
-            return roll(t.target_date, cs, "modified_following")
+                return roll_with_trace(raw, cs, "modified_following")
+            return roll_with_trace(t.target_date, cs, "modified_following")
 
-        base.near_date = _resolve(near_tenor)
-        base.far_date = _resolve(far_tenor)
+        near_d, near_tr = _resolve_with_trace(near_tenor)
+        far_d, far_tr = _resolve_with_trace(far_tenor)
+        base.near_date = near_d
+        base.near_trace = near_tr
+        base.far_date = far_d
+        base.far_trace = far_tr
         if base.far_date <= base.near_date:
             raise InvalidFFSCombinationError(
                 f"FFS far_date ({base.far_date}) must be after near_date ({base.near_date})"

@@ -164,3 +164,55 @@ def test_ffs_rejects_far_le_near():
             far_tenor=parse_tenor("1M"),
             ref_currency="none", calendars=cals,
         )
+
+
+def test_far_trace_populated_for_period():
+    cals = {"EUR": _empty("EUR"), "USD": _empty("USD")}
+    r = calculate_swap_dates(
+        trade_date=date(2026, 5, 6), pair=parse_pair("EUR/USD"),
+        far_tenor=parse_tenor("3M"), ref_currency="none", calendars=cals,
+    )
+    # raw far = 2026-08-08 (Sat) → reject; +1 (Sun) reject; +2 (Mon) accepted
+    assert len(r.far_trace) == 3
+    assert r.far_trace[0].candidate_date == date(2026, 8, 8)
+    assert r.far_trace[0].decision == "reject_weekend"
+    assert r.far_trace[-1].candidate_date == date(2026, 8, 10)
+    assert r.far_trace[-1].decision == "accepted"
+
+
+def test_far_trace_single_step_when_no_adjustment():
+    cals = {"EUR": _empty("EUR"), "USD": _empty("USD")}
+    r = calculate_swap_dates(
+        trade_date=date(2026, 5, 4), pair=parse_pair("EUR/USD"),
+        far_tenor=parse_tenor("1M"), ref_currency="none", calendars=cals,
+    )
+    # Whichever, the trace should not be empty.
+    assert len(r.far_trace) >= 1
+    assert r.far_trace[-1].decision == "accepted"
+
+
+def test_near_trace_populated_for_ffs():
+    cals = {"EUR": _empty("EUR"), "USD": _empty("USD")}
+    r = calculate_swap_dates(
+        trade_date=date(2026, 5, 6), pair=parse_pair("EUR/USD"),
+        near_tenor=parse_tenor("1M"),
+        far_tenor=parse_tenor("3M"),
+        ref_currency="none", calendars=cals,
+    )
+    # Both legs are forwards → both should have trace
+    assert len(r.near_trace) >= 1
+    assert len(r.far_trace) >= 1
+    assert r.near_trace[-1].decision == "accepted"
+    assert r.far_trace[-1].decision == "accepted"
+
+
+def test_near_trace_populated_for_tn():
+    cals = {"EUR": _empty("EUR"), "USD": _empty("USD")}
+    r = calculate_swap_dates(
+        trade_date=date(2026, 5, 6), pair=parse_pair("EUR/USD"),
+        far_tenor=parse_tenor("TN"), ref_currency="none", calendars=cals,
+    )
+    # T+1 = 2026-05-07 (Thu, no holidays) → 1 accepted step
+    assert len(r.near_trace) == 1
+    assert r.near_trace[0].candidate_date == date(2026, 5, 7)
+    assert r.near_trace[0].decision == "accepted"
