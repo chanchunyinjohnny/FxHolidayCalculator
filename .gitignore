@@ -1,0 +1,19 @@
+# Python
+__pycache__/
+*.py[cod]
+*.egg-info/
+.pytest_cache/
+build/
+dist/
+
+# Editor
+.idea/
+.vscode/
+*.swp
+
+# Project
+proprietary/
+.DS_Store
+
+# User cache (if accidentally placed inside repo)
+.fx_holiday_calculator_cache/

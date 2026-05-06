@@ -1,0 +1,48 @@
+name: refresh-holidays
+
+on:
+  schedule:
+    - cron: "0 3 1 * *"
+  workflow_dispatch:
+    inputs:
+      sources:
+        description: "Comma-separated source keys (e.g. EUR,USD). Empty = all."
+        required: false
+        default: ""
+
+jobs:
+  refresh:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.11"
+      - run: pip install -e ".[test]"
+      - name: Run refresh
+        run: |
+          if [ -n "${{ github.event.inputs.sources }}" ]; then
+            for s in $(echo "${{ github.event.inputs.sources }}" | tr ',' ' '); do
+              python -m fx_holiday_calculator.refresh --write-bundled --source "$s"
+            done
+          else
+            python -m fx_holiday_calculator.refresh --write-bundled
+          fi
+      - name: Run integrity tests
+        run: pytest tests/test_data_integrity.py -v
+      - name: Open PR if data changed
+        uses: peter-evans/create-pull-request@v6
+        with:
+          commit-message: "data: refresh holiday calendars"
+          branch: data/refresh-${{ github.run_id }}
+          title: "Holiday refresh ${{ github.run_id }}"
+          body: |
+            Automated holiday data refresh.
+
+            Run: ${{ github.run_id }}
+            Trigger: ${{ github.event_name }}
+            Sources: ${{ github.event.inputs.sources || 'all' }}
+
+            Review the diff against `data/fx_rtgs/` and `data/fx_exchange/`
+            before merging. Integrity tests passed.
+          labels: data-refresh

@@ -1,0 +1,16 @@
+{
+  "schema_version": 1,
+  "venue": "HKEX",
+  "calendar_kind": "EXCHANGE",
+  "products": ["USD/CNH Futures", "Mini USD/CNH Futures"],
+  "default_source": {
+    "url": "https://www.hkex.com.hk/Holidays",
+    "doc_title": "HKEX Holiday Schedule 2026",
+    "fetched_at": "2026-04-15T03:00:00Z",
+    "fetcher": "scripts/sources/hkex_fx.py@v1"
+  },
+  "holidays": [
+    {"date": "2026-01-01", "name": "New Year's Day", "source": null, "note": null},
+    {"date": "2026-02-17", "name": "Lunar New Year (Day 1)", "source": null, "note": null}
+  ]
+}

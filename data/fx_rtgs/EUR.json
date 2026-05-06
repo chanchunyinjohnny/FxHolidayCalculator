@@ -1,0 +1,195 @@
+{
+  "schema_version": 1,
+  "currency": "EUR",
+  "calendar_kind": "RTGS",
+  "calendar_name": "TARGET2",
+  "operator": "Eurosystem (European Central Bank)",
+  "default_source": {
+    "url": "https://www.ecb.europa.eu/paym/target/target2/profuse/calendar/html/index.en.html",
+    "doc_title": "TARGET2 / T2 calendar — Eurosystem",
+    "fetched_at": "2026-05-06T06:39:22Z",
+    "fetcher": "scripts/sources/ecb_target2.py@v1"
+  },
+  "holidays": [
+    {
+      "date": "2026-01-01",
+      "name": "New Year's Day",
+      "source": null,
+      "note": null
+    },
+    {
+      "date": "2026-04-03",
+      "name": "Good Friday",
+      "source": null,
+      "note": null
+    },
+    {
+      "date": "2026-04-06",
+      "name": "Easter Monday",
+      "source": null,
+      "note": null
+    },
+    {
+      "date": "2026-05-01",
+      "name": "Labour Day",
+      "source": null,
+      "note": null
+    },
+    {
+      "date": "2026-12-25",
+      "name": "Christmas Day",
+      "source": null,
+      "note": null
+    },
+    {
+      "date": "2026-12-26",
+      "name": "Christmas Holiday",
+      "source": null,
+      "note": null
+    },
+    {
+      "date": "2027-01-01",
+      "name": "New Year's Day",
+      "source": null,
+      "note": null
+    },
+    {
+      "date": "2027-03-26",
+      "name": "Good Friday",
+      "source": null,
+      "note": null
+    },
+    {
+      "date": "2027-03-29",
+      "name": "Easter Monday",
+      "source": null,
+      "note": null
+    },
+    {
+      "date": "2027-05-01",
+      "name": "Labour Day",
+      "source": null,
+      "note": null
+    },
+    {
+      "date": "2027-12-25",
+      "name": "Christmas Day",
+      "source": null,
+      "note": null
+    },
+    {
+      "date": "2027-12-26",
+      "name": "Christmas Holiday",
+      "source": null,
+      "note": null
+    },
+    {
+      "date": "2028-01-01",
+      "name": "New Year's Day",
+      "source": null,
+      "note": null
+    },
+    {
+      "date": "2028-04-14",
+      "name": "Good Friday",
+      "source": null,
+      "note": null
+    },
+    {
+      "date": "2028-04-17",
+      "name": "Easter Monday",
+      "source": null,
+      "note": null
+    },
+    {
+      "date": "2028-05-01",
+      "name": "Labour Day",
+      "source": null,
+      "note": null
+    },
+    {
+      "date": "2028-12-25",
+      "name": "Christmas Day",
+      "source": null,
+      "note": null
+    },
+    {
+      "date": "2028-12-26",
+      "name": "Christmas Holiday",
+      "source": null,
+      "note": null
+    },
+    {
+      "date": "2029-01-01",
+      "name": "New Year's Day",
+      "source": null,
+      "note": null
+    },
+    {
+      "date": "2029-03-30",
+      "name": "Good Friday",
+      "source": null,
+      "note": null
+    },
+    {
+      "date": "2029-04-02",
+      "name": "Easter Monday",
+      "source": null,
+      "note": null
+    },
+    {
+      "date": "2029-05-01",
+      "name": "Labour Day",
+      "source": null,
+      "note": null
+    },
+    {
+      "date": "2029-12-25",
+      "name": "Christmas Day",
+      "source": null,
+      "note": null
+    },
+    {
+      "date": "2029-12-26",
+      "name": "Christmas Holiday",
+      "source": null,
+      "note": null
+    },
+    {
+      "date": "2030-01-01",
+      "name": "New Year's Day",
+      "source": null,
+      "note": null
+    },
+    {
+      "date": "2030-04-19",
+      "name": "Good Friday",
+      "source": null,
+      "note": null
+    },
+    {
+      "date": "2030-04-22",
+      "name": "Easter Monday",
+      "source": null,
+      "note": null
+    },
+    {
+      "date": "2030-05-01",
+      "name": "Labour Day",
+      "source": null,
+      "note": null
+    },
+    {
+      "date": "2030-12-25",
+      "name": "Christmas Day",
+      "source": null,
+      "note": null
+    },
+    {
+      "date": "2030-12-26",
+      "name": "Christmas Holiday",
+      "source": null,
+      "note": null
+    }
+  ]
+}
