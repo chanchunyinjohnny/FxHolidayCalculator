@@ -26,7 +26,7 @@ def _resolve_source(raw_entry: dict, default: dict) -> dict:
 def test_every_entry_has_resolvable_source(path: Path):
     blob = json.loads(path.read_text())
     default = blob["default_source"]
-    for raw in blob["holidays"]:
+    for raw in blob.get("holidays", []) + blob.get("informational_dates", []):
         src = _resolve_source(raw, default)
         assert src["url"], f"{path}: entry {raw['date']} missing source.url"
         assert src["doc_title"], f"{path}: entry {raw['date']} missing source.doc_title"

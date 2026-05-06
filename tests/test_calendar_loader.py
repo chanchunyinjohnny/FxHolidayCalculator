@@ -48,6 +48,38 @@ def test_loads_hkex_exchange_calendar():
     assert entry.source.url.startswith("https://www.hkex.com.hk")
 
 
+def test_loader_reads_informational_dates(tmp_path):
+    blob = {
+        "schema_version": 2,
+        "currency": "USD",
+        "calendar_kind": "RTGS",
+        "calendar_name": "Fedwire",
+        "operator": "Federal Reserve System",
+        "default_source": {
+            "url": "https://x", "doc_title": "x",
+            "fetched_at": "2026-05-06T00:00:00Z", "fetcher": "test",
+        },
+        "holidays": [
+            {"date": "2026-01-01", "name": "NYD", "source": None, "note": None}
+        ],
+        "informational_dates": [
+            {"date": "2026-11-27", "name": "Day after T",
+             "source": None, "note": "thin", "liquidity": "thin"},
+        ],
+    }
+    p = tmp_path / "USD.json"
+    p.write_text(_json.dumps(blob))
+    cal = load_rtgs_calendar("USD", root=tmp_path)
+    # The closure date is a holiday; the informational date is not.
+    assert cal.is_holiday(date(2026, 1, 1)) is True
+    assert cal.is_holiday(date(2026, 11, 27)) is False  # informational, NOT a closure
+    # But get_holiday returns the entry for the informational date too
+    info = cal.get_holiday(date(2026, 11, 27))
+    assert info is not None
+    assert info.is_closure is False
+    assert info.liquidity == "thin"
+
+
 def test_cache_overlays_bundled(tmp_path):
     # Bundled fixture has 2 USD holidays; cache adds a 3rd.
     cache = tmp_path / "cache"

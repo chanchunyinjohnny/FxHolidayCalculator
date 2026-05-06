@@ -160,6 +160,39 @@ def render() -> None:
                 "to RTGS calendars."
             )
 
+        # Surface liquidity warnings for any annotated dates in the calculation range.
+        liq_alerts = []
+        for trace in (result.spot_trace, result.near_trace, result.far_trace):
+            for step in trace:
+                for cal_label, status in step.statuses.items():
+                    if status.liquidity:
+                        # Try to fetch the entry name for richer detail
+                        entry_note = ""
+                        ccy = cal_label.split(" ")[0]  # "EUR (TARGET2)" -> "EUR"
+                        cal = cals.get(ccy)
+                        if cal is not None:
+                            entry = cal.get_holiday(step.candidate_date)
+                            if entry:
+                                entry_note = f" — {entry.name}"
+                        liq_alerts.append(
+                            f"{step.candidate_date.isoformat()} ({step.weekday}) "
+                            f"{cal_label}: {status.liquidity}{entry_note}"
+                        )
+
+        if liq_alerts:
+            # Deduplicate (same date/cal can appear in spot+near trace).
+            seen = set()
+            unique_alerts = []
+            for a in liq_alerts:
+                if a not in seen:
+                    seen.add(a)
+                    unique_alerts.append(a)
+            st.warning(
+                "Liquidity warning — these dates are flagged as thin/halted trading "
+                "even though they don't block the calculation:\n\n"
+                + "\n".join(f"• {a}" for a in unique_alerts)
+            )
+
         st.markdown("### Result")
         st.write(f"**Trade date:** {result.trade_date} ({result.trade_date.strftime('%a')})")
         st.write(f"**Spot date:**  {result.spot_date} ({result.spot_date.strftime('%a')})")

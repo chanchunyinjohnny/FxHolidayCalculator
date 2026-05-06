@@ -72,6 +72,28 @@ def test_both_mode_includes_rtgs_and_exchange():
     assert types == {"FX_RTGS", "EXCHANGE"}
 
 
+def test_holiday_row_carries_liquidity_when_informational():
+    src = SourceRef(url="https://x", doc_title="x",
+                    fetched_at=datetime(2026, 1, 1, tzinfo=timezone.utc), fetcher="t")
+    info = HolidayEntry(date=date(2026, 11, 27), name="DAT", note=None,
+                        source=src, source_origin="bundled",
+                        is_closure=False, liquidity="thin")
+    cal = RtgsCalendar(currency="USD", calendar_name="USD", operator="x",
+                       entries_by_date={date(2026, 11, 27): info})
+    rows = list_holidays(
+        pair=parse_pair("EUR/USD"), ref_currency="none",
+        start=date(2026, 11, 1), end=date(2026, 11, 30),
+        calendar_mode="FX",
+        rtgs_calendars={"USD": cal, "EUR": _cal("EUR", [])},
+        exchange_calendars={},
+    )
+    # Should still be in the list (the listing iterates entries_by_date).
+    matching = [r for r in rows if r.date == date(2026, 11, 27)]
+    assert len(matching) == 1
+    assert matching[0].is_closure is False
+    assert matching[0].liquidity == "thin"
+
+
 def test_national_rows_appear_only_when_toggled():
     rtgs = {"USD": _cal("USD", []), "JPY": _cal("JPY", [])}
     nationals = {"US": get_national_calendar("US"), "JP": get_national_calendar("JP")}

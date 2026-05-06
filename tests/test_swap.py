@@ -8,6 +8,40 @@ from fx_holiday_calculator.swap import calculate_swap_dates, InvalidFFSCombinati
 from fx_holiday_calculator.tenor import parse_tenor
 
 
+def test_swap_does_not_reject_informational_dates():
+    # If an informational date falls on a candidate spot date, the calc proceeds.
+    src = SourceRef(url="https://x", doc_title="x",
+                    fetched_at=datetime(2026, 1, 1, tzinfo=timezone.utc), fetcher="t")
+    info_entry = HolidayEntry(
+        date=date(2026, 5, 7),
+        name="Informational",
+        note=None,
+        source=src,
+        source_origin="bundled",
+        is_closure=False,
+        liquidity="thin",
+    )
+    eur = RtgsCalendar(currency="EUR", calendar_name="EUR", operator="x",
+                       entries_by_date={})
+    usd = RtgsCalendar(currency="USD", calendar_name="USD", operator="x",
+                       entries_by_date={date(2026, 5, 7): info_entry})
+    cals = {"EUR": eur, "USD": usd}
+    r = calculate_swap_dates(
+        trade_date=date(2026, 5, 6),
+        pair=parse_pair("EUR/USD"),
+        far_tenor=parse_tenor("SPOT"),
+        ref_currency="none",
+        calendars=cals,
+    )
+    # Spot proceeds normally; the +1 step should be accepted (not rejected).
+    # The candidate date 2026-05-07 has liquidity but is_good=True.
+    step = r.spot_trace[0]
+    assert step.decision == "accepted"
+    usd_status = step.statuses["USD"]
+    assert usd_status.is_good is True
+    assert usd_status.liquidity == "thin"
+
+
 def _empty(c: str) -> RtgsCalendar:
     return RtgsCalendar(currency=c, calendar_name=c, operator="x", entries_by_date={})
 

@@ -30,7 +30,7 @@ def _load_calendar_blob(
 def _build_entries(blob: dict, origin: str) -> dict[date, HolidayEntry]:
     default_src = _parse_source(blob["default_source"])
     entries: dict[date, HolidayEntry] = {}
-    for raw in blob["holidays"]:
+    for raw in blob.get("holidays", []):
         src = _parse_source(raw["source"]) if raw.get("source") else default_src
         d = date.fromisoformat(raw["date"])
         entries[d] = HolidayEntry(
@@ -39,6 +39,23 @@ def _build_entries(blob: dict, origin: str) -> dict[date, HolidayEntry]:
             note=raw.get("note"),
             source=src,
             source_origin=origin,  # type: ignore[arg-type]
+            is_closure=True,
+            liquidity=raw.get("liquidity"),
+        )
+    for raw in blob.get("informational_dates", []):
+        src = _parse_source(raw["source"]) if raw.get("source") else default_src
+        d = date.fromisoformat(raw["date"])
+        # Don't overwrite a closure entry if the same date is in both arrays.
+        if d in entries:
+            continue
+        entries[d] = HolidayEntry(
+            date=d,
+            name=raw["name"],
+            note=raw.get("note"),
+            source=src,
+            source_origin=origin,  # type: ignore[arg-type]
+            is_closure=False,
+            liquidity=raw.get("liquidity"),
         )
     return entries
 

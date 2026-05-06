@@ -123,6 +123,8 @@ def render() -> None:
                 "Type": r.type,
                 "Calendar": r.calendar,
                 "Holiday": r.holiday_name,
+                "Closure": "✓" if r.is_closure else "info",
+                "Liquidity": r.liquidity or "",
                 "Source": r.source_url,
                 "Fetched": r.source_fetched_at.isoformat(),
                 "Origin": r.source_origin,
@@ -131,7 +133,7 @@ def render() -> None:
         ]
         st.dataframe(rendered, use_container_width=True)
 
-        csv = "Date,Day,Type,Calendar,Holiday,Source,Fetched,Origin\n" + "\n".join(
+        csv = "Date,Day,Type,Calendar,Holiday,Closure,Liquidity,Source,Fetched,Origin\n" + "\n".join(
             ",".join(str(v).replace(",", ";") for v in row.values()) for row in rendered
         )
         st.download_button(

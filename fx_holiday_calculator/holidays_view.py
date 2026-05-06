@@ -5,7 +5,7 @@ from typing import Literal
 from fx_holiday_calculator.calendars.exchange import ExchangeCalendar
 from fx_holiday_calculator.calendars.national import NationalCalendar
 from fx_holiday_calculator.calendars.rtgs import RtgsCalendar
-from fx_holiday_calculator.calendars.types import SourceOrigin
+from fx_holiday_calculator.calendars.types import LiquidityFlag, SourceOrigin
 from fx_holiday_calculator.conventions.cross import RefCurrency, relevant_venues
 from fx_holiday_calculator.pairs import Pair
 
@@ -25,6 +25,8 @@ class HolidayRow:
     source_fetched_at: datetime
     source_origin: SourceOrigin
     is_reference_only: bool
+    is_closure: bool = True
+    liquidity: LiquidityFlag | None = None
 
 
 def _daterange(start: date, end: date):
@@ -55,6 +57,8 @@ def _rtgs_rows(
                 source_url=entry.source.url, source_doc_title=entry.source.doc_title,
                 source_fetched_at=entry.source.fetched_at, source_origin=entry.source_origin,
                 is_reference_only=False,
+                is_closure=entry.is_closure,
+                liquidity=entry.liquidity,
             ))
     return out
 
@@ -79,6 +83,8 @@ def _exchange_rows(
                 source_url=entry.source.url, source_doc_title=entry.source.doc_title,
                 source_fetched_at=entry.source.fetched_at, source_origin=entry.source_origin,
                 is_reference_only=False,
+                is_closure=entry.is_closure,
+                liquidity=entry.liquidity,
             ))
     return out
 

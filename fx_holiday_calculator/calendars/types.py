@@ -4,6 +4,8 @@ from typing import Literal
 
 SourceOrigin = Literal["bundled", "cache", "live", "library"]
 
+LiquidityFlag = Literal["normal", "thin", "halted"]
+
 
 @dataclass(frozen=True)
 class SourceRef:
@@ -20,6 +22,8 @@ class HolidayEntry:
     note: str | None
     source: SourceRef
     source_origin: SourceOrigin
+    is_closure: bool = True            # True = real RTGS closure; False = informational only
+    liquidity: LiquidityFlag | None = None
 
 
 @dataclass(frozen=True)
@@ -28,3 +32,4 @@ class CalendarStatus:
     holiday_name: str | None
     source: SourceRef | None
     source_origin: SourceOrigin | None
+    liquidity: LiquidityFlag | None = None     # set even when is_good=True
