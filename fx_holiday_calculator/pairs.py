@@ -27,7 +27,7 @@ _add("USD", "JPY", listed_on=("CME",))
 _add("USD", "CHF", listed_on=("CME",))
 _add("AUD", "USD", listed_on=("CME",))
 _add("NZD", "USD", listed_on=("CME",))
-_add("USD", "CAD", t=1, listed_on=("CME",))    # T+1
+_add("USD", "CAD", t=1, listed_on=("CME",))  # T+1
 
 # EUR crosses
 _add("EUR", "GBP", listed_on=("CME",))

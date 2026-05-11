@@ -3,10 +3,17 @@ from pathlib import Path
 
 import streamlit as st
 
-from fx_holiday_calculator.calendars.loader import load_rtgs_calendar
+from fx_holiday_calculator.calendars.loader import load_exchange_calendar, load_rtgs_calendar
+from fx_holiday_calculator.calendars.types import CalendarRangeError
+from fx_holiday_calculator.conventions.cross import (
+    MissingExchangeCalendarError,
+    relevant_venues,
+)
 from fx_holiday_calculator.pairs import list_supported_pairs, parse_pair
 from fx_holiday_calculator.swap import (
+    InvalidBrokenDateError,
     InvalidFFSCombinationError,
+    InvalidTradeDateError,
     calculate_swap_dates,
 )
 from fx_holiday_calculator.tenor import InvalidTenorError, parse_tenor
@@ -16,6 +23,13 @@ CACHE = Path.home() / ".fx_holiday_calculator" / "cache"
 
 # v1: only these RTGS calendars are bundled.
 AVAILABLE_RTGS = {"EUR", "USD", "GBP", "JPY"}
+
+
+def _available_exchange_venues() -> set[str]:
+    bundled = BUNDLED / "fx_exchange"
+    if not bundled.exists():
+        return set()
+    return {p.stem for p in bundled.glob("*.json") if not p.name.startswith("_")}
 
 
 def _available_pair_codes() -> list[str]:
@@ -34,6 +48,17 @@ def _load_rtgs_set(currencies):
             cache_root=CACHE / "fx_rtgs",
         )
         for c in currencies
+    }
+
+
+def _load_exchange_set(venues):
+    return {
+        v: load_exchange_calendar(
+            v,
+            root=BUNDLED / "fx_exchange",
+            cache_root=CACHE / "fx_exchange",
+        )
+        for v in venues
     }
 
 
@@ -87,7 +112,8 @@ def render() -> None:
     near_tenor_str: str | None = None
     if swap_kind.startswith("Standard"):
         far_tenor_str = st.text_input(
-            "Tenor (e.g. SPOT, ON, 3M, IMM1, 2026-08-15)", value="3M",
+            "Tenor (e.g. SPOT, ON, 3M, IMM1, 2026-08-15)",
+            value="3M",
             key="swap_far_tenor_std",
         )
     else:
@@ -115,7 +141,12 @@ def render() -> None:
         ["FX (RTGS) only", "Exchange only", "Both"],
         index=0,
         horizontal=True,
-        help="v1 has no Exchange calendars loaded; Exchange/Both will fall back to FX-only.",
+        help=(
+            "FX = roll legs against RTGS settlement calendars. "
+            "Exchange = roll legs against the relevant FX-futures venue (CME/HKEX/SGX). "
+            "Both = roll against the union (most conservative). "
+            "Spot date is always RTGS-based regardless of mode."
+        ),
         key="swap_cal_mode",
     )
     cal_mode_key = {
@@ -134,10 +165,46 @@ def render() -> None:
         st.error(f"Calendar file missing: {exc}")
         return
 
-    st.caption(
-        "Calendars to be used: "
-        + " · ".join(f"{c} ({cals[c].calendar_name})" for c in sorted(needed))
-    )
+    exch_cals = None
+    if cal_mode_key in {"EXCHANGE", "BOTH"}:
+        available_venues = _available_exchange_venues()
+        needed_venues = set(relevant_venues(pair, ref))  # type: ignore[arg-type]
+        missing = sorted(needed_venues - available_venues)
+        if missing:
+            st.error(
+                f"{cal_mode} requires exchange calendars for venue(s) "
+                f"{', '.join(missing)}, but none are bundled. "
+                "Switch to FX (RTGS) only to compute."
+            )
+            return
+        try:
+            exch_cals = _load_exchange_set(sorted(needed_venues))
+        except FileNotFoundError as exc:
+            st.error(f"Exchange calendar file missing: {exc}")
+            return
+        lib_venues = sorted(v for v, c in exch_cals.items() if c.library_sourced)
+        if lib_venues:
+            st.warning(
+                "**Exchange calendar caveat — library-sourced data in use for "
+                f"{', '.join(lib_venues)}.**\n\n"
+                "These calendars come from the `exchange_calendars` library "
+                "(equity session), not a primary venue document. Real-world "
+                "FX-futures holidays may differ:\n"
+                "- Library encodes the venue's **equity** session — "
+                "FX-futures products often observe additional closures "
+                "(US bank holidays for CME, Hari Raya for SGX FX-INR, etc.).\n"
+                "- Exchange holidays are **per-product**, not per-venue — "
+                "a date may close one FX contract and not another.\n"
+                "- Library coverage horizon lags real-world year-ahead "
+                "publication, especially for lunar/Islamic dates.\n\n"
+                "**For high-stakes decisions, verify against the venue's "
+                "primary holiday document.** See `docs/data-sources.md`."
+            )
+
+    cal_caption = "RTGS: " + " · ".join(f"{c} ({cals[c].calendar_name})" for c in sorted(needed))
+    if exch_cals:
+        cal_caption += " | Exchange: " + " · ".join(sorted(exch_cals))
+    st.caption("Calendars to be used: " + cal_caption)
 
     if st.button("Calculate"):
         try:
@@ -150,19 +217,26 @@ def render() -> None:
                 near_tenor=near_tenor,
                 ref_currency=ref,  # type: ignore[arg-type]
                 calendars=cals,
+                exchange_calendars=exch_cals,
                 calendar_mode=cal_mode_key,
             )
-        except (InvalidTenorError, InvalidFFSCombinationError) as exc:
+        except (
+            InvalidTenorError,
+            InvalidFFSCombinationError,
+            InvalidBrokenDateError,
+            InvalidTradeDateError,
+        ) as exc:
             st.error(f"Invalid input: {exc}")
             return
-
-        if cal_mode_key == "EXCHANGE":
-            st.warning(
-                "Calendar mode: Exchange only — settlement here would be "
-                "exchange-cleared (FX futures), NOT RTGS settlement. "
-                "v1 has no Exchange calendars loaded; the math falls back "
-                "to RTGS calendars."
+        except MissingExchangeCalendarError as exc:
+            st.error(f"Exchange calendar missing: {exc}")
+            return
+        except CalendarRangeError as exc:
+            st.error(
+                f"Calculation lands outside bundled calendar window: {exc} "
+                "Refresh the calendar data or pick an earlier trade date."
             )
+            return
 
         # Surface liquidity warnings for any annotated dates in the calculation range.
         liq_alerts = []
@@ -196,6 +270,9 @@ def render() -> None:
                 "even though they don't block the calculation:\n\n"
                 + "\n".join(f"• {a}" for a in unique_alerts)
             )
+
+        if result.warnings:
+            st.warning("Convention warning:\n\n" + "\n".join(f"• {w}" for w in result.warnings))
 
         st.markdown("### Result")
         st.write(f"**Trade date:** {result.trade_date} ({result.trade_date.strftime('%a')})")

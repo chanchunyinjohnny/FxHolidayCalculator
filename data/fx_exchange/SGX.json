@@ -1,0 +1,84 @@
+{
+  "schema_version": 3,
+  "venue": "SGX",
+  "calendar_kind": "EXCHANGE",
+  "products": [
+    "USD/CNH Futures",
+    "USD/INR Futures",
+    "KRW/USD Futures",
+    "JPY/SGD Futures",
+    "EUR/USD Futures",
+    "GBP/USD Futures",
+    "AUD/USD Futures"
+  ],
+  "valid_from": "2026-01-01",
+  "valid_until": "2026-12-31",
+  "default_source": {
+    "url": "https://pypi.org/project/exchange-calendars/",
+    "doc_title": "exchange_calendars v4.13.1, calendar=XSES (equity session)",
+    "fetched_at": "2026-05-11T03:19:13Z",
+    "fetcher": "scripts/sources/library_exchange.py@v1"
+  },
+  "holidays": [
+    {
+      "date": "2026-01-01",
+      "name": "New Year's Day",
+      "source": null,
+      "note": "library-sourced (exchange_calendars equity session). Not FX-product-specific — see docs/data-sources.md."
+    },
+    {
+      "date": "2026-02-17",
+      "name": "Chinese New Year (estimated)",
+      "source": null,
+      "note": "library-sourced (exchange_calendars equity session). Not FX-product-specific — see docs/data-sources.md."
+    },
+    {
+      "date": "2026-02-18",
+      "name": "Chinese New Year (estimated)",
+      "source": null,
+      "note": "library-sourced (exchange_calendars equity session). Not FX-product-specific — see docs/data-sources.md."
+    },
+    {
+      "date": "2026-04-03",
+      "name": "Good Friday",
+      "source": null,
+      "note": "library-sourced (exchange_calendars equity session). Not FX-product-specific — see docs/data-sources.md."
+    },
+    {
+      "date": "2026-05-01",
+      "name": "Labour Day",
+      "source": null,
+      "note": "library-sourced (exchange_calendars equity session). Not FX-product-specific — see docs/data-sources.md."
+    },
+    {
+      "date": "2026-05-27",
+      "name": "Hari Raya Haji (estimated)",
+      "source": null,
+      "note": "library-sourced (exchange_calendars equity session). Not FX-product-specific — see docs/data-sources.md."
+    },
+    {
+      "date": "2026-06-01",
+      "name": "Vesak Day (estimated) (observed)",
+      "source": null,
+      "note": "library-sourced (exchange_calendars equity session). Not FX-product-specific — see docs/data-sources.md."
+    },
+    {
+      "date": "2026-08-10",
+      "name": "National Day (observed)",
+      "source": null,
+      "note": "library-sourced (exchange_calendars equity session). Not FX-product-specific — see docs/data-sources.md."
+    },
+    {
+      "date": "2026-11-09",
+      "name": "Exchange closure (library, unnamed adhoc)",
+      "source": null,
+      "note": "library-sourced (exchange_calendars equity session). Not FX-product-specific — see docs/data-sources.md."
+    },
+    {
+      "date": "2026-12-25",
+      "name": "Christmas Day",
+      "source": null,
+      "note": "library-sourced (exchange_calendars equity session). Not FX-product-specific — see docs/data-sources.md."
+    }
+  ]
+}

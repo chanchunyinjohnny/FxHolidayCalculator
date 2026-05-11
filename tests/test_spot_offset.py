@@ -8,17 +8,30 @@ from fx_holiday_calculator.pairs import parse_pair
 
 
 def _empty_cal(c: str) -> RtgsCalendar:
-    return RtgsCalendar(currency=c, calendar_name=c, operator="x", entries_by_date={})
+    return RtgsCalendar(
+        currency=c,
+        calendar_name=c,
+        operator="x",
+        entries_by_date={},
+        valid_from=date(2020, 1, 1),
+        valid_until=date(2030, 12, 31),
+    )
 
 
 def _holiday_cal(c: str, h: list[date]) -> RtgsCalendar:
     src = SourceRef(
-        url="https://x", doc_title="x",
-        fetched_at=datetime(2026, 1, 1, tzinfo=timezone.utc), fetcher="t",
+        url="https://x",
+        doc_title="x",
+        fetched_at=datetime(2026, 1, 1, tzinfo=timezone.utc),
+        fetcher="t",
     )
     return RtgsCalendar(
-        currency=c, calendar_name=c, operator="x",
+        currency=c,
+        calendar_name=c,
+        operator="x",
         entries_by_date={d: HolidayEntry(d, "x", None, src, "bundled") for d in h},
+        valid_from=date(2020, 1, 1),
+        valid_until=date(2030, 12, 31),
     )
 
 
@@ -39,10 +52,12 @@ def test_usdcad_t1():
 
 
 def test_holiday_extends_spot_offset():
-    cs = CalendarSet({
-        "EUR": _holiday_cal("EUR", [date(2026, 5, 7)]),
-        "USD": _empty_cal("USD"),
-    })
+    cs = CalendarSet(
+        {
+            "EUR": _holiday_cal("EUR", [date(2026, 5, 7)]),
+            "USD": _empty_cal("USD"),
+        }
+    )
     pair = parse_pair("EUR/USD")
     result = apply_spot_offset(date(2026, 5, 6), pair, cs)
     # +1 (5-7) is EUR holiday → reject; +1 (5-8) accepted; +2 (5-11 Mon, since 5-9/10 weekend).

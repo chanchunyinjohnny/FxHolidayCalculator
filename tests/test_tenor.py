@@ -5,14 +5,17 @@ import pytest
 from fx_holiday_calculator.tenor import InvalidTenorError, Tenor, parse_tenor
 
 
-@pytest.mark.parametrize("raw, expected_kind", [
-    ("ON", "ON"),
-    ("on", "ON"),
-    (" TN ", "TN"),
-    ("sn", "SN"),
-    ("SPOT", "SPOT"),
-    ("Spot", "SPOT"),
-])
+@pytest.mark.parametrize(
+    "raw, expected_kind",
+    [
+        ("ON", "ON"),
+        ("on", "ON"),
+        (" TN ", "TN"),
+        ("sn", "SN"),
+        ("SPOT", "SPOT"),
+        ("Spot", "SPOT"),
+    ],
+)
 def test_parses_named_tenors(raw: str, expected_kind: str):
     t = parse_tenor(raw)
     assert isinstance(t, Tenor)
@@ -28,17 +31,20 @@ def test_rejects_garbage_input():
         parse_tenor("not a tenor")
 
 
-@pytest.mark.parametrize("raw, unit, n", [
-    ("1W", "W", 1),
-    ("3W", "W", 3),
-    ("1M", "M", 1),
-    ("12M", "M", 12),
-    ("1Y", "Y", 1),
-    ("2Y", "Y", 2),
-    ("5D", "D", 5),
-    ("45D", "D", 45),
-    (" 6m ", "M", 6),
-])
+@pytest.mark.parametrize(
+    "raw, unit, n",
+    [
+        ("1W", "W", 1),
+        ("3W", "W", 3),
+        ("1M", "M", 1),
+        ("12M", "M", 12),
+        ("1Y", "Y", 1),
+        ("2Y", "Y", 2),
+        ("5D", "D", 5),
+        ("45D", "D", 45),
+        (" 6m ", "M", 6),
+    ],
+)
 def test_parses_period_tenors(raw: str, unit: str, n: int):
     t = parse_tenor(raw)
     assert t.kind == "PERIOD"

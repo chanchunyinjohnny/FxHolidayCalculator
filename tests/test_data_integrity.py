@@ -1,5 +1,5 @@
 import json
-from datetime import datetime
+from datetime import date, datetime
 from pathlib import Path
 
 import pytest
@@ -43,3 +43,18 @@ def test_default_source_complete(path: Path):
     assert src["doc_title"]
     assert src["fetched_at"]
     assert src["fetcher"]
+
+
+@pytest.mark.parametrize("path", _all_calendar_files(), ids=lambda p: p.name)
+def test_validity_window_declared_and_covers_entries(path: Path):
+    blob = json.loads(path.read_text())
+    assert "valid_from" in blob, f"{path}: missing required field 'valid_from'"
+    assert "valid_until" in blob, f"{path}: missing required field 'valid_until'"
+    vf = date.fromisoformat(blob["valid_from"])
+    vu = date.fromisoformat(blob["valid_until"])
+    assert vu >= vf, f"{path}: valid_until precedes valid_from"
+    for raw in blob.get("holidays", []) + blob.get("informational_dates", []):
+        d = date.fromisoformat(raw["date"])
+        assert (
+            vf <= d <= vu
+        ), f"{path}: entry {raw['date']} is outside declared window [{vf} .. {vu}]"

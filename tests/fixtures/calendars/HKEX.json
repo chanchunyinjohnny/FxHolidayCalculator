@@ -1,8 +1,10 @@
 {
-  "schema_version": 1,
+  "schema_version": 3,
   "venue": "HKEX",
   "calendar_kind": "EXCHANGE",
   "products": ["USD/CNH Futures", "Mini USD/CNH Futures"],
+  "valid_from": "2026-01-01",
+  "valid_until": "2026-12-31",
   "default_source": {
     "url": "https://www.hkex.com.hk/Holidays",
     "doc_title": "HKEX Holiday Schedule 2026",

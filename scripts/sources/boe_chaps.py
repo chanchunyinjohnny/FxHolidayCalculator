@@ -1,6 +1,7 @@
 """GBP CHAPS holidays — gov.uk bank-holidays JSON API.
 
 See docs/data-sources.md#gbp--chaps."""
+
 from __future__ import annotations
 
 import json
@@ -34,12 +35,14 @@ def parse_document(raw: bytes, year_range: tuple[int, int]) -> list[dict]:
         if not (year_range[0] <= year <= year_range[1]):
             continue
         notes = ev.get("notes") or None
-        out.append({
-            "date": date_str,
-            "name": ev.get("title", ""),
-            "source": None,
-            "note": notes if notes else None,
-        })
+        out.append(
+            {
+                "date": date_str,
+                "name": ev.get("title", ""),
+                "source": None,
+                "note": notes if notes else None,
+            }
+        )
     out.sort(key=lambda h: h["date"])
     return out
 
@@ -47,11 +50,13 @@ def parse_document(raw: bytes, year_range: tuple[int, int]) -> list[dict]:
 def build_payload(year_range: tuple[int, int], raw: bytes) -> dict:
     """Wraps parse_document with calendar metadata."""
     return {
-        "schema_version": 1,
+        "schema_version": 3,
         "currency": "GBP",
         "calendar_kind": "RTGS",
         "calendar_name": "CHAPS",
         "operator": "Bank of England",
+        "valid_from": f"{year_range[0]}-01-01",
+        "valid_until": f"{year_range[1]}-12-31",
         "default_source": {
             "url": _URL,
             "doc_title": _DOC_TITLE,
@@ -64,8 +69,7 @@ def build_payload(year_range: tuple[int, int], raw: bytes) -> dict:
 
 def fetch(year_range: tuple[int, int], data_root: Path) -> Path:
     """HTTP GET https://www.gov.uk/bank-holidays.json; persist raw + JSON."""
-    resp = requests.get(_URL, timeout=30,
-                        headers={"User-Agent": "fx-holiday-calculator/0.1"})
+    resp = requests.get(_URL, timeout=30, headers={"User-Agent": "fx-holiday-calculator/0.1"})
     resp.raise_for_status()
     raw = resp.content
     payload = build_payload(year_range, raw)
@@ -78,5 +82,6 @@ def fetch(year_range: tuple[int, int], data_root: Path) -> Path:
 
 if __name__ == "__main__":
     import sys
+
     fetch((2026, 2030), Path(__file__).parents[2] / "data")
     sys.exit(0)

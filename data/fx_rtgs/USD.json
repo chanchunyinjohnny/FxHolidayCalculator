@@ -1,9 +1,11 @@
 {
-  "schema_version": 2,
+  "schema_version": 3,
   "currency": "USD",
   "calendar_kind": "RTGS",
   "calendar_name": "Fedwire",
   "operator": "Federal Reserve System",
+  "valid_from": "2026-01-01",
+  "valid_until": "2030-12-31",
   "default_source": {
     "url": "https://www.federalreserve.gov/aboutthefed/k8.htm",
     "doc_title": "Federal Reserve Bank Holiday Schedule (K.8)",

@@ -23,13 +23,42 @@ Then open the displayed local URL in a browser.
 
 ## v1 scope
 
-This release ships with four RTGS settlement calendars: **EUR (TARGET2)**,
-**USD (Fedwire)**, **GBP (CHAPS)**, **JPY (BoJ-NET)**. Supported currency
-pairs are the EUR/USD/GBP/JPY combinations.
+This release ships with four primary-source RTGS settlement calendars:
+**EUR (TARGET2)**, **USD (Fedwire)**, **GBP (CHAPS)**, **JPY (BoJ-NET)**.
+Supported currency pairs are the EUR/USD/GBP/JPY combinations.
 
-Additional RTGS sources (HKD, CNH, CHF, CAD, AUD, SGD) and FX-listed venues
-(CME, HKEX, SGX) are scaffolded but deferred — their fetcher code is not
-yet shipped, pending direct access to the upstream documents.
+Three FX-listed exchange venues ship in **library-sourced** form:
+**SGX (XSES)**, **HKEX (XHKG)**, **CME (CMES)** — data is generated from
+the open-source [`exchange_calendars`](https://pypi.org/project/exchange-calendars/)
+package rather than scraped from venue documents. Read the caveat below
+before relying on these for real settlement decisions.
+
+Additional RTGS sources (HKD, CNH, CHF, CAD, AUD, SGD) are deferred.
+
+### ⚠ Exchange calendar caveat
+
+Library-sourced exchange calendars are an **equity-session approximation**
+of FX-futures holidays. They are useful as a sanity check but they are not
+authoritative. Three things to know:
+
+1. **Equity ≠ FX-futures.** The library encodes each venue's equity session.
+   CME's equity calendar contains only ~3 closed weekdays per year (NYD,
+   Good Friday, Christmas); CME Globex FX futures additionally observe US
+   bank holidays (MLK Day, Memorial Day, Independence Day, Labor Day,
+   Thanksgiving, etc.) that the library does **not** include.
+2. **Exchange holidays are per-product, not per-venue.** A given date may
+   close USD/INR futures (Indian holiday) without closing USD/CNH futures
+   on the same venue. The library returns a single calendar per venue
+   regardless of which FX product you actually trade.
+3. **Coverage horizon lags real-world publication.** Lunar/Islamic dates
+   are hand-typed into the library; year-ahead dates often appear months
+   after the venue publishes them. SGX coverage currently ends 2026-12-31;
+   HKEX and CME end 2027-05-11. Beyond those dates the calculator raises a
+   clear range error rather than silently returning wrong results.
+
+**For high-stakes decisions, always cross-check against the venue's primary
+holiday document.** When a primary-source fetcher is added for a venue, the
+loader prefers it automatically — see `docs/data-sources.md`.
 
 ## Data sources
 

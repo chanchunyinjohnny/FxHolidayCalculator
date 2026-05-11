@@ -7,6 +7,26 @@ SourceOrigin = Literal["bundled", "cache", "live", "library"]
 LiquidityFlag = Literal["normal", "thin", "halted"]
 
 
+class CalendarRangeError(LookupError):
+    """Raised when a calendar is queried outside its bundled validity window.
+
+    Silent fallthrough (treating an out-of-range date as a non-holiday) would
+    make this tool quietly return wrong results, which breaks its core promise.
+    Callers must refresh data, narrow the query, or extend coverage.
+    """
+
+    def __init__(self, calendar_label: str, queried: date, valid_from: date, valid_until: date):
+        self.calendar_label = calendar_label
+        self.queried = queried
+        self.valid_from = valid_from
+        self.valid_until = valid_until
+        super().__init__(
+            f"{calendar_label}: queried {queried.isoformat()} is outside the bundled "
+            f"validity window [{valid_from.isoformat()} .. {valid_until.isoformat()}]. "
+            f"Refresh the data or narrow the query range."
+        )
+
+
 @dataclass(frozen=True)
 class SourceRef:
     url: str
@@ -22,7 +42,7 @@ class HolidayEntry:
     note: str | None
     source: SourceRef
     source_origin: SourceOrigin
-    is_closure: bool = True            # True = real RTGS closure; False = informational only
+    is_closure: bool = True  # True = real RTGS closure; False = informational only
     liquidity: LiquidityFlag | None = None
 
 
@@ -32,4 +52,4 @@ class CalendarStatus:
     holiday_name: str | None
     source: SourceRef | None
     source_origin: SourceOrigin | None
-    liquidity: LiquidityFlag | None = None     # set even when is_good=True
+    liquidity: LiquidityFlag | None = None  # set even when is_good=True

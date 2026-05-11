@@ -6,6 +6,7 @@ Date authority: BoJ HTML page.
 Name enrichment: python-holidays (Japan public holidays) + hardcoded
 year-end map (Jan 2, 3, Dec 31 are Bank-only and not in python-holidays).
 """
+
 from __future__ import annotations
 
 from datetime import date
@@ -22,9 +23,18 @@ _DOC_TITLE = "Holiday Schedule of the Bank — Bank of Japan"
 _FETCHER = "scripts/sources/boj.py@v1"
 
 _MONTHS = {
-    "January": 1, "February": 2, "March": 3, "April": 4,
-    "May": 5, "June": 6, "July": 7, "August": 8,
-    "September": 9, "October": 10, "November": 11, "December": 12,
+    "January": 1,
+    "February": 2,
+    "March": 3,
+    "April": 4,
+    "May": 5,
+    "June": 6,
+    "July": 7,
+    "August": 8,
+    "September": 9,
+    "October": 10,
+    "November": 11,
+    "December": 12,
 }
 
 # BoJ-only days not in python-holidays
@@ -41,6 +51,7 @@ class _BoJExtractor(HTMLParser):
     Locates each <h3 id="pNN"> year header followed by a <table> with
     rows of (Month, comma-separated days). Yields (year, month, day) triples.
     """
+
     def __init__(self) -> None:
         super().__init__()
         self.entries: list[tuple[int, int, int]] = []
@@ -53,7 +64,6 @@ class _BoJExtractor(HTMLParser):
         self._td_text: list[str] = []
 
     def handle_starttag(self, tag, attrs):
-        ad = dict(attrs)
         if tag == "h3":
             self._in_h3 = True
             self._h3_text = []
@@ -129,23 +139,27 @@ def parse_document(raw: bytes, year_range: tuple[int, int]) -> list[dict]:
             real = date(y, m, d)
         except ValueError:
             continue
-        out.append({
-            "date": real.isoformat(),
-            "name": _name_for(real),
-            "source": None,
-            "note": None,
-        })
+        out.append(
+            {
+                "date": real.isoformat(),
+                "name": _name_for(real),
+                "source": None,
+                "note": None,
+            }
+        )
     out.sort(key=lambda h: h["date"])
     return out
 
 
 def build_payload(year_range: tuple[int, int], raw: bytes) -> dict:
     return {
-        "schema_version": 1,
+        "schema_version": 3,
         "currency": "JPY",
         "calendar_kind": "RTGS",
         "calendar_name": "BoJ-NET",
         "operator": "Bank of Japan",
+        "valid_from": f"{year_range[0]}-01-01",
+        "valid_until": f"{year_range[1]}-12-31",
         "default_source": {
             "url": _URL,
             "doc_title": _DOC_TITLE,
@@ -157,8 +171,7 @@ def build_payload(year_range: tuple[int, int], raw: bytes) -> dict:
 
 
 def fetch(year_range: tuple[int, int], data_root: Path) -> Path:
-    resp = requests.get(_URL, timeout=30,
-                        headers={"User-Agent": "fx-holiday-calculator/0.1"})
+    resp = requests.get(_URL, timeout=30, headers={"User-Agent": "fx-holiday-calculator/0.1"})
     resp.raise_for_status()
     raw = resp.content
     payload = build_payload(year_range, raw)
@@ -171,5 +184,6 @@ def fetch(year_range: tuple[int, int], data_root: Path) -> Path:
 
 if __name__ == "__main__":
     import sys
+
     fetch((2026, 2027), Path(__file__).parents[2] / "data")
     sys.exit(0)

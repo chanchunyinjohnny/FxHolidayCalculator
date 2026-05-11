@@ -1,9 +1,11 @@
 {
-  "schema_version": 1,
+  "schema_version": 3,
   "currency": "GBP",
   "calendar_kind": "RTGS",
   "calendar_name": "CHAPS",
   "operator": "Bank of England",
+  "valid_from": "2026-01-01",
+  "valid_until": "2028-12-31",
   "default_source": {
     "url": "https://www.gov.uk/bank-holidays.json",
     "doc_title": "UK government bank holidays (England and Wales)",

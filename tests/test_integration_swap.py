@@ -2,6 +2,7 @@
 
 Skips if data files are not yet generated.
 """
+
 from datetime import date
 from pathlib import Path
 

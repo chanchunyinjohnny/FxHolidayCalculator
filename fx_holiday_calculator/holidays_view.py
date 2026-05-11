@@ -51,15 +51,22 @@ def _rtgs_rows(
             entry = cal.get_holiday(d)
             if entry is None:
                 continue
-            out.append(HolidayRow(
-                date=d, weekday=d.strftime("%a"),
-                type="FX_RTGS", calendar=label, holiday_name=entry.name,
-                source_url=entry.source.url, source_doc_title=entry.source.doc_title,
-                source_fetched_at=entry.source.fetched_at, source_origin=entry.source_origin,
-                is_reference_only=False,
-                is_closure=entry.is_closure,
-                liquidity=entry.liquidity,
-            ))
+            out.append(
+                HolidayRow(
+                    date=d,
+                    weekday=d.strftime("%a"),
+                    type="FX_RTGS",
+                    calendar=label,
+                    holiday_name=entry.name,
+                    source_url=entry.source.url,
+                    source_doc_title=entry.source.doc_title,
+                    source_fetched_at=entry.source.fetched_at,
+                    source_origin=entry.source_origin,
+                    is_reference_only=False,
+                    is_closure=entry.is_closure,
+                    liquidity=entry.liquidity,
+                )
+            )
     return out
 
 
@@ -77,15 +84,22 @@ def _exchange_rows(
             entry = cal.get_holiday(d)
             if entry is None:
                 continue
-            out.append(HolidayRow(
-                date=d, weekday=d.strftime("%a"),
-                type="EXCHANGE", calendar=v, holiday_name=entry.name,
-                source_url=entry.source.url, source_doc_title=entry.source.doc_title,
-                source_fetched_at=entry.source.fetched_at, source_origin=entry.source_origin,
-                is_reference_only=False,
-                is_closure=entry.is_closure,
-                liquidity=entry.liquidity,
-            ))
+            out.append(
+                HolidayRow(
+                    date=d,
+                    weekday=d.strftime("%a"),
+                    type="EXCHANGE",
+                    calendar=v,
+                    holiday_name=entry.name,
+                    source_url=entry.source.url,
+                    source_doc_title=entry.source.doc_title,
+                    source_fetched_at=entry.source.fetched_at,
+                    source_origin=entry.source_origin,
+                    is_reference_only=False,
+                    is_closure=entry.is_closure,
+                    liquidity=entry.liquidity,
+                )
+            )
     return out
 
 
@@ -100,18 +114,28 @@ def _national_rows(
             entry = cal.get_holiday(d)
             if entry is None:
                 continue
-            out.append(HolidayRow(
-                date=d, weekday=d.strftime("%a"),
-                type="NATIONAL",
-                calendar=f"{code} (national, ref)",
-                holiday_name=entry.name,
-                source_url=entry.source.url,
-                source_doc_title=entry.source.doc_title,
-                source_fetched_at=entry.source.fetched_at,
-                source_origin=entry.source_origin,
-                is_reference_only=True,
-            ))
+            out.append(
+                HolidayRow(
+                    date=d,
+                    weekday=d.strftime("%a"),
+                    type="NATIONAL",
+                    calendar=f"{code} (national, ref)",
+                    holiday_name=entry.name,
+                    source_url=entry.source.url,
+                    source_doc_title=entry.source.doc_title,
+                    source_fetched_at=entry.source.fetched_at,
+                    source_origin=entry.source_origin,
+                    is_reference_only=True,
+                )
+            )
     return out
+
+
+def _auto_rtgs_scope(pair: Pair, ref_currency: RefCurrency) -> set[str]:
+    needed = {pair.base, pair.quote}
+    if ref_currency != "none":
+        needed.add(ref_currency)
+    return needed
 
 
 def list_holidays(
@@ -130,7 +154,10 @@ def list_holidays(
 ) -> list[HolidayRow]:
     rows: list[HolidayRow] = []
     if calendar_mode in {"FX", "BOTH"}:
-        rows += _rtgs_rows(rtgs_calendars, selected_rtgs, start, end)
+        rtgs_scope = (
+            _auto_rtgs_scope(pair, ref_currency) if selected_rtgs is None else selected_rtgs
+        )
+        rows += _rtgs_rows(rtgs_calendars, rtgs_scope, start, end)
     if calendar_mode in {"EXCHANGE", "BOTH"}:
         if selected_venues is None:
             allowed = set(relevant_venues(pair, ref_currency))

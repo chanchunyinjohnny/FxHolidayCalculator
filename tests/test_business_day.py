@@ -3,7 +3,6 @@ from datetime import date, datetime, timezone
 from fx_holiday_calculator.calendars.rtgs import RtgsCalendar
 from fx_holiday_calculator.calendars.types import HolidayEntry, SourceRef
 from fx_holiday_calculator.conventions.business_day import (
-    AdjustmentStep,
     CalendarSet,
     apply_eom,
     apply_eom_with_trace,
@@ -16,14 +15,23 @@ from fx_holiday_calculator.conventions.business_day import (
 
 def _cal(currency: str, holidays: list[date]) -> RtgsCalendar:
     src = SourceRef(
-        url="https://x", doc_title="x", fetched_at=datetime(2026, 1, 1, tzinfo=timezone.utc),
+        url="https://x",
+        doc_title="x",
+        fetched_at=datetime(2026, 1, 1, tzinfo=timezone.utc),
         fetcher="test",
     )
     entries = {
         d: HolidayEntry(date=d, name="X", note=None, source=src, source_origin="bundled")
         for d in holidays
     }
-    return RtgsCalendar(currency=currency, calendar_name=currency, operator="x", entries_by_date=entries)
+    return RtgsCalendar(
+        currency=currency,
+        calendar_name=currency,
+        operator="x",
+        entries_by_date=entries,
+        valid_from=date(2020, 1, 1),
+        valid_until=date(2030, 12, 31),
+    )
 
 
 def test_weekend_is_not_good_business_day():
@@ -31,7 +39,7 @@ def test_weekend_is_not_good_business_day():
     cs = CalendarSet({"EUR (TARGET2)": eur})
     assert is_good_business_day(date(2026, 5, 9), cs) is False  # Saturday
     assert is_good_business_day(date(2026, 5, 10), cs) is False  # Sunday
-    assert is_good_business_day(date(2026, 5, 11), cs) is True   # Monday
+    assert is_good_business_day(date(2026, 5, 11), cs) is True  # Monday
 
 
 def test_holiday_in_any_calendar_disqualifies():

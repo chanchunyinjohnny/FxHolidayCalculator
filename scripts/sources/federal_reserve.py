@@ -1,10 +1,11 @@
 """USD Fedwire holiday calendar — see docs/data-sources.md#usd--fedwire."""
+
 from __future__ import annotations
 
+import urllib.request
 from datetime import date, timedelta
 from html.parser import HTMLParser
 from pathlib import Path
-import urllib.request
 
 from scripts.sources._provenance import now_iso_utc, write_calendar_json, write_raw
 
@@ -13,9 +14,18 @@ _DOC_TITLE = "Federal Reserve Bank Holiday Schedule (K.8)"
 _FETCHER = "scripts/sources/federal_reserve.py@v1"
 
 _MONTHS = {
-    "January": 1, "February": 2, "March": 3, "April": 4,
-    "May": 5, "June": 6, "July": 7, "August": 8,
-    "September": 9, "October": 10, "November": 11, "December": 12,
+    "January": 1,
+    "February": 2,
+    "March": 3,
+    "April": 4,
+    "May": 5,
+    "June": 6,
+    "July": 7,
+    "August": 8,
+    "September": 9,
+    "October": 10,
+    "November": 11,
+    "December": 12,
 }
 
 
@@ -131,24 +141,28 @@ def parse_document(raw: bytes, year_range: tuple[int, int]) -> list[dict]:
             except (ValueError, KeyError):
                 continue
             if stars == 0:
-                out.append({
-                    "date": d.isoformat(),
-                    "name": name,
-                    "source": None,
-                    "note": None,
-                })
+                out.append(
+                    {
+                        "date": d.isoformat(),
+                        "name": name,
+                        "source": None,
+                        "note": None,
+                    }
+                )
             elif stars == 1:
                 # Saturday — Fedwire OPEN on preceding Friday; neither date is a closure. EXCLUDE.
                 continue
             else:
                 # Sunday — observed Monday is the Fedwire closure
                 observed = d + timedelta(days=1)
-                out.append({
-                    "date": observed.isoformat(),
-                    "name": name,
-                    "source": None,
-                    "note": "Following Monday observed; original holiday fell on Sunday",
-                })
+                out.append(
+                    {
+                        "date": observed.isoformat(),
+                        "name": name,
+                        "source": None,
+                        "note": "Following Monday observed; original holiday fell on Sunday",
+                    }
+                )
     out.sort(key=lambda h: h["date"])
     return out
 
@@ -156,11 +170,13 @@ def parse_document(raw: bytes, year_range: tuple[int, int]) -> list[dict]:
 def build_payload(year_range: tuple[int, int], raw: bytes) -> dict:
     """Wraps parse_document with calendar metadata + default_source."""
     return {
-        "schema_version": 1,
+        "schema_version": 3,
         "currency": "USD",
         "calendar_kind": "RTGS",
         "calendar_name": "Fedwire",
         "operator": "Federal Reserve System",
+        "valid_from": f"{year_range[0]}-01-01",
+        "valid_until": f"{year_range[1]}-12-31",
         "default_source": {
             "url": _URL,
             "doc_title": _DOC_TITLE,
@@ -189,5 +205,6 @@ def fetch(year_range: tuple[int, int], data_root: Path) -> Path:
 
 if __name__ == "__main__":
     import sys
+
     fetch((2026, 2030), Path(__file__).parents[2] / "data")
     sys.exit(0)

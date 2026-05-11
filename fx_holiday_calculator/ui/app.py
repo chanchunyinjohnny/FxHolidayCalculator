@@ -10,9 +10,13 @@ def main() -> None:
     from fx_holiday_calculator.ui import sidebar, tab_about, tab_holidays, tab_swap
 
     sidebar.render()
-    t1, t2, t3 = st.tabs([
-        "Swap Date Calculator", "Holiday Calendar", "About / Sources",
-    ])
+    t1, t2, t3 = st.tabs(
+        [
+            "Swap Date Calculator",
+            "Holiday Calendar",
+            "About / Sources",
+        ]
+    )
     with t1:
         tab_swap.render()
     with t2:

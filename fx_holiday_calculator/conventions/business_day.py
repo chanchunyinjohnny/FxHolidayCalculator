@@ -13,6 +13,7 @@ class _CalendarLike(Protocol):
 @dataclass
 class CalendarSet:
     """Named calendars; a date is good iff good in ALL members."""
+
     members: dict[str, _CalendarLike]
 
     def __iter__(self):
@@ -44,15 +45,18 @@ def statuses_for_date(d: date, cs: CalendarSet) -> dict[str, CalendarStatus]:
         if entry is None or not entry.is_closure:
             liq = entry.liquidity if entry else None
             out[label] = CalendarStatus(
-                is_good=True, holiday_name=None,
+                is_good=True,
+                holiday_name=None,
                 source=None if not entry else entry.source,
                 source_origin=None if not entry else entry.source_origin,
                 liquidity=liq,
             )
         else:
             out[label] = CalendarStatus(
-                is_good=False, holiday_name=entry.name,
-                source=entry.source, source_origin=entry.source_origin,
+                is_good=False,
+                holiday_name=entry.name,
+                source=entry.source,
+                source_origin=entry.source_origin,
                 liquidity=entry.liquidity,
             )
     return out

@@ -4,8 +4,9 @@ from pathlib import Path
 
 import streamlit as st
 
-from fx_holiday_calculator.calendars.loader import load_rtgs_calendar
+from fx_holiday_calculator.calendars.loader import load_exchange_calendar, load_rtgs_calendar
 from fx_holiday_calculator.calendars.national import get_national_calendar
+from fx_holiday_calculator.conventions.cross import relevant_venues
 from fx_holiday_calculator.holidays_view import list_holidays
 from fx_holiday_calculator.pairs import list_supported_pairs, parse_pair
 
@@ -14,8 +15,19 @@ CACHE = Path.home() / ".fx_holiday_calculator" / "cache"
 
 AVAILABLE_RTGS = {"EUR", "USD", "GBP", "JPY"}
 
+
+def _available_exchange_venues() -> set[str]:
+    bundled = BUNDLED / "fx_exchange"
+    if not bundled.exists():
+        return set()
+    return {p.stem for p in bundled.glob("*.json") if not p.name.startswith("_")}
+
+
 _CCY_TO_NATIONAL = {
-    "USD": "US", "EUR": "DE", "GBP": "GB", "JPY": "JP",
+    "USD": "US",
+    "EUR": "DE",
+    "GBP": "GB",
+    "JPY": "JP",
 }
 
 
@@ -56,7 +68,11 @@ def render() -> None:
         ["FX (RTGS) only", "Exchange only", "Both"],
         index=0,
         horizontal=True,
-        help="v1 has no Exchange calendars loaded; Exchange/Both shows only FX-RTGS rows.",
+        help=(
+            "FX = RTGS settlement calendars (EUR/USD/GBP/JPY). "
+            "Exchange = FX-futures venues (CME/HKEX/SGX). "
+            "Both = union. Exchange and Both require bundled exchange data."
+        ),
         key="hol_cal_mode",
     )
     cal_mode_key = {
@@ -80,9 +96,7 @@ def render() -> None:
 
     try:
         rtgs = {
-            c: load_rtgs_calendar(
-                c, root=BUNDLED / "fx_rtgs", cache_root=CACHE / "fx_rtgs"
-            )
+            c: load_rtgs_calendar(c, root=BUNDLED / "fx_rtgs", cache_root=CACHE / "fx_rtgs")
             for c in sorted(needed_rtgs)
         }
     except FileNotFoundError as exc:
@@ -97,10 +111,42 @@ def render() -> None:
             if code:
                 nat_cals[code] = get_national_calendar(code)
 
+    exch_cals: dict = {}
     if cal_mode_key in {"EXCHANGE", "BOTH"}:
-        st.info(
-            "v1 has no exchange calendars loaded. Exchange-mode rows will be empty."
-        )
+        available_venues = _available_exchange_venues()
+        needed_venues = set(relevant_venues(pair, ref))  # type: ignore[arg-type]
+        missing = sorted(needed_venues - available_venues)
+        if missing:
+            st.error(
+                f"{cal_mode} requires exchange calendars for venue(s) "
+                f"{', '.join(missing)}, but none are bundled. "
+                "Switch to FX (RTGS) only to view holidays."
+            )
+            return
+        try:
+            exch_cals = {
+                v: load_exchange_calendar(
+                    v,
+                    root=BUNDLED / "fx_exchange",
+                    cache_root=CACHE / "fx_exchange",
+                )
+                for v in sorted(needed_venues)
+            }
+        except FileNotFoundError as exc:
+            st.error(f"Exchange calendar file missing: {exc}")
+            return
+        lib_venues = sorted(v for v, c in exch_cals.items() if c.library_sourced)
+        if lib_venues:
+            st.warning(
+                "**Exchange data caveat — library-sourced for "
+                f"{', '.join(lib_venues)}.**\n\n"
+                "Rows below come from `exchange_calendars` (equity session), "
+                "not a primary venue document. Real FX-futures holidays may "
+                "differ — these calendars omit per-product observances "
+                "(e.g. CME equity calendar does NOT include US bank "
+                "holidays observed by CME Globex FX futures). "
+                "See `docs/data-sources.md` for the full caveat."
+            )
 
     if st.button("Show"):
         rows = list_holidays(
@@ -111,7 +157,7 @@ def render() -> None:
             calendar_mode=cal_mode_key,
             include_national=include_national,
             rtgs_calendars=rtgs,
-            exchange_calendars={},  # v1: no exchange data
+            exchange_calendars=exch_cals,
             national_calendars=nat_cals,
         )
         st.write(f"**{len(rows)} rows**")
@@ -135,12 +181,13 @@ def render() -> None:
         ]
         st.dataframe(rendered, use_container_width=True)
 
-        csv = "Date,Day,Type,Calendar,Holiday,Closure,Liquidity,Source,Fetched,Origin\n" + "\n".join(
-            ",".join(str(v).replace(",", ";") for v in row.values()) for row in rendered
+        csv = (
+            "Date,Day,Type,Calendar,Holiday,Closure,Liquidity,Source,Fetched,Origin\n"
+            + "\n".join(
+                ",".join(str(v).replace(",", ";") for v in row.values()) for row in rendered
+            )
         )
-        st.download_button(
-            "Export CSV", data=csv, file_name="holidays.csv", mime="text/csv"
-        )
+        st.download_button("Export CSV", data=csv, file_name="holidays.csv", mime="text/csv")
         st.download_button(
             "Export JSON",
             data=json.dumps(rendered, indent=2),

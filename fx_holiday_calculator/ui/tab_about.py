@@ -75,10 +75,7 @@ There are no unsourced dates.
         st.write("_No bundled data found._")
 
     st.markdown("### Deferred sources (v1.1+)")
-    deferred_rows = [
-        {"Code": c, "Kind": k, "Description": d}
-        for (c, k, d) in _DEFERRED
-    ]
+    deferred_rows = [{"Code": c, "Kind": k, "Description": d} for (c, k, d) in _DEFERRED]
     st.dataframe(deferred_rows, use_container_width=True)
     st.caption(
         "v1 ships with EUR, USD, GBP, JPY RTGS calendars only. The deferred sources "

@@ -337,92 +337,173 @@ A fetcher must:
 
 ---
 
+## Exchange calendars — hybrid strategy and caveats
+
+Unlike the FX-RTGS calendars above (each driven by a single authoritative
+upstream document), the v1 exchange calendars use a **hybrid strategy**:
+
+1. **Library floor.** `scripts/sources/library_exchange.py` reads the
+   open-source [`exchange_calendars`](https://pypi.org/project/exchange-calendars/)
+   package and emits `data/fx_exchange/{SGX,HKEX,CME}.json` with provenance
+   pointing to that library. This is the default v1 data source.
+2. **Primary-source overrides (future).** When a venue-specific fetcher
+   under `scripts/sources/<venue>_fx.py` is added, it writes a JSON with
+   `fetcher` field pointing to itself. The loader detects this (the
+   `library_sourced` flag is `False`) and that file becomes authoritative;
+   the library generator will not overwrite it (`fetch()` guards against
+   that).
+
+### Why hybrid, not primary-source-only
+
+The original design (HTML-scrape each venue's holiday page) ran into the
+following at implementation time:
+
+- **SGX** rearchitected the trading-and-clearing-hours page into a JavaScript
+  SPA — the static HTML is an empty shell. The PDF SGX publishes at
+  [api2.sgx.com/sites/default/files/.../SGX Calendar 2026_2.pdf](https://api2.sgx.com/sites/default/files/2026-01/SGX%20Calendar%202026_2.pdf)
+  is a per-product calendar (each day lists product codes closed that day,
+  e.g. "GIN, GINB, AJ, UC, UCO, …"); there is no single "venue is closed
+  today" signal, only per-product information.
+- **HKEX** holiday page returns a JS-rendered shell similar to SGX.
+- **CME** master holiday calendar is an interactive HTML widget; the
+  underlying data is loaded via XHR.
+
+Plain-HTTP scraping (the only path available under the BOCHK runtime
+constraints — no Playwright, no headless browser) cannot reach the holiday
+data on any of these venues. The hybrid strategy ships working v1 data via
+the library while leaving the door open for primary-source fetchers as
+they become viable (PDF parsing for SGX, ICS feed if discovered, manual
+curation for ad-hoc events like HKEX typhoon notices).
+
+### ⚠ Caveats that the UI surfaces to users
+
+Library-sourced exchange calendars are an **equity-session approximation**
+of FX-futures holidays. The UI shows a banner whenever
+`library_sourced=True`; the substance:
+
+1. **Equity ≠ FX-futures.** `exchange_calendars` encodes each venue's
+   equity session. The data for CME (`CMES` calendar) contains only **3**
+   closed weekdays in 2026 — New Year's Day, Good Friday, Christmas Day.
+   CME Globex FX futures additionally observe US bank holidays (MLK Day,
+   Presidents Day, Memorial Day, Independence Day, Labor Day, Thanksgiving,
+   day-after-Thanksgiving early close) that the library does **not**
+   include. A trader checking "is my USD/EUR future open on Memorial Day"
+   would get a wrong answer from the library data.
+2. **Per-product nature.** Exchange holidays are observed per-product, not
+   per-venue. SGX's published 2026 calendar lists ~50 dates where *some*
+   product is closed, against ~10 that close the entire venue. The library
+   returns one calendar per venue, which corresponds roughly to the
+   full-venue-closure set — the most conservative subset, which omits
+   product-specific observances like SGX USD/INR closing for Indian
+   public holidays.
+3. **Coverage-horizon lag.** `exchange_calendars` hard-codes lunar/Islamic
+   dates (Chinese New Year, Hari Raya, Deepavali) in Python source. New
+   years are added by community PRs, typically months after the venue
+   publishes its calendar. As of `exchange_calendars` 4.13.x:
+   - SGX (`XSES`): coverage through **2026-12-31**.
+   - HKEX (`XHKG`): coverage through **2027-05-11**.
+   - CME (`CMES`): coverage through **2027-05-11**.
+   Beyond those dates, `CalendarRangeError` fires with the window in the
+   message — no silent fallthrough.
+
+### Loader precedence (hybrid runtime)
+
+`load_exchange_calendar(venue)`:
+
+1. Cache (`~/.fx_holiday_calculator/cache/fx_exchange/<VENUE>.json`) if present.
+2. Bundled (`data/fx_exchange/<VENUE>.json`) — committed to the repo.
+
+Both paths share the same schema (v3). The `library_sourced` attribute on
+the loaded calendar is `True` when the file's `default_source.fetcher`
+contains `library_exchange`. The UI uses this to decide whether to show
+the caveat banner. When a venue eventually gets a primary-source fetcher,
+the JSON it writes will not match that pattern and the banner disappears
+for that venue.
+
+---
+
 ## CME — FX futures
 
-**Identity:** CME Group's FX futures product holiday calendar. Affects FX futures trading sessions and delivery dates on CME Globex (USD majors, EUR/JPY, USD/CNH, USD/MXN, USD/BRL, USD/ZAR, USD/RUB historically, etc.).
+**Current source (v1):** `scripts/sources/library_exchange.py@v1` via
+`exchange_calendars.CMES`. Library-sourced — banner shown in UI. Coverage
+through 2027-05-11. Equity-session calendar; **does not include US bank
+holidays observed by Globex FX futures**.
+
+**Future primary source (planned):** CME Group's master holiday calendar
+at `https://www.cmegroup.com/tools-information/holiday-calendar.html` —
+HTML page with interactive product-filter widget. Plain-HTTP scraping is
+hostile (data loads via XHR); future implementation may require a
+manually-curated CSV from CME's downloadable calendar export.
+
+**Identity:** Affects FX futures trading sessions and delivery dates on
+CME Globex (USD majors, EUR/JPY, USD/CNH, USD/MXN, USD/BRL, USD/ZAR, etc.).
 **Calendar kind:** `EXCHANGE`
 **File:** `data/fx_exchange/CME.json`
-**Fetcher:** `scripts/sources/cme_fx.py`
-**Products covered:** All CME Group FX futures contracts (Globex). The `products` list in the JSON enumerates the major pairs.
+**Products covered:** Enumerated in the JSON's `products` field.
 
-**Upstream URL:** `https://www.cmegroup.com/tools-information/holiday-calendar.html` — CME Group's master holiday calendar with per-product breakdown.
-**Document format:** HTML — interactive calendar with product filters; underlying data is typically also available as a downloadable file.
-**Update cadence:** Annual; CME publishes well in advance for products it lists.
-
-**Parser strategy:**
-- HTML scrape, filter to "FX" product group.
-- Parse per-product session schedules: `Closed`, `Early Close`, `Normal`. We model only `Closed` (full-day) for v1; early-close days may be added later via `note`.
-- A single date can have different session statuses for different FX contracts; we record only dates where ALL FX products are closed (the conservative "venue is closed for FX" definition).
-
-**Schema mapping:**
-- `name` ← holiday name from CME page (e.g. `"Christmas Day"`, `"US Independence Day"`).
-- `note` ← `"early close — see CME calendar"` for any date where some products are normal but others are closed; we still include it as a closure conservatively, with the note.
-
-**Known quirks:**
-- CME observes US federal holidays; most international holidays are NOT CME closures (you can trade USD/JPY on CME on a Japanese holiday).
-- Day-after-Thanksgiving is typically an early-close day; we record as `Closed` with the early-close note OR exclude depending on policy decided at implementation time.
-- FX delivery happens via the Continuous Linked Settlement (CLS) mechanism for most pairs; CME-specific delivery dates fall on the third Wednesday of contract months and are subject to mod-following adjustment using the union of FX-RTGS calendars (handled in the engine, not here).
-
-**Cross-check tripwire:** No clean library match for CME FX. `exchange_calendars.CMES` is equity-focused. No tripwire; rely on data-integrity test plus manual review.
+**Known quirks (will matter when a primary fetcher is built):**
+- US federal holidays observed; international holidays are NOT CME closures.
+- Day-after-Thanksgiving is typically an early-close day.
+- FX delivery happens via CLS for most pairs; CME-specific delivery dates
+  fall on the third Wednesday of contract months and are subject to
+  mod-following adjustment against the FX-RTGS calendar union (engine logic).
 
 ---
 
 ## HKEX — FX futures
 
-**Identity:** Hong Kong Exchanges and Clearing's FX futures product holiday calendar. Covers USD/CNH, Mini USD/CNH, EUR/CNH, JPY/CNH, AUD/CNH, USD/HKD, EUR/CNH, etc.
+**Current source (v1):** `scripts/sources/library_exchange.py@v1` via
+`exchange_calendars.XHKG`. Library-sourced — banner shown in UI. Coverage
+through 2027-05-11. Equity-session calendar; **does not include
+typhoon T8+ ad-hoc closures or all derivative-product-specific dates**.
+
+**Future primary source (planned):** HKEX holiday schedule at
+`https://www.hkex.com.hk/Services/Trading-hours-and-Severe-Weather-Arrangements/Trading-Hours/Holiday-Schedule?sc_lang=en`.
+JS-rendered SPA. Future implementation may parse HKEX's downloadable
+calendar PDF or use HKEX's circulars feed for ad-hoc notices.
+
+**Identity:** Covers USD/CNH, Mini USD/CNH, EUR/CNH, JPY/CNH, AUD/CNH, USD/HKD futures.
 **Calendar kind:** `EXCHANGE`
 **File:** `data/fx_exchange/HKEX.json`
-**Fetcher:** `scripts/sources/hkex_fx.py`
-**Products covered:** All HKEX FX futures contracts (enumerated in `products`).
 
-**Upstream URL:** `https://www.hkex.com.hk/Services/Trading-hours-and-Severe-Weather-Arrangements/Trading-Hours/Holiday-Schedule?sc_lang=en`
-**Document format:** HTML page with per-year holiday schedule, multi-asset; FX is one of the markets listed.
-**Update cadence:** Annual, published in late prior year.
-
-**Parser strategy:**
-- HTML scrape; locate the holiday schedule table for the "Derivatives Market" segment (HKFE).
-- HKEX publishes a single holiday schedule that covers all derivatives markets including FX futures; same dates apply.
-- Parse all listed dates.
-
-**Schema mapping:**
-- `name` ← holiday name from the HKEX schedule (e.g. `"Lunar New Year's Day"`).
-- `note` ← `"morning session only"` or `"closed"` etc. — HKEX often distinguishes half-days; we record only full closures for v1, with notes preserved when present.
-
-**Known quirks:**
-- Lunar New Year: typically 3 holiday days; eve-of-LNY is a half-day for cash equities but FX futures may close fully — verify at implementation time.
-- Christmas Eve and New Year's Eve: half-day for cash equities; full closures for some derivatives products. Verify per HKEX product specifications.
-- Typhoon T8+ ad-hoc closures: HKEX issues mid-day notices when typhoons cause closure. These are added via per-entry `source` overrides pointing to the specific HKEX notice URL, with `fetcher: "manual"`.
-
-**Cross-check tripwire:** `exchange_calendars.XHKG` for HKEX. Informational tripwire; not a perfect match because XHKG is equity-side.
+**Known quirks (will matter when a primary fetcher is built):**
+- Lunar New Year: typically 3 holiday days for HKEX (vs 1-2 for SGX).
+- Christmas Eve / New Year's Eve: half-day for cash equities; full closures
+  for some derivatives products. Library data does not distinguish.
+- Typhoon T8+ ad-hoc closures: HKEX issues mid-day notices. These will
+  require per-entry `source` overrides pointing to the specific HKEX
+  notice URL, with `fetcher: "manual"`.
 
 ---
 
 ## SGX — FX futures
 
-**Identity:** Singapore Exchange's FX futures product holiday calendar. Covers USD/CNH, USD/INR, KRW/USD, JPY/SGD, EUR/USD, GBP/USD, AUD/USD futures.
+**Current source (v1):** `scripts/sources/library_exchange.py@v1` via
+`exchange_calendars.XSES`. Library-sourced — banner shown in UI. Coverage
+through 2026-12-31. Equity-session calendar; **does not include
+per-product Indian / Korean / Japanese holidays observed by SGX FX-INR,
+KRW/USD, JPY/SGD respectively**.
+
+**Future primary source (planned):** SGX publishes an annual derivatives
+calendar PDF (e.g. [SGX Calendar 2026_2.pdf](https://api2.sgx.com/sites/default/files/2026-01/SGX%20Calendar%202026_2.pdf)
+via [www.sgx.com/trading-0](https://www.sgx.com/trading-0)). The PDF is
+per-product: each day lists product codes closed that day, with full-venue
+holidays shown as named caps headers (NEW YEAR'S DAY, CHINESE NEW YEAR,
+etc.). A primary-source fetcher would `pdfplumber`-parse the named headers
+to extract full-venue closures (the conservative subset that aligns with
+what an FX user typically needs).
+
+**Identity:** Covers USD/CNH, USD/INR, KRW/USD, JPY/SGD, EUR/USD, GBP/USD,
+AUD/USD futures.
 **Calendar kind:** `EXCHANGE`
 **File:** `data/fx_exchange/SGX.json`
-**Fetcher:** `scripts/sources/sgx_fx.py`
-**Products covered:** SGX FX futures contracts (enumerated in `products`).
 
-**Upstream URL:** `https://www.sgx.com/securities/trading-and-clearing-information/trading-clearing-hours-and-holidays`
-**Document format:** HTML with per-year derivatives holiday table.
-**Update cadence:** Annual, late prior year.
-
-**Parser strategy:**
-- HTML scrape; locate the SGX derivatives holiday table; FX is one of the segments.
-- Parse all listed dates and full vs. partial closure status.
-
-**Schema mapping:**
-- `name` ← holiday name from SGX (e.g. `"Hari Raya Haji"`).
-- `note` ← `"early close — see SGX schedule"` or `null`.
-
-**Known quirks:**
-- SGX observes Singapore public holidays plus selected international holidays for global FX products (e.g. Christmas).
-- Lunar New Year: typically 1–2 day closure on the SG calendar (vs 3+ on HKEX) — different rule.
-- SGX FX-INR product has its own holiday calendar that adds Indian holidays; we model the **base SGX schedule** here; per-product augmentations are out of scope for v1.
-
-**Cross-check tripwire:** `exchange_calendars.XSES` for SGX. Informational tripwire; equity-side bias.
+**Known quirks (will matter when a primary fetcher is built):**
+- SGX observes Singapore public holidays plus selected international ones.
+- Lunar New Year: 1-2 day closure on SG calendar (vs 3+ on HKEX).
+- SGX FX-INR adds Indian holidays; FX-KRW adds Korean. We model the
+  **base SGX (full-venue) schedule**; per-product augmentations are out
+  of scope until a primary-source fetcher with product-code awareness ships.
 
 ---
 

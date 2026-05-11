@@ -1,9 +1,11 @@
 {
-  "schema_version": 1,
+  "schema_version": 3,
   "currency": "JPY",
   "calendar_kind": "RTGS",
   "calendar_name": "BoJ-NET",
   "operator": "Bank of Japan",
+  "valid_from": "2026-01-01",
+  "valid_until": "2027-12-31",
   "default_source": {
     "url": "https://www.boj.or.jp/en/about/outline/holi.htm",
     "doc_title": "Holiday Schedule of the Bank — Bank of Japan",

@@ -1,4 +1,5 @@
 """Common helpers for fetchers — no business logic, only schema scaffolding."""
+
 from __future__ import annotations
 
 import json

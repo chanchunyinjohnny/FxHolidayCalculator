@@ -37,10 +37,10 @@ def test_2027_independence_day_is_sunday_observed_monday():
     holidays = parse_document(raw, (2027, 2027))
     by_date = _by_date(holidays)
     # Jul 4 2027 is Sunday (page shows "July 4**"). Per rule: following Monday Jul 5 is closure.
-    assert "2027-07-04" not in by_date           # the Sunday itself is not listed
+    assert "2027-07-04" not in by_date  # the Sunday itself is not listed
     assert "2027-07-05" in by_date
     assert "Independence Day" in by_date["2027-07-05"]["name"]
-    assert by_date["2027-07-05"]["note"]          # note explaining observed Monday
+    assert by_date["2027-07-05"]["note"]  # note explaining observed Monday
 
 
 def test_2026_plain_dates_present():

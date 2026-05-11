@@ -17,3 +17,6 @@ proprietary/
 
 # User cache (if accidentally placed inside repo)
 .fx_holiday_calculator_cache/
+
+# AI
+.claude/

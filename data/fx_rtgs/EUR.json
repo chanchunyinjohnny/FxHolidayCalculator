@@ -1,9 +1,11 @@
 {
-  "schema_version": 1,
+  "schema_version": 3,
   "currency": "EUR",
   "calendar_kind": "RTGS",
   "calendar_name": "TARGET2",
   "operator": "Eurosystem (European Central Bank)",
+  "valid_from": "2026-01-01",
+  "valid_until": "2030-12-31",
   "default_source": {
     "url": "https://www.ecb.europa.eu/paym/target/target2/profuse/calendar/html/index.en.html",
     "doc_title": "TARGET2 / T2 calendar — Eurosystem",

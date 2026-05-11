@@ -4,7 +4,6 @@ from datetime import date, timedelta
 from fx_holiday_calculator.conventions.business_day import (
     AdjustmentStep,
     CalendarSet,
-    is_good_business_day,
     statuses_for_date,
 )
 from fx_holiday_calculator.pairs import Pair
@@ -30,10 +29,12 @@ def apply_spot_offset(trade_date: date, pair: Pair, cs: CalendarSet) -> SpotResu
         else:
             decision = "accepted"
             accepted += 1
-        trace.append(AdjustmentStep(
-            candidate_date=cur,
-            weekday=cur.strftime("%a"),
-            statuses=statuses,
-            decision=decision,
-        ))
+        trace.append(
+            AdjustmentStep(
+                candidate_date=cur,
+                weekday=cur.strftime("%a"),
+                statuses=statuses,
+                decision=decision,
+            )
+        )
     return SpotResult(spot_date=cur, trace=trace)

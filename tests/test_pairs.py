@@ -1,7 +1,6 @@
 import pytest
 
 from fx_holiday_calculator.pairs import (
-    Pair,
     PairNotFoundError,
     list_supported_pairs,
     parse_pair,

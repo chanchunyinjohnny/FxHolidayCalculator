@@ -3,6 +3,7 @@
 Source citation: https://www.ecb.europa.eu/paym/target/target2/profuse/calendar/html/index.en.html
 The rule is encoded directly in this module per docs/data-sources.md#eur--target2.
 """
+
 from __future__ import annotations
 
 from datetime import date, timedelta
@@ -20,18 +21,37 @@ _FETCHER = "scripts/sources/ecb_target2.py@v1"
 def _holidays_for_year(year: int) -> list[dict]:
     e = easter(year)
     return [
-        {"date": date(year, 1, 1).isoformat(), "name": "New Year's Day",
-         "source": None, "note": None},
-        {"date": (e - timedelta(days=2)).isoformat(),
-         "name": "Good Friday", "source": None, "note": None},
-        {"date": (e + timedelta(days=1)).isoformat(),
-         "name": "Easter Monday", "source": None, "note": None},
-        {"date": date(year, 5, 1).isoformat(), "name": "Labour Day",
-         "source": None, "note": None},
-        {"date": date(year, 12, 25).isoformat(), "name": "Christmas Day",
-         "source": None, "note": None},
-        {"date": date(year, 12, 26).isoformat(), "name": "Christmas Holiday",
-         "source": None, "note": None},
+        {
+            "date": date(year, 1, 1).isoformat(),
+            "name": "New Year's Day",
+            "source": None,
+            "note": None,
+        },
+        {
+            "date": (e - timedelta(days=2)).isoformat(),
+            "name": "Good Friday",
+            "source": None,
+            "note": None,
+        },
+        {
+            "date": (e + timedelta(days=1)).isoformat(),
+            "name": "Easter Monday",
+            "source": None,
+            "note": None,
+        },
+        {"date": date(year, 5, 1).isoformat(), "name": "Labour Day", "source": None, "note": None},
+        {
+            "date": date(year, 12, 25).isoformat(),
+            "name": "Christmas Day",
+            "source": None,
+            "note": None,
+        },
+        {
+            "date": date(year, 12, 26).isoformat(),
+            "name": "Christmas Holiday",
+            "source": None,
+            "note": None,
+        },
     ]
 
 
@@ -41,11 +61,13 @@ def build_payload(year_range: tuple[int, int]) -> dict:
         holidays += _holidays_for_year(y)
     holidays.sort(key=lambda h: h["date"])
     return {
-        "schema_version": 1,
+        "schema_version": 3,
         "currency": "EUR",
         "calendar_kind": "RTGS",
         "calendar_name": "TARGET2",
         "operator": "Eurosystem (European Central Bank)",
+        "valid_from": f"{year_range[0]}-01-01",
+        "valid_until": f"{year_range[1]}-12-31",
         "default_source": {
             "url": _URL,
             "doc_title": _DOC_TITLE,
@@ -61,12 +83,16 @@ def fetch(year_range: tuple[int, int], data_root: Path) -> Path:
     out = data_root / "fx_rtgs" / "EUR.json"
     write_calendar_json(out, payload)
     raw_dir = data_root / "fx_rtgs" / "_raw"
-    write_raw(raw_dir, "EUR.txt",
-              f"# {_DOC_TITLE}\n# Source: {_URL}\n# Rule encoded in {_FETCHER}\n".encode())
+    write_raw(
+        raw_dir,
+        "EUR.txt",
+        f"# {_DOC_TITLE}\n# Source: {_URL}\n# Rule encoded in {_FETCHER}\n".encode(),
+    )
     return out
 
 
 if __name__ == "__main__":
     import sys
+
     fetch((2026, 2030), Path(__file__).parents[2] / "data")
     sys.exit(0)

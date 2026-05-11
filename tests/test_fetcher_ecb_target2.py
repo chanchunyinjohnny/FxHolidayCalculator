@@ -14,7 +14,7 @@ def test_target2_2026_holidays():
     dates = {h["date"]: h["name"] for h in payload["holidays"]}
     # Six fixed/movable holidays for TARGET2 in 2026:
     assert dates["2026-01-01"] == "New Year's Day"
-    assert dates["2026-04-03"] == "Good Friday"     # 2026 Easter is Apr 5
+    assert dates["2026-04-03"] == "Good Friday"  # 2026 Easter is Apr 5
     assert dates["2026-04-06"] == "Easter Monday"
     assert dates["2026-05-01"] == "Labour Day"
     assert dates["2026-12-25"] == "Christmas Day"

@@ -27,17 +27,17 @@ def test_2026_known_holidays():
     holidays = parse_document(raw, (2026, 2026))
     by_date = _by_date(holidays)
     # Known 2026 E&W bank holidays (per gov.uk feed):
-    assert "2026-01-01" in by_date          # New Year's Day
-    assert "2026-04-03" in by_date          # Good Friday
-    assert "2026-04-06" in by_date          # Easter Monday
-    assert "2026-05-04" in by_date          # Early May bank holiday
-    assert "2026-05-25" in by_date          # Spring bank holiday
-    assert "2026-08-31" in by_date          # Summer bank holiday
-    assert "2026-12-25" in by_date          # Christmas Day
+    assert "2026-01-01" in by_date  # New Year's Day
+    assert "2026-04-03" in by_date  # Good Friday
+    assert "2026-04-06" in by_date  # Easter Monday
+    assert "2026-05-04" in by_date  # Early May bank holiday
+    assert "2026-05-25" in by_date  # Spring bank holiday
+    assert "2026-08-31" in by_date  # Summer bank holiday
+    assert "2026-12-25" in by_date  # Christmas Day
     # Boxing Day 2026 falls Sat -> substitute Mon Dec 28
     assert "2026-12-28" in by_date
     assert "Boxing Day" in by_date["2026-12-28"]["name"]
-    assert by_date["2026-12-28"]["note"]    # gov.uk's "Substitute day" preserved
+    assert by_date["2026-12-28"]["note"]  # gov.uk's "Substitute day" preserved
 
 
 def test_only_england_and_wales_division():
