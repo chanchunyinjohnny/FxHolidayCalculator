@@ -1,3 +1,11 @@
+"""Spot / Swap product sub-tab.
+
+Renders the existing engine surface (calculate_swap_dates) under a
+product-aware label. Covers spot, cross-spot, ON/TN/SN, forward outright,
+standard swap, and forward-forward swap — all sharing identical RTGS-only
+calendar logic, with optional exchange/both mode for forward legs.
+"""
+
 from datetime import date
 from pathlib import Path
 
@@ -89,7 +97,12 @@ def _render_trace(steps, label: str) -> None:
 
 
 def render() -> None:
-    st.subheader("Swap Date Calculator")
+    st.subheader("Spot & Swap Date Calculator")
+    st.caption(
+        "Covers spot, cross-spot, ON/TN/SN, forward outright, standard swap, "
+        "and forward-forward swap. All rolling on RTGS calendars; exchange "
+        "calendar mode optional for forward legs."
+    )
 
     pair_codes = _available_pair_codes()
     if not pair_codes:

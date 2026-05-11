@@ -6,6 +6,7 @@ from fx_holiday_calculator.conventions.business_day import (
     CalendarSet,
     apply_eom,
     apply_eom_with_trace,
+    imm_last_trade_date,
     is_good_business_day,
     last_business_day_of_month,
     roll,
@@ -135,3 +136,21 @@ def test_apply_eom_with_trace_eom_kick_in():
     assert len(trace) == 2
     assert trace[0].decision == "rolled_eom"
     assert trace[1].decision == "accepted"
+
+
+def test_imm_last_trade_date_clean_month():
+    cs = CalendarSet({"X": _cal("X", [])})
+    # June 2026 — 3rd Wed = 2026-06-17. LTD = 2 BD back = 2026-06-15 (Mon).
+    ltd = imm_last_trade_date((2026, 6), cs)
+    assert ltd == date(2026, 6, 15)
+
+
+def test_imm_last_trade_date_with_friday_and_monday_holidays():
+    cs = CalendarSet({"X": _cal("X", [date(2026, 6, 12), date(2026, 6, 15)])})
+    # Counting back from 2026-06-17 (3rd Wed, good):
+    #   06-16 (Tue, good) -> count 1
+    #   06-15 (Mon, holiday) -> skip
+    #   06-12 (Fri, holiday) -> skip
+    #   06-11 (Thu, good) -> count 2
+    ltd = imm_last_trade_date((2026, 6), cs)
+    assert ltd == date(2026, 6, 11)

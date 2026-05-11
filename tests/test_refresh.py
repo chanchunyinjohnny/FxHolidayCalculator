@@ -1,6 +1,6 @@
 from pathlib import Path
 
-from fx_holiday_calculator.refresh import RefreshResult, refresh_one
+from fx_holiday_calculator.refresh import _SOURCES, RefreshResult, refresh_one
 
 
 def test_refresh_one_writes_to_cache(tmp_path: Path, monkeypatch):
@@ -39,3 +39,21 @@ def test_refresh_unknown_source_returns_error():
     result = refresh_one("XXX", target=P("/tmp/nonexistent"))
     assert result.changed is False
     assert result.error is not None
+
+
+def test_refresh_sources_include_fixing_currencies():
+    assert "CNY" in _SOURCES
+    assert "KRW" in _SOURCES
+    assert "TWD" in _SOURCES
+
+
+def test_refresh_fixing_sources_target_fx_fixing_subdir():
+    _, subdir_cny, file_cny = _SOURCES["CNY"]
+    assert subdir_cny == "fx_fixing"
+    assert file_cny == "CNY.json"
+    _, subdir_krw, file_krw = _SOURCES["KRW"]
+    assert subdir_krw == "fx_fixing"
+    assert file_krw == "KRW.json"
+    _, subdir_twd, file_twd = _SOURCES["TWD"]
+    assert subdir_twd == "fx_fixing"
+    assert file_twd == "TWD.json"

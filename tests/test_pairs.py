@@ -48,3 +48,50 @@ def test_supported_pairs_includes_majors():
     assert "EUR/JPY" in codes
     assert "USD/CNH" in codes
     assert "HKD/CNH" in codes
+
+
+def test_pair_dataclass_has_ndf_field_default_false():
+    p = parse_pair("EUR/USD")
+    assert p.ndf is False
+    assert p.fixing_currency is None
+
+
+def test_pair_dataclass_supports_ndf_fields():
+    from fx_holiday_calculator.pairs import Pair
+    p = Pair(
+        base="USD",
+        quote="CNY",
+        spot_offset_days=2,
+        listed_on=(),
+        ndf=True,
+        fixing_currency="CNY",
+    )
+    assert p.ndf is True
+    assert p.fixing_currency == "CNY"
+
+
+def test_usd_cny_is_ndf_pair():
+    p = parse_pair("USD/CNY")
+    assert p.ndf is True
+    assert p.fixing_currency == "CNY"
+    assert p.spot_offset_days == 2
+    assert p.listed_on == ()
+
+
+def test_usd_krw_is_ndf_pair():
+    p = parse_pair("USD/KRW")
+    assert p.ndf is True
+    assert p.fixing_currency == "KRW"
+
+
+def test_usd_twd_is_ndf_pair():
+    p = parse_pair("USD/TWD")
+    assert p.ndf is True
+    assert p.fixing_currency == "TWD"
+
+
+def test_krw_usd_remains_deliverable_sgx_listed():
+    # Distinct from USD/KRW (the NDF) — KRW/USD is the SGX-listed deliverable contract.
+    p = parse_pair("KRW/USD")
+    assert p.ndf is False
+    assert "SGX" in p.listed_on

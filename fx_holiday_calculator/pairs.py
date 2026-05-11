@@ -11,13 +11,30 @@ class Pair:
     quote: str
     spot_offset_days: int
     listed_on: tuple[str, ...]
+    ndf: bool = False
+    fixing_currency: str | None = None
 
 
 _PAIRS: dict[tuple[str, str], Pair] = {}
 
 
-def _add(base: str, quote: str, *, t: int = 2, listed_on: tuple[str, ...] = ()) -> None:
-    _PAIRS[(base, quote)] = Pair(base=base, quote=quote, spot_offset_days=t, listed_on=listed_on)
+def _add(
+    base: str,
+    quote: str,
+    *,
+    t: int = 2,
+    listed_on: tuple[str, ...] = (),
+    ndf: bool = False,
+    fixing_currency: str | None = None,
+) -> None:
+    _PAIRS[(base, quote)] = Pair(
+        base=base,
+        quote=quote,
+        spot_offset_days=t,
+        listed_on=listed_on,
+        ndf=ndf,
+        fixing_currency=fixing_currency,
+    )
 
 
 # G10 majors and crosses (T+2 unless noted)
@@ -51,6 +68,11 @@ _add("AUD", "CNH", listed_on=("HKEX",))
 _add("USD", "SGD", listed_on=("SGX",))
 _add("USD", "INR", listed_on=("SGX",))
 _add("KRW", "USD", listed_on=("SGX",))
+
+# NDF pairs (East-Asia). Non-deliverable; USD-settled; fixing on local primary source.
+_add("USD", "CNY", t=2, listed_on=(), ndf=True, fixing_currency="CNY")
+_add("USD", "KRW", t=2, listed_on=(), ndf=True, fixing_currency="KRW")
+_add("USD", "TWD", t=2, listed_on=(), ndf=True, fixing_currency="TWD")
 
 
 def parse_pair(raw: str) -> Pair:

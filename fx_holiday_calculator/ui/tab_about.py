@@ -20,7 +20,7 @@ _DEFERRED = [
 
 def _summary_rows() -> list[dict]:
     rows: list[dict] = []
-    for kind, label in [("fx_rtgs", "RTGS"), ("fx_exchange", "EXCHANGE")]:
+    for kind, label in [("fx_rtgs", "RTGS"), ("fx_exchange", "EXCHANGE"), ("fx_fixing", "FIXING")]:
         d = BUNDLED / kind
         if not d.exists():
             continue
@@ -67,6 +67,16 @@ There are no unsourced dates.
         """
     )
 
+    st.markdown(
+        "**Products supported (v1.1):**\n"
+        "- Spot / Swap (covers spot, cross-spot, ON/TN/SN, standard swap, "
+        "forward-forward swap; forward outright also accessible here)\n"
+        "- Forward outright (focused sub-tab; same engine as Spot/Swap)\n"
+        "- NDF (USD/CNY, USD/KRW, USD/TWD — primary-source fixing)\n"
+        "- FX Option (OTC and Listed)\n"
+        "- FX Futures (CME / HKEX / SGX)"
+    )
+
     st.markdown("### Sources currently loaded (bundled)")
     rows = _summary_rows()
     if rows:
@@ -80,6 +90,13 @@ There are no unsourced dates.
     st.caption(
         "v1 ships with EUR, USD, GBP, JPY RTGS calendars only. The deferred sources "
         "are blocked or PDF-based and require manual data sourcing in production."
+    )
+
+    st.markdown(
+        "**Fixing calendars (NDF):**\n"
+        "- **CNY** — CFETS / PBoC ([chinamoney.com.cn](https://www.chinamoney.com.cn/english/svcrmm/))\n"
+        "- **KRW** — KFTC ([kftc.or.kr](https://www.kftc.or.kr/en/))\n"
+        "- **TWD** — Taipei Forex Inc. ([tpefx.com.tw](https://www.tpefx.com.tw/))"
     )
 
     st.markdown("### Refresh policy")

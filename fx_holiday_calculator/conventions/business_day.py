@@ -187,3 +187,24 @@ def apply_eom_with_trace(
         ]
         return target, trace
     return roll_with_trace(raw_far, cs, mode="modified_following")
+
+
+def imm_last_trade_date(contract_month: tuple[int, int], cs: CalendarSet) -> date:
+    """Compute the FX-futures last trade date: 2 good business days before the
+    unrolled 3rd Wednesday of `contract_month`, on the supplied calendar set.
+
+    Used by all three venues in v1.1 (CME, HKEX, SGX) — see CME Rule 25102.E
+    for the EUR/USD canonical example. The unrolled 3rd Wed is the anchor,
+    not the rolled delivery date: LTD does not chain off delivery.
+    """
+    from fx_holiday_calculator.conventions.dates import imm_third_wednesday
+
+    year, month = contract_month
+    anchor = imm_third_wednesday(year, month)
+    cur = anchor
+    good_count = 0
+    while good_count < 2:
+        cur = cur - timedelta(days=1)
+        if is_good_business_day(cur, cs):
+            good_count += 1
+    return cur
