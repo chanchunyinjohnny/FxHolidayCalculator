@@ -1,10 +1,12 @@
 """FX option date math: expiry and delivery.
 
-OTC: expiry rolls on RTGS (base + quote + ref). Delivery rolls on base + quote
-(no reference-currency constraint on the delivery leg).
+OTC: spot anchor on RTGS{base, quote, ref}; expiry rolls on the same set;
+delivery rolls on RTGS{base, quote} (no reference-currency constraint on
+the delivery leg).
 
-Listed: expiry rolls on the venue's exchange calendar. Delivery rolls on
-base + quote RTGS (cash legs still settle bilaterally).
+Listed: spot anchor on RTGS{base, quote} (ref currency does not enter the
+listed-contract path); expiry rolls on the venue's exchange calendar;
+delivery rolls on RTGS{base, quote} (cash legs settle bilaterally).
 
 Conventions: see docs/conventions.md §10.
 """
@@ -35,6 +37,12 @@ class InvalidOptionStyleError(ValueError):
 
 class ListedOptionVenueRequiredError(ValueError):
     pass
+
+
+class VenueCalendarMismatchError(ValueError):
+    """Raised when the supplied exchange_calendar's venue does not match the
+    declared venue argument — guards against silently computing on the wrong
+    exchange while labelling the result with the requested venue."""
 
 
 @dataclass
@@ -70,17 +78,27 @@ def calculate_option_dates(
                 f"LISTED option requires a venue from pair.listed_on={pair.listed_on} "
                 f"and a matching exchange_calendar."
             )
+        if exchange_calendar.venue != venue:
+            raise VenueCalendarMismatchError(
+                f"exchange_calendar.venue={exchange_calendar.venue!r} does not match "
+                f"declared venue={venue!r}."
+            )
 
     if tenor.kind in {"SPOT", "ON", "TN", "SN"}:
         raise InvalidTenorError("Option requires a forward tenor (PERIOD / IMM / BROKEN).")
 
-    # Spot uses the full RTGS set (base + quote + ref).
-    rtgs_cs = rtgs_calendar_set(pair, ref=ref_currency, calendars=rtgs_calendars)
-    spot_result = apply_spot_offset(trade_date, pair, rtgs_cs)
+    # Spot anchor calendar set differs by style:
+    # OTC: ref-aware (base + quote + ref) — full FX cross-spot constraint.
+    # LISTED: base + quote only — the exchange contract is venue-defined; the
+    # spot anchor is treated as a bilateral base/quote concept and the ref
+    # currency does not enter the calculation.
+    spot_anchor_ref: RefCurrency = ref_currency if style == "OTC" else "none"
+    spot_cs = rtgs_calendar_set(pair, ref=spot_anchor_ref, calendars=rtgs_calendars)
+    spot_result = apply_spot_offset(trade_date, pair, spot_cs)
 
     # Build expiry calendar set.
     if style == "OTC":
-        expiry_cs = rtgs_cs
+        expiry_cs = spot_cs
     else:
         expiry_cs = CalendarSet(members={venue: exchange_calendar})  # type: ignore[dict-item]
 

@@ -9,6 +9,7 @@ from fx_holiday_calculator.option import (
     InvalidOptionStyleError,
     ListedOptionVenueRequiredError,
     OptionResult,
+    VenueCalendarMismatchError,
     calculate_option_dates,
 )
 from fx_holiday_calculator.pairs import parse_pair
@@ -274,6 +275,92 @@ def test_option_rejects_non_forward_tenor(bad):
             ref_currency="none",
             rtgs_calendars=cals,
         )
+
+
+def test_listed_rejects_mismatched_exchange_calendar():
+    # Declared venue is CME but the supplied exchange_calendar is for SGX.
+    # Engine must refuse to silently compute on SGX while labelling as CME.
+    cals = {"USD": _empty_rtgs("USD"), "JPY": _empty_rtgs("JPY")}
+    sgx_cal = _empty_exchange("SGX")
+    with pytest.raises(VenueCalendarMismatchError):
+        calculate_option_dates(
+            trade_date=date(2026, 5, 6),
+            pair=parse_pair("USD/JPY"),  # listed on both CME and SGX
+            tenor=parse_tenor("1M"),
+            style="LISTED",
+            ref_currency="none",
+            rtgs_calendars=cals,
+            exchange_calendar=sgx_cal,
+            venue="CME",
+        )
+
+
+def test_listed_option_ignores_ref_currency_in_spot_anchor():
+    # ref=JPY has a holiday on what would be the OTC spot date for EUR/USD
+    # (T+2 from Wed 2026-05-06 -> Fri 2026-05-08). For LISTED, ref must not
+    # enter the spot anchor calendar set, so spot stays on 2026-05-08.
+    jpy_hol = HolidayEntry(
+        date=date(2026, 5, 8),
+        name="JPY holiday on spot",
+        note=None,
+        source=_src(),
+        source_origin="bundled",
+        is_closure=True,
+    )
+    jpy = RtgsCalendar(
+        currency="JPY",
+        calendar_name="JPY",
+        operator="x",
+        entries_by_date={date(2026, 5, 8): jpy_hol},
+        **WINDOW,
+    )
+    cme = _empty_exchange("CME")
+    cals = {"EUR": _empty_rtgs("EUR"), "USD": _empty_rtgs("USD"), "JPY": jpy}
+    r = calculate_option_dates(
+        trade_date=date(2026, 5, 6),
+        pair=parse_pair("EUR/USD"),
+        tenor=parse_tenor("1M"),
+        style="LISTED",
+        ref_currency="JPY",  # type: ignore[arg-type]
+        rtgs_calendars=cals,
+        exchange_calendar=cme,
+        venue="CME",
+    )
+    # Spot anchor ignores JPY — stays on 2026-05-08
+    assert r.spot_date == date(2026, 5, 8)
+    # Expiry rolls only on the (empty) CME calendar — clean Mon 2026-06-08
+    assert r.expiry_date == date(2026, 6, 8)
+
+
+def test_otc_option_spot_anchor_respects_ref_currency():
+    # Mirror of the LISTED test above: confirm OTC path *does* shift the
+    # spot anchor when ref currency has a holiday on the otherwise-spot date.
+    jpy_hol = HolidayEntry(
+        date=date(2026, 5, 8),
+        name="JPY holiday on spot",
+        note=None,
+        source=_src(),
+        source_origin="bundled",
+        is_closure=True,
+    )
+    jpy = RtgsCalendar(
+        currency="JPY",
+        calendar_name="JPY",
+        operator="x",
+        entries_by_date={date(2026, 5, 8): jpy_hol},
+        **WINDOW,
+    )
+    cals = {"EUR": _empty_rtgs("EUR"), "USD": _empty_rtgs("USD"), "JPY": jpy}
+    r = calculate_option_dates(
+        trade_date=date(2026, 5, 6),
+        pair=parse_pair("EUR/USD"),
+        tenor=parse_tenor("1M"),
+        style="OTC",
+        ref_currency="JPY",  # type: ignore[arg-type]
+        rtgs_calendars=cals,
+    )
+    # OTC spot moves past JPY holiday -> Mon 2026-05-11
+    assert r.spot_date == date(2026, 5, 11)
 
 
 def test_option_same_day_expiry_warning():

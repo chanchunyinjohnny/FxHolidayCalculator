@@ -8,9 +8,8 @@ from pathlib import Path
 
 import streamlit as st
 
-from fx_holiday_calculator.calendars.loader import load_exchange_calendar, load_rtgs_calendar
+from fx_holiday_calculator.calendars.loader import load_rtgs_calendar
 from fx_holiday_calculator.calendars.types import CalendarRangeError
-from fx_holiday_calculator.conventions.cross import MissingExchangeCalendarError, relevant_venues
 from fx_holiday_calculator.forward import InvalidForwardTenorError, calculate_forward_dates
 from fx_holiday_calculator.pairs import list_supported_pairs, parse_pair
 from fx_holiday_calculator.swap import InvalidBrokenDateError, InvalidTradeDateError
@@ -28,13 +27,6 @@ def _available_pair_codes() -> list[str]:
         for p in list_supported_pairs()
         if not p.ndf and p.base in AVAILABLE_RTGS and p.quote in AVAILABLE_RTGS
     ]
-
-
-def _available_exchange_venues() -> set[str]:
-    bundled = BUNDLED / "fx_exchange"
-    if not bundled.exists():
-        return set()
-    return {p.stem for p in bundled.glob("*.json") if not p.name.startswith("_")}
 
 
 def _render_trace(steps, label: str) -> None:
@@ -99,24 +91,6 @@ def render() -> None:
         key="fwd_ref",
     )
 
-    cal_mode = st.radio(
-        "Calendar mode",
-        ["FX (RTGS) only", "Exchange only", "Both"],
-        index=0,
-        horizontal=True,
-        help=(
-            "FX = roll settlement against RTGS settlement calendars. "
-            "Exchange = roll against the relevant FX-futures venue. "
-            "Both = roll against the union (most conservative)."
-        ),
-        key="fwd_cal_mode",
-    )
-    cal_mode_key = {
-        "FX (RTGS) only": "FX",
-        "Exchange only": "EXCHANGE",
-        "Both": "BOTH",
-    }[cal_mode]
-
     needed = {pair.base, pair.quote}
     if ref != "none":
         needed.add(ref)
@@ -130,40 +104,7 @@ def render() -> None:
         st.error(f"Calendar file missing: {exc}")
         return
 
-    exch_cals = None
-    if cal_mode_key in {"EXCHANGE", "BOTH"}:
-        available_venues = _available_exchange_venues()
-        needed_venues = set(relevant_venues(pair, ref))  # type: ignore[arg-type]
-        missing = sorted(needed_venues - available_venues)
-        if missing:
-            st.error(
-                f"{cal_mode} requires exchange calendars for venue(s) "
-                f"{', '.join(missing)}, but none are bundled. "
-                "Switch to FX (RTGS) only to compute."
-            )
-            return
-        try:
-            exch_cals = {
-                v: load_exchange_calendar(
-                    v,
-                    root=BUNDLED / "fx_exchange",
-                    cache_root=CACHE / "fx_exchange",
-                )
-                for v in sorted(needed_venues)
-            }
-        except FileNotFoundError as exc:
-            st.error(f"Exchange calendar file missing: {exc}")
-            return
-        lib_venues = sorted(v for v, c in exch_cals.items() if c.library_sourced)
-        if lib_venues:
-            st.warning(
-                f"Exchange calendar caveat — library-sourced data in use for "
-                f"{', '.join(lib_venues)}. See docs/data-sources.md."
-            )
-
     cal_caption = "RTGS: " + " · ".join(f"{c} ({cals[c].calendar_name})" for c in sorted(needed))
-    if exch_cals:
-        cal_caption += " | Exchange: " + " · ".join(sorted(exch_cals))
     st.caption("Calendars to be used: " + cal_caption)
 
     if st.button("Calculate", key="fwd_calc"):
@@ -175,8 +116,6 @@ def render() -> None:
                 tenor=tenor,
                 ref_currency=ref,  # type: ignore[arg-type]
                 calendars=cals,
-                exchange_calendars=exch_cals,
-                calendar_mode=cal_mode_key,
             )
         except (
             InvalidForwardTenorError,
@@ -185,9 +124,6 @@ def render() -> None:
             InvalidTradeDateError,
         ) as exc:
             st.error(f"Invalid input: {exc}")
-            return
-        except MissingExchangeCalendarError as exc:
-            st.error(f"Exchange calendar missing: {exc}")
             return
         except CalendarRangeError as exc:
             st.error(

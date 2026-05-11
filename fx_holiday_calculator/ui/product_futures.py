@@ -18,9 +18,17 @@ from fx_holiday_calculator.tenor import InvalidTenorError, parse_tenor
 BUNDLED = Path(__file__).resolve().parents[2] / "data"
 CACHE = Path.home() / ".fx_holiday_calculator" / "cache"
 
+# v1: only these RTGS calendars are bundled. Pairs whose base or quote is
+# outside this set can't be computed and shouldn't appear in the selector.
+AVAILABLE_RTGS = {"EUR", "USD", "GBP", "JPY"}
+
 
 def _listed_pairs() -> list[str]:
-    return [f"{p.base}/{p.quote}" for p in list_supported_pairs() if p.listed_on]
+    return [
+        f"{p.base}/{p.quote}"
+        for p in list_supported_pairs()
+        if p.listed_on and p.base in AVAILABLE_RTGS and p.quote in AVAILABLE_RTGS
+    ]
 
 
 def _available_exchange_venues() -> set[str]:

@@ -2,8 +2,9 @@
 
 Renders the existing engine surface (calculate_swap_dates) under a
 product-aware label. Covers spot, cross-spot, ON/TN/SN, forward outright,
-standard swap, and forward-forward swap — all sharing identical RTGS-only
-calendar logic, with optional exchange/both mode for forward legs.
+standard swap, and forward-forward swap — all rolling on RTGS settlement
+calendars. Exchange calendars are not consulted: OTC swap/forward
+settlement is bilateral and venue-independent.
 """
 
 from datetime import date
@@ -11,9 +12,8 @@ from pathlib import Path
 
 import streamlit as st
 
-from fx_holiday_calculator.calendars.loader import load_exchange_calendar, load_rtgs_calendar
+from fx_holiday_calculator.calendars.loader import load_rtgs_calendar
 from fx_holiday_calculator.calendars.types import CalendarRangeError
-from fx_holiday_calculator.conventions.cross import MissingExchangeCalendarError, relevant_venues
 from fx_holiday_calculator.pairs import list_supported_pairs, parse_pair
 from fx_holiday_calculator.swap import (
     InvalidBrokenDateError,
@@ -28,13 +28,6 @@ CACHE = Path.home() / ".fx_holiday_calculator" / "cache"
 
 # v1: only these RTGS calendars are bundled.
 AVAILABLE_RTGS = {"EUR", "USD", "GBP", "JPY"}
-
-
-def _available_exchange_venues() -> set[str]:
-    bundled = BUNDLED / "fx_exchange"
-    if not bundled.exists():
-        return set()
-    return {p.stem for p in bundled.glob("*.json") if not p.name.startswith("_")}
 
 
 def _available_pair_codes() -> list[str]:
@@ -53,17 +46,6 @@ def _load_rtgs_set(currencies):
             cache_root=CACHE / "fx_rtgs",
         )
         for c in currencies
-    }
-
-
-def _load_exchange_set(venues):
-    return {
-        v: load_exchange_calendar(
-            v,
-            root=BUNDLED / "fx_exchange",
-            cache_root=CACHE / "fx_exchange",
-        )
-        for v in venues
     }
 
 
@@ -97,8 +79,7 @@ def render() -> None:
     st.subheader("Spot & Swap Date Calculator")
     st.caption(
         "Covers spot, cross-spot, ON/TN/SN, forward outright, standard swap, "
-        "and forward-forward swap. All rolling on RTGS calendars; exchange "
-        "calendar mode optional for forward legs."
+        "and forward-forward swap. All rolling on RTGS settlement calendars."
     )
 
     pair_codes = _available_pair_codes()
@@ -146,25 +127,6 @@ def render() -> None:
         key="swap_ref",
     )
 
-    cal_mode = st.radio(
-        "Calendar mode",
-        ["FX (RTGS) only", "Exchange only", "Both"],
-        index=0,
-        horizontal=True,
-        help=(
-            "FX = roll legs against RTGS settlement calendars. "
-            "Exchange = roll legs against the relevant FX-futures venue (CME/HKEX/SGX). "
-            "Both = roll against the union (most conservative). "
-            "Spot date is always RTGS-based regardless of mode."
-        ),
-        key="swap_cal_mode",
-    )
-    cal_mode_key = {
-        "FX (RTGS) only": "FX",
-        "Exchange only": "EXCHANGE",
-        "Both": "BOTH",
-    }[cal_mode]
-
     needed = {pair.base, pair.quote}
     if ref != "none":
         needed.add(ref)
@@ -175,45 +137,7 @@ def render() -> None:
         st.error(f"Calendar file missing: {exc}")
         return
 
-    exch_cals = None
-    if cal_mode_key in {"EXCHANGE", "BOTH"}:
-        available_venues = _available_exchange_venues()
-        needed_venues = set(relevant_venues(pair, ref))  # type: ignore[arg-type]
-        missing = sorted(needed_venues - available_venues)
-        if missing:
-            st.error(
-                f"{cal_mode} requires exchange calendars for venue(s) "
-                f"{', '.join(missing)}, but none are bundled. "
-                "Switch to FX (RTGS) only to compute."
-            )
-            return
-        try:
-            exch_cals = _load_exchange_set(sorted(needed_venues))
-        except FileNotFoundError as exc:
-            st.error(f"Exchange calendar file missing: {exc}")
-            return
-        lib_venues = sorted(v for v, c in exch_cals.items() if c.library_sourced)
-        if lib_venues:
-            st.warning(
-                "**Exchange calendar caveat — library-sourced data in use for "
-                f"{', '.join(lib_venues)}.**\n\n"
-                "These calendars come from the `exchange_calendars` library "
-                "(equity session), not a primary venue document. Real-world "
-                "FX-futures holidays may differ:\n"
-                "- Library encodes the venue's **equity** session — "
-                "FX-futures products often observe additional closures "
-                "(US bank holidays for CME, Hari Raya for SGX FX-INR, etc.).\n"
-                "- Exchange holidays are **per-product**, not per-venue — "
-                "a date may close one FX contract and not another.\n"
-                "- Library coverage horizon lags real-world year-ahead "
-                "publication, especially for lunar/Islamic dates.\n\n"
-                "**For high-stakes decisions, verify against the venue's "
-                "primary holiday document.** See `docs/data-sources.md`."
-            )
-
     cal_caption = "RTGS: " + " · ".join(f"{c} ({cals[c].calendar_name})" for c in sorted(needed))
-    if exch_cals:
-        cal_caption += " | Exchange: " + " · ".join(sorted(exch_cals))
     st.caption("Calendars to be used: " + cal_caption)
 
     if st.button("Calculate"):
@@ -227,8 +151,6 @@ def render() -> None:
                 near_tenor=near_tenor,
                 ref_currency=ref,  # type: ignore[arg-type]
                 calendars=cals,
-                exchange_calendars=exch_cals,
-                calendar_mode=cal_mode_key,
             )
         except (
             InvalidTenorError,
@@ -237,9 +159,6 @@ def render() -> None:
             InvalidTradeDateError,
         ) as exc:
             st.error(f"Invalid input: {exc}")
-            return
-        except MissingExchangeCalendarError as exc:
-            st.error(f"Exchange calendar missing: {exc}")
             return
         except CalendarRangeError as exc:
             st.error(

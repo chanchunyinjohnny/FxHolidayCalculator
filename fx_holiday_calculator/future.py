@@ -29,6 +29,12 @@ class VenueNotListedError(ValueError):
     pass
 
 
+class VenueCalendarMismatchError(ValueError):
+    """Raised when the supplied exchange_calendar's venue does not match the
+    declared venue argument — guards against silently computing on the wrong
+    exchange while labelling the result with the requested venue."""
+
+
 class InvalidContractMonthError(ValueError):
     pass
 
@@ -59,6 +65,11 @@ def calculate_future_dates(
         raise VenueNotListedError(
             f"{pair.base}/{pair.quote} is not listed on {venue}. "
             f"Listed venues: {pair.listed_on}"
+        )
+    if exchange_calendar.venue != venue:
+        raise VenueCalendarMismatchError(
+            f"exchange_calendar.venue={exchange_calendar.venue!r} does not match "
+            f"declared venue={venue!r}."
         )
     if contract_month is None and imm_tenor is None:
         raise ValueError("Exactly one of contract_month / imm_tenor must be provided")
@@ -95,6 +106,15 @@ def calculate_future_dates(
     # LTD is by construction a good BD on combined_cs, so roll_with_trace
     # returns a single accepted step — no need to reach for a private helper.
     _, last_trade_trace = roll_with_trace(last_trade_date, combined_cs, "following")
+
+    # Date-aware staleness check: month being "current or future" isn't enough
+    # if LTD has already passed (i.e. mid-month after the 2-BD-before-3rd-Wed
+    # cutoff). from_date being provided is an explicit override for backtests.
+    if from_date is None and last_trade_date < today:
+        raise InvalidContractMonthError(
+            f"Last trade date {last_trade_date.isoformat()} for contract "
+            f"{contract_month} has already passed."
+        )
 
     calendars_used = [venue]
     calendars_used += [

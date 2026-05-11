@@ -220,15 +220,25 @@ same business-day offset as the swap engine's spot, applied off the expiry
 instead of the trade date. Where the dates roll on different calendars
 depending on style:
 
-| Style  | Expiry calendar set            | Delivery calendar set      |
-|--------|--------------------------------|----------------------------|
-| OTC    | RTGS{base, quote, ref}         | RTGS{base, quote} only     |
-| LISTED | Exchange{venue}                | RTGS{base, quote} only     |
+| Style  | Spot anchor calendar set       | Expiry calendar set            | Delivery calendar set      |
+|--------|--------------------------------|--------------------------------|----------------------------|
+| OTC    | RTGS{base, quote, ref}         | RTGS{base, quote, ref}         | RTGS{base, quote} only     |
+| LISTED | RTGS{base, quote}              | Exchange{venue}                | RTGS{base, quote} only     |
 
 The delivery leg deliberately omits the reference currency: the option's
 delivery is the physical exchange of two currencies, not a cross-currency
-constrained spot. Reference: ISDA 1998 FX and Currency Options Definitions
-§3.2 (Expiration Date and Settlement Date).
+constrained spot.
+
+For the LISTED path the spot anchor also omits the reference currency: the
+exchange contract is venue-defined, and the spot used as the base for
+`spot + tenor` expiry computation is treated as a bilateral base/quote
+concept. The `venue` and `exchange_calendar` arguments must agree
+(`exchange_calendar.venue == venue`) — mismatches raise
+`VenueCalendarMismatchError` rather than silently computing on the wrong
+exchange while labelling the result with the requested venue.
+
+Reference: ISDA 1998 FX and Currency Options Definitions §3.2
+(Expiration Date and Settlement Date).
 
 ### 10.1 Validations
 
@@ -236,6 +246,8 @@ constrained spot. Reference: ISDA 1998 FX and Currency Options Definitions
 - `ListedOptionVenueRequiredError` — `style == LISTED` with no venue
   provided, or venue not in `pair.listed_on`, or no exchange calendar
   provided.
+- `VenueCalendarMismatchError` — `style == LISTED` with
+  `exchange_calendar.venue != venue`.
 - `InvalidTenorError` — tenor is SPOT / ON / TN / SN (option requires
   a forward tenor).
 
@@ -279,8 +291,10 @@ rules; the 9:16 a.m. CT time-of-day cut is out of v1.1 scope.
 ### 11.2 Validations
 
 - `VenueNotListedError` — pair is not listed on the chosen venue.
-- `InvalidContractMonthError` — contract month is in the past relative
-  to `from_date` (or today if no `from_date`).
+- `VenueCalendarMismatchError` — `exchange_calendar.venue != venue`.
+- `InvalidContractMonthError` — contract month is in the past *or* the
+  computed last trade date is in the past, both relative to today
+  (skipped when `from_date` is supplied as an explicit backtest override).
 - `InvalidTenorError` — `imm_tenor` is supplied but not an IMM kind.
 
 ### 11.3 Warnings

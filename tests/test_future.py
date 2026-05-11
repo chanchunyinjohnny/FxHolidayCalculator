@@ -8,6 +8,7 @@ from fx_holiday_calculator.calendars.types import HolidayEntry, SourceRef
 from fx_holiday_calculator.future import (
     FutureResult,
     InvalidContractMonthError,
+    VenueCalendarMismatchError,
     VenueNotListedError,
     calculate_future_dates,
 )
@@ -171,6 +172,48 @@ def test_future_all_three_venues_produce_same_dates_when_calendars_match(venue):
     )
     assert r.delivery_date == date(2026, 6, 17)
     assert r.last_trade_date == date(2026, 6, 15)
+
+
+def test_future_rejects_mismatched_exchange_calendar():
+    # Declared venue is CME but the supplied calendar is for SGX. The engine
+    # must refuse to silently compute on SGX while labelling the result CME.
+    cals = {"USD": _empty_rtgs("USD"), "JPY": _empty_rtgs("JPY")}
+    sgx_cal = _empty_exchange("SGX")
+    with pytest.raises(VenueCalendarMismatchError):
+        calculate_future_dates(
+            pair=parse_pair("USD/JPY"),  # listed on both CME and SGX
+            venue="CME",
+            contract_month=(2026, 6),
+            rtgs_calendars=cals,
+            exchange_calendar=sgx_cal,
+            from_date=date(2026, 5, 6),
+        )
+
+
+def test_future_rejects_stale_current_month_after_ltd(monkeypatch):
+    # Contract month is technically not past, but its LTD has already passed.
+    # Existing month-only check wouldn't catch this; the new date-aware
+    # check must.
+    import fx_holiday_calculator.future as future_module
+
+    class FrozenDate(date):
+        @classmethod
+        def today(cls):
+            # Day after expected LTD (2026-06-15) for June 2026 CME EUR/USD.
+            return date(2026, 6, 16)
+
+    monkeypatch.setattr(future_module, "date", FrozenDate)
+
+    cals = {"EUR": _empty_rtgs("EUR"), "USD": _empty_rtgs("USD")}
+    cme = _empty_exchange("CME")
+    with pytest.raises(InvalidContractMonthError):
+        calculate_future_dates(
+            pair=parse_pair("EUR/USD"),
+            venue="CME",
+            contract_month=(2026, 6),
+            rtgs_calendars=cals,
+            exchange_calendar=cme,
+        )
 
 
 def test_future_past_contract_rejection():

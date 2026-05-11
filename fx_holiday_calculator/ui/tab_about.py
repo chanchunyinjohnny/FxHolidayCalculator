@@ -49,11 +49,13 @@ def render() -> None:
     st.subheader("About / Sources")
     st.markdown(
         """
-**Methodology.** This tool draws settlement (RTGS) and exchange holiday data
-exclusively from primary-source documents — central bank publications and
-exchange operator notices. National (public) holidays are sourced from the
-`python-holidays` library at runtime and shown for reference only; they
-never drive any calculation.
+**Methodology.** Settlement (RTGS) holiday data is drawn exclusively from
+primary-source documents — central bank publications. Exchange holiday data
+is drawn from primary venue notices where available; for some venues v1.1
+falls back to the `exchange_calendars` library (equity session), and these
+fallbacks are flagged in-app at calculation time. National (public) holidays
+are sourced from the `python-holidays` library at runtime and shown for
+reference only; they never drive any calculation.
 
 **Cross-currency rule.** When a reference currency is selected, the spot date
 must be a good business day in *all three* of base, quote, and reference.
