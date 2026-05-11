@@ -95,9 +95,7 @@ def build_payload(year_range: tuple[int, int], raw: bytes) -> dict:
 
 
 def fetch(year_range: tuple[int, int], data_root: Path) -> Path:
-    req = urllib.request.Request(
-        _URL, headers={"User-Agent": "fx-holiday-calculator/0.1"}
-    )
+    req = urllib.request.Request(_URL, headers={"User-Agent": "fx-holiday-calculator/0.1"})
     with urllib.request.urlopen(req, timeout=30) as resp:
         raw = resp.read()
     payload = build_payload(year_range, raw)

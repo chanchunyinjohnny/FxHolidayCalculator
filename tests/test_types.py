@@ -1,10 +1,6 @@
 from datetime import date, datetime, timezone
 
-from fx_holiday_calculator.calendars.types import (
-    CalendarStatus,
-    HolidayEntry,
-    SourceRef,
-)
+from fx_holiday_calculator.calendars.types import CalendarStatus, HolidayEntry, SourceRef
 
 
 def _make_source() -> SourceRef:

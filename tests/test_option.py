@@ -104,8 +104,11 @@ def test_otc_option_expiry_skips_holiday():
         is_closure=True,
     )
     eur = RtgsCalendar(
-        currency="EUR", calendar_name="EUR", operator="x",
-        entries_by_date={date(2026, 6, 8): eur_hol}, **WINDOW,
+        currency="EUR",
+        calendar_name="EUR",
+        operator="x",
+        entries_by_date={date(2026, 6, 8): eur_hol},
+        **WINDOW,
     )
     cals = {"EUR": eur, "USD": _empty_rtgs("USD")}
     r = calculate_option_dates(
@@ -132,8 +135,11 @@ def test_otc_option_delivery_ignores_ref_currency_holiday():
         is_closure=True,
     )
     jpy = RtgsCalendar(
-        currency="JPY", calendar_name="JPY", operator="x",
-        entries_by_date={date(2026, 6, 10): jpy_hol}, **WINDOW,
+        currency="JPY",
+        calendar_name="JPY",
+        operator="x",
+        entries_by_date={date(2026, 6, 10): jpy_hol},
+        **WINDOW,
     )
     cals = {
         "EUR": _empty_rtgs("EUR"),
@@ -163,9 +169,11 @@ def test_listed_option_expiry_rolls_on_exchange_only():
         is_closure=True,
     )
     cme = ExchangeCalendar(
-        venue="CME", products=("EURUSD",),
+        venue="CME",
+        products=("EURUSD",),
         entries_by_date={date(2026, 6, 8): cme_hol},
-        library_sourced=False, **WINDOW,
+        library_sourced=False,
+        **WINDOW,
     )
     cals = {"EUR": _empty_rtgs("EUR"), "USD": _empty_rtgs("USD")}
     r = calculate_option_dates(
@@ -196,8 +204,11 @@ def test_listed_option_rtgs_holiday_does_not_shift_expiry():
         is_closure=True,
     )
     eur = RtgsCalendar(
-        currency="EUR", calendar_name="EUR", operator="x",
-        entries_by_date={date(2026, 6, 8): eur_hol}, **WINDOW,
+        currency="EUR",
+        calendar_name="EUR",
+        operator="x",
+        entries_by_date={date(2026, 6, 8): eur_hol},
+        **WINDOW,
     )
     cme = _empty_exchange("CME")
     cals = {"EUR": eur, "USD": _empty_rtgs("USD")}
@@ -230,8 +241,11 @@ def test_otc_option_delivery_uses_business_day_offset():
         is_closure=True,
     )
     usd = RtgsCalendar(
-        currency="USD", calendar_name="USD", operator="x",
-        entries_by_date={date(2026, 6, 9): usd_hol}, **WINDOW,
+        currency="USD",
+        calendar_name="USD",
+        operator="x",
+        entries_by_date={date(2026, 6, 9): usd_hol},
+        **WINDOW,
     )
     cals = {"EUR": _empty_rtgs("EUR"), "USD": usd}
     r = calculate_option_dates(

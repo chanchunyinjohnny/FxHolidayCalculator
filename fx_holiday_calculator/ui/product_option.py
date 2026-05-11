@@ -5,10 +5,7 @@ from pathlib import Path
 
 import streamlit as st
 
-from fx_holiday_calculator.calendars.loader import (
-    load_exchange_calendar,
-    load_rtgs_calendar,
-)
+from fx_holiday_calculator.calendars.loader import load_exchange_calendar, load_rtgs_calendar
 from fx_holiday_calculator.calendars.types import CalendarRangeError
 from fx_holiday_calculator.option import (
     InvalidOptionStyleError,
@@ -179,7 +176,9 @@ def render() -> None:
         st.write(f"**Trade date:**     {result.trade_date} ({result.trade_date.strftime('%a')})")
         st.write(f"**Spot date:**      {result.spot_date} ({result.spot_date.strftime('%a')})")
         st.write(f"**Expiry date:**    {result.expiry_date} ({result.expiry_date.strftime('%a')})")
-        st.write(f"**Delivery date:**  {result.delivery_date} ({result.delivery_date.strftime('%a')})")
+        st.write(
+            f"**Delivery date:**  {result.delivery_date} ({result.delivery_date.strftime('%a')})"
+        )
 
         st.markdown("### Adjustment trace")
         _render_trace(result.expiry_trace, "Expiry")

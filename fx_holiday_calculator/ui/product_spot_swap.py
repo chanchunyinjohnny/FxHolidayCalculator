@@ -13,10 +13,7 @@ import streamlit as st
 
 from fx_holiday_calculator.calendars.loader import load_exchange_calendar, load_rtgs_calendar
 from fx_holiday_calculator.calendars.types import CalendarRangeError
-from fx_holiday_calculator.conventions.cross import (
-    MissingExchangeCalendarError,
-    relevant_venues,
-)
+from fx_holiday_calculator.conventions.cross import MissingExchangeCalendarError, relevant_venues
 from fx_holiday_calculator.pairs import list_supported_pairs, parse_pair
 from fx_holiday_calculator.swap import (
     InvalidBrokenDateError,

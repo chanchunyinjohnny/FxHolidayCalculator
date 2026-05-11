@@ -19,8 +19,10 @@ WINDOW = dict(valid_from=date(2020, 1, 1), valid_until=date(2030, 12, 31))
 
 def _src() -> SourceRef:
     return SourceRef(
-        url="x", doc_title="x",
-        fetched_at=datetime(2026, 1, 1, tzinfo=timezone.utc), fetcher="t",
+        url="x",
+        doc_title="x",
+        fetched_at=datetime(2026, 1, 1, tzinfo=timezone.utc),
+        fetcher="t",
     )
 
 
@@ -29,7 +31,9 @@ def _empty_rtgs(c: str) -> RtgsCalendar:
 
 
 def _empty_exchange(v: str) -> ExchangeCalendar:
-    return ExchangeCalendar(venue=v, products=(), entries_by_date={}, library_sourced=False, **WINDOW)
+    return ExchangeCalendar(
+        venue=v, products=(), entries_by_date={}, library_sourced=False, **WINDOW
+    )
 
 
 def test_rejects_venue_not_on_pair():
@@ -100,9 +104,11 @@ def test_future_ltd_anchored_to_unrolled_3rd_wed():
         is_closure=True,
     )
     cme = ExchangeCalendar(
-        venue="CME", products=("EURUSD",),
+        venue="CME",
+        products=("EURUSD",),
         entries_by_date={date(2026, 6, 17): cme_hol},
-        library_sourced=False, **WINDOW,
+        library_sourced=False,
+        **WINDOW,
     )
     cals = {"EUR": _empty_rtgs("EUR"), "USD": _empty_rtgs("USD")}
     r = calculate_future_dates(

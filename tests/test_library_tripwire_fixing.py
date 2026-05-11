@@ -29,6 +29,7 @@ def _fixing_dates(currency: str, year: int) -> set[date]:
 
 def _pyholiday_dates(country_code: str, year: int) -> set[date]:
     import holidays  # python-holidays
+
     cls = getattr(holidays, {"CN": "China", "KR": "SouthKorea", "TW": "Taiwan"}[country_code])
     return {d for d in cls(years=[year])}
 
@@ -48,6 +49,7 @@ def test_fixing_calendar_overlaps_python_holidays(currency, country):
     # Expect >= 50% overlap; below that, raise a soft warning, but don't fail.
     if coverage < 0.5:
         import warnings
+
         warnings.warn(
             f"{currency} fixing calendar overlaps python-holidays {country} by only "
             f"{coverage:.0%} for {year}. Verify the bundled data is current and "

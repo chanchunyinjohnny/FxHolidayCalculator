@@ -6,10 +6,7 @@ from pathlib import Path
 import streamlit as st
 
 from fx_holiday_calculator.calendars.fixing import FixingCalendar
-from fx_holiday_calculator.calendars.loader import (
-    load_fixing_calendar,
-    load_rtgs_calendar,
-)
+from fx_holiday_calculator.calendars.loader import load_fixing_calendar, load_rtgs_calendar
 from fx_holiday_calculator.calendars.types import CalendarRangeError
 from fx_holiday_calculator.ndf import (
     InvalidBrokenDateError,
@@ -25,11 +22,7 @@ CACHE = Path.home() / ".fx_holiday_calculator" / "cache"
 
 
 def _ndf_pair_codes() -> list[str]:
-    return [
-        f"{p.base}/{p.quote}"
-        for p in list_supported_pairs()
-        if p.ndf
-    ]
+    return [f"{p.base}/{p.quote}" for p in list_supported_pairs() if p.ndf]
 
 
 def _load_fixing(currency: str) -> FixingCalendar:
@@ -179,8 +172,12 @@ def render() -> None:
         st.markdown("### Result")
         st.write(f"**Trade date:**       {result.trade_date} ({result.trade_date.strftime('%a')})")
         st.write(f"**Spot date:**        {result.spot_date} ({result.spot_date.strftime('%a')})")
-        st.write(f"**Fixing date:**      {result.fixing_date} ({result.fixing_date.strftime('%a')})")
-        st.write(f"**Settlement date:**  {result.settlement_date} ({result.settlement_date.strftime('%a')})")
+        st.write(
+            f"**Fixing date:**      {result.fixing_date} ({result.fixing_date.strftime('%a')})"
+        )
+        st.write(
+            f"**Settlement date:**  {result.settlement_date} ({result.settlement_date.strftime('%a')})"
+        )
 
         st.markdown("### Adjustment trace")
         _render_trace(result.spot_trace, "Spot offset")

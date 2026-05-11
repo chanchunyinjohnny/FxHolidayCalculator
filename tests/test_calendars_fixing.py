@@ -3,11 +3,7 @@ from datetime import date, datetime, timezone
 import pytest
 
 from fx_holiday_calculator.calendars.fixing import FixingCalendar
-from fx_holiday_calculator.calendars.types import (
-    CalendarRangeError,
-    HolidayEntry,
-    SourceRef,
-)
+from fx_holiday_calculator.calendars.types import CalendarRangeError, HolidayEntry, SourceRef
 
 
 def _src() -> SourceRef:

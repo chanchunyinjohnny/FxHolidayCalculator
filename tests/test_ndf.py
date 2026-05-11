@@ -5,11 +5,7 @@ import pytest
 from fx_holiday_calculator.calendars.fixing import FixingCalendar
 from fx_holiday_calculator.calendars.rtgs import RtgsCalendar
 from fx_holiday_calculator.calendars.types import HolidayEntry, SourceRef
-from fx_holiday_calculator.ndf import (
-    InvalidNdfPairError,
-    NdfResult,
-    calculate_ndf_dates,
-)
+from fx_holiday_calculator.ndf import InvalidNdfPairError, NdfResult, calculate_ndf_dates
 from fx_holiday_calculator.pairs import parse_pair
 from fx_holiday_calculator.tenor import parse_tenor
 
@@ -30,9 +26,7 @@ def _empty_rtgs(c: str) -> RtgsCalendar:
 
 
 def _empty_fixing(c: str) -> FixingCalendar:
-    return FixingCalendar(
-        currency=c, calendar_name=c, operator="x", entries_by_date={}, **WINDOW
-    )
+    return FixingCalendar(currency=c, calendar_name=c, operator="x", entries_by_date={}, **WINDOW)
 
 
 def test_reject_non_ndf_pair():
@@ -137,6 +131,7 @@ def test_trade_date_not_good_usd_rtgs():
     cals = {"USD": _empty_rtgs("USD")}
     fix = _empty_fixing("CNY")
     from fx_holiday_calculator.ndf import InvalidTradeDateError
+
     with pytest.raises(InvalidTradeDateError):
         calculate_ndf_dates(
             trade_date=date(2026, 5, 9),  # Sat
@@ -165,6 +160,7 @@ def test_maturity_driven_rejects_pre_spot_target():
     cals = {"USD": _empty_rtgs("USD")}
     fix = _empty_fixing("CNY")
     from fx_holiday_calculator.ndf import InvalidBrokenDateError
+
     with pytest.raises(InvalidBrokenDateError):
         calculate_ndf_dates(
             trade_date=date(2026, 5, 6),
@@ -245,6 +241,7 @@ def test_ndf_rejects_non_forward_tenor(bad):
     cals = {"USD": _empty_rtgs("USD")}
     fix = _empty_fixing("CNY")
     from fx_holiday_calculator.tenor import InvalidTenorError
+
     with pytest.raises(InvalidTenorError):
         calculate_ndf_dates(
             trade_date=date(2026, 5, 6),

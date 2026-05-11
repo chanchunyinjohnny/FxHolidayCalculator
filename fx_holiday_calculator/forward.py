@@ -27,8 +27,8 @@ class InvalidForwardTenorError(ValueError):
 @dataclass
 class ForwardResult:
     trade_date: date
-    spot_date: date            # reference date used to compute the forward
-    settlement_date: date      # the single settlement date of the outright
+    spot_date: date  # reference date used to compute the forward
+    settlement_date: date  # the single settlement date of the outright
     spot_trace: list[AdjustmentStep]
     settlement_trace: list[AdjustmentStep]
     calendars_used: list[str]

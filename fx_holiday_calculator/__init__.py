@@ -9,11 +9,7 @@ from fx_holiday_calculator.future import (
     VenueNotListedError,
     calculate_future_dates,
 )
-from fx_holiday_calculator.ndf import (
-    InvalidNdfPairError,
-    NdfResult,
-    calculate_ndf_dates,
-)
+from fx_holiday_calculator.ndf import InvalidNdfPairError, NdfResult, calculate_ndf_dates
 from fx_holiday_calculator.option import (
     InvalidOptionStyleError,
     ListedOptionVenueRequiredError,

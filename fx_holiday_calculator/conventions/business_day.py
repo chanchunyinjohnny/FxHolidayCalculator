@@ -7,7 +7,8 @@ from fx_holiday_calculator.calendars.types import CalendarStatus
 
 
 class _CalendarLike(Protocol):
-    def is_holiday(self, d: date) -> bool: ...
+    def is_holiday(self, d: date) -> bool:
+        ...
 
 
 @dataclass

@@ -10,8 +10,8 @@ from fx_holiday_calculator.forward import (
     calculate_forward_dates,
 )
 from fx_holiday_calculator.pairs import parse_pair
-from fx_holiday_calculator.swap import InvalidBrokenDateError, InvalidTradeDateError
-from fx_holiday_calculator.tenor import InvalidTenorError, parse_tenor
+from fx_holiday_calculator.swap import InvalidBrokenDateError
+from fx_holiday_calculator.tenor import parse_tenor
 
 WINDOW = dict(valid_from=date(2020, 1, 1), valid_until=date(2030, 12, 31))
 
@@ -38,8 +38,8 @@ def test_forward_clean_eurusd_3m():
         ref_currency="none",
         calendars=cals,
     )
-    assert r.spot_date == date(2026, 5, 8)            # Fri T+2
-    assert r.settlement_date == date(2026, 8, 10)     # 2026-08-08 Sat -> Mon 8-10
+    assert r.spot_date == date(2026, 5, 8)  # Fri T+2
+    assert r.settlement_date == date(2026, 8, 10)  # 2026-08-08 Sat -> Mon 8-10
     assert r.trade_date == date(2026, 5, 6)
     assert isinstance(r, ForwardResult)
 
@@ -120,8 +120,11 @@ def test_forward_holiday_rolls_settlement():
         is_closure=True,
     )
     usd = RtgsCalendar(
-        currency="USD", calendar_name="USD", operator="x",
-        entries_by_date={date(2026, 8, 10): usd_hol}, **WINDOW,
+        currency="USD",
+        calendar_name="USD",
+        operator="x",
+        entries_by_date={date(2026, 8, 10): usd_hol},
+        **WINDOW,
     )
     cals = {"EUR": _empty("EUR"), "USD": usd}
     r = calculate_forward_dates(

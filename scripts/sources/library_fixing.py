@@ -56,12 +56,14 @@ def _holidays_for(country_class: str, year_range: tuple[int, int]) -> list[dict]
     hol = cls(years=years)
     out: list[dict] = []
     for d, name in sorted(hol.items()):
-        out.append({
-            "date": d.isoformat(),
-            "name": str(name),
-            "source": None,
-            "note": f"python-holidays {country_class}; v{_holidays.__version__}",
-        })
+        out.append(
+            {
+                "date": d.isoformat(),
+                "name": str(name),
+                "source": None,
+                "note": f"python-holidays {country_class}; v{_holidays.__version__}",
+            }
+        )
     return out
 
 

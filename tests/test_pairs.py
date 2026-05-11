@@ -1,10 +1,6 @@
 import pytest
 
-from fx_holiday_calculator.pairs import (
-    PairNotFoundError,
-    list_supported_pairs,
-    parse_pair,
-)
+from fx_holiday_calculator.pairs import PairNotFoundError, list_supported_pairs, parse_pair
 
 
 def test_parse_eurusd():
@@ -58,6 +54,7 @@ def test_pair_dataclass_has_ndf_field_default_false():
 
 def test_pair_dataclass_supports_ndf_fields():
     from fx_holiday_calculator.pairs import Pair
+
     p = Pair(
         base="USD",
         quote="CNY",

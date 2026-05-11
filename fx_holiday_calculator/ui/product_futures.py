@@ -5,10 +5,7 @@ from pathlib import Path
 
 import streamlit as st
 
-from fx_holiday_calculator.calendars.loader import (
-    load_exchange_calendar,
-    load_rtgs_calendar,
-)
+from fx_holiday_calculator.calendars.loader import load_exchange_calendar, load_rtgs_calendar
 from fx_holiday_calculator.calendars.types import CalendarRangeError
 from fx_holiday_calculator.future import (
     InvalidContractMonthError,
@@ -23,11 +20,7 @@ CACHE = Path.home() / ".fx_holiday_calculator" / "cache"
 
 
 def _listed_pairs() -> list[str]:
-    return [
-        f"{p.base}/{p.quote}"
-        for p in list_supported_pairs()
-        if p.listed_on
-    ]
+    return [f"{p.base}/{p.quote}" for p in list_supported_pairs() if p.listed_on]
 
 
 def _available_exchange_venues() -> set[str]:
@@ -102,18 +95,33 @@ def render() -> None:
         today = date.today()
         c1, c2 = st.columns(2)
         year = c1.number_input(
-            "Year", min_value=today.year, max_value=today.year + 5,
-            value=today.year, step=1, key="fut_year",
+            "Year",
+            min_value=today.year,
+            max_value=today.year + 5,
+            value=today.year,
+            step=1,
+            key="fut_year",
         )
         month_name = c2.selectbox(
             "Month",
-            ["Jan", "Feb", "Mar", "Apr", "May", "Jun",
-             "Jul", "Aug", "Sep", "Oct", "Nov", "Dec"],
+            ["Jan", "Feb", "Mar", "Apr", "May", "Jun", "Jul", "Aug", "Sep", "Oct", "Nov", "Dec"],
             index=today.month - 1,
             key="fut_month",
         )
-        month_idx = ["Jan", "Feb", "Mar", "Apr", "May", "Jun",
-                     "Jul", "Aug", "Sep", "Oct", "Nov", "Dec"].index(month_name) + 1
+        month_idx = [
+            "Jan",
+            "Feb",
+            "Mar",
+            "Apr",
+            "May",
+            "Jun",
+            "Jul",
+            "Aug",
+            "Sep",
+            "Oct",
+            "Nov",
+            "Dec",
+        ].index(month_name) + 1
         contract_month = (int(year), int(month_idx))
     else:
         c1, c2 = st.columns(2)
@@ -122,9 +130,7 @@ def render() -> None:
             ["IMM1", "IMM2", "IMM3", "IMM4"],
             key="fut_imm_tenor",
         )
-        from_date = c2.date_input(
-            "Reference date", value=date.today(), key="fut_from_date"
-        )
+        from_date = c2.date_input("Reference date", value=date.today(), key="fut_from_date")
 
     # Load RTGS + exchange calendars.
     needed = {pair.base, pair.quote}
@@ -149,9 +155,8 @@ def render() -> None:
             "FX-futures holidays may differ. See docs/data-sources.md."
         )
 
-    cal_caption = (
-        f"Exchange: {venue} | RTGS: "
-        + " · ".join(f"{c} ({cals[c].calendar_name})" for c in sorted(needed))
+    cal_caption = f"Exchange: {venue} | RTGS: " + " · ".join(
+        f"{c} ({cals[c].calendar_name})" for c in sorted(needed)
     )
     st.caption("Calendars to be used: " + cal_caption)
 
@@ -191,8 +196,12 @@ def render() -> None:
         st.markdown("### Result")
         cm = result.contract_month
         st.write(f"**Contract:**         {cm[0]}-{cm[1]:02d} ({venue})")
-        st.write(f"**Last trade date:**  {result.last_trade_date} ({result.last_trade_date.strftime('%a')})")
-        st.write(f"**Delivery date:**    {result.delivery_date} ({result.delivery_date.strftime('%a')})")
+        st.write(
+            f"**Last trade date:**  {result.last_trade_date} ({result.last_trade_date.strftime('%a')})"
+        )
+        st.write(
+            f"**Delivery date:**    {result.delivery_date} ({result.delivery_date.strftime('%a')})"
+        )
 
         st.markdown("### Adjustment trace")
         _render_trace(result.last_trade_trace, "Last trade date")

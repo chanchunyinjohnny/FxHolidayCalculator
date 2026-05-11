@@ -75,9 +75,7 @@ def calculate_future_dates(
 
     today = date.today()
     if (contract_month[0], contract_month[1]) < (today.year, today.month) and from_date is None:
-        raise InvalidContractMonthError(
-            f"Contract month {contract_month} is in the past."
-        )
+        raise InvalidContractMonthError(f"Contract month {contract_month} is in the past.")
 
     # Combined calendar set: venue exchange + base + quote RTGS.
     combined_cs = CalendarSet(
@@ -99,8 +97,10 @@ def calculate_future_dates(
     _, last_trade_trace = roll_with_trace(last_trade_date, combined_cs, "following")
 
     calendars_used = [venue]
-    calendars_used += [f"{pair.base} ({rtgs_calendars[pair.base].calendar_name})",
-                       f"{pair.quote} ({rtgs_calendars[pair.quote].calendar_name})"]
+    calendars_used += [
+        f"{pair.base} ({rtgs_calendars[pair.base].calendar_name})",
+        f"{pair.quote} ({rtgs_calendars[pair.quote].calendar_name})",
+    ]
 
     warnings: list[str] = []
 

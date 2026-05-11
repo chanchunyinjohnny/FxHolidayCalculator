@@ -63,8 +63,7 @@ def calculate_ndf_dates(
 ) -> NdfResult:
     if not pair.ndf:
         raise InvalidNdfPairError(
-            f"{pair.base}/{pair.quote} is not configured as an NDF pair "
-            f"(pair.ndf is False)."
+            f"{pair.base}/{pair.quote} is not configured as an NDF pair " f"(pair.ndf is False)."
         )
     # USD-only RTGS set for spot offset and settlement.
     if "USD" not in rtgs_calendars:
@@ -152,8 +151,10 @@ def calculate_ndf_dates(
     fixing_date, fix_roll_trace = roll_with_trace(fixing_candidate, fixing_cs, "preceding")
     fixing_trace.extend(fix_roll_trace)
 
-    calendars_used = [f"USD ({usd.calendar_name})",
-                      f"{fixing_calendar.currency} ({fixing_calendar.calendar_name})"]
+    calendars_used = [
+        f"USD ({usd.calendar_name})",
+        f"{fixing_calendar.currency} ({fixing_calendar.calendar_name})",
+    ]
 
     warnings: list[str] = []
     if (fixing_date - trade_date).days < 2:
