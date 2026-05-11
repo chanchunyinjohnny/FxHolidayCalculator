@@ -151,3 +151,180 @@ Fedwire combined. With `ref=none` the third constraint is dropped.
 [strata-fxswap]: https://strata.opengamma.io/apidocs/com/opengamma/strata/product/fx/type/FxSwapConvention.html
 [ql-ratehelpers]: https://github.com/lballabio/QuantLib/blob/master/ql/termstructures/yield/ratehelpers.cpp
 [ql-dates]: https://quantlib-python-docs.readthedocs.io/en/latest/dates.html
+
+## 9. NDF (Non-Deliverable Forward) — fixing & settlement
+
+Non-deliverable forwards settle in USD only. The non-deliverable side
+(CNY / KRW / TWD in v1.1) fixes against a primary-source rate published by
+the local market organisation:
+
+- **CNY** — CFETS / PBoC USD/CNY central parity (中间价)
+- **KRW** — KFTC USD/KRW Market Average Rate
+- **TWD** — Taipei Forex Inc. USD/TWD reference rate (TAIFX1)
+
+### 9.1 Date relations
+
+- **Spot** = `T + pair.spot_offset_days` on **USD RTGS only** (Fedwire). The
+  non-deliverable side has no settlement leg, so its RTGS does not constrain
+  spot.
+- **Settlement** (tenor-driven) = `spot + tenor`, rolled `modified_following`
+  on the union `{USD RTGS, fixing_calendar}`. EOM rule applies keyed on spot.
+- **Settlement** (maturity-driven) = user-supplied target date, rolled
+  `modified_following` on the same union. Rejected if rolled settlement ≤ spot.
+- **Fixing date** = `settlement − 2 business days` on the fixing calendar.
+  The fixing-day calendar must allow a fix to be published; the 2-day lag
+  matches EMTA / ISDA EM template terms for these currencies.
+
+### 9.2 Validations
+
+- `InvalidNdfPairError` — pair is not configured as NDF (`pair.ndf is False`).
+- `InvalidTradeDateError` — trade date is not a good USD-RTGS business day.
+- `InvalidTenorError` — tenor is SPOT / ON / TN / SN (NDF requires a forward
+  tenor; v1.1 accepts PERIOD / IMM / BROKEN).
+- `InvalidBrokenDateError` — rolled settlement ≤ spot.
+
+### 9.3 Warnings
+
+- *Short fixing horizon* — `(fixing_date - trade_date).days < 2`. Surfaces a
+  warning that fixing falls within 2 days of trade and may not be achievable
+  with the counterparty.
+
+### 9.4 References
+
+- EMTA template terms for CNY / KRW / TWD non-deliverable forwards.
+- ISDA 1998 FX and Currency Options Definitions, §1.18 (Business Day) and
+  §3.7 (Settlement Date).
+- CFETS market notices (chinamoney.com.cn) — primary source for CNY
+  fixing-calendar data. v1.1 ships with a `python-holidays`-sourced
+  stopgap (`scripts/sources/library_fixing.py`); the primary fetcher
+  `scripts/sources/cfets_cny.py` awaits a successful first live run
+  from an unrestricted network environment.
+- KFTC FX market trading calendar (kftc.or.kr) — primary source for KRW
+  fixing-calendar data. v1.1 ships with a `python-holidays`-sourced
+  stopgap; the primary fetcher `scripts/sources/kftc_krw.py` awaits a
+  successful first live run.
+- Taipei Forex Inc. (tpefx.com.tw) — primary source for TWD
+  fixing-calendar data. v1.1 ships with a `python-holidays`-sourced
+  stopgap; the primary fetcher `scripts/sources/taifx_twd.py` awaits a
+  successful first live run.
+
+## 10. FX Option — expiry & delivery
+
+FX options have two characteristic dates:
+
+- **Expiry date** — the day the option contract expires.
+- **Delivery date** — the day the cash legs settle if the option is exercised.
+
+Delivery date = `apply_spot_offset(expiry, pair, RTGS{base,quote})` — the
+same business-day offset as the swap engine's spot, applied off the expiry
+instead of the trade date. Where the dates roll on different calendars
+depending on style:
+
+| Style  | Expiry calendar set            | Delivery calendar set      |
+|--------|--------------------------------|----------------------------|
+| OTC    | RTGS{base, quote, ref}         | RTGS{base, quote} only     |
+| LISTED | Exchange{venue}                | RTGS{base, quote} only     |
+
+The delivery leg deliberately omits the reference currency: the option's
+delivery is the physical exchange of two currencies, not a cross-currency
+constrained spot. Reference: ISDA 1998 FX and Currency Options Definitions
+§3.2 (Expiration Date and Settlement Date).
+
+### 10.1 Validations
+
+- `InvalidOptionStyleError` — `style ∉ {OTC, LISTED}`.
+- `ListedOptionVenueRequiredError` — `style == LISTED` with no venue
+  provided, or venue not in `pair.listed_on`, or no exchange calendar
+  provided.
+- `InvalidTenorError` — tenor is SPOT / ON / TN / SN (option requires
+  a forward tenor).
+
+### 10.2 Warnings
+
+- *Same-day expiry* — `expiry_date == spot_date` (rare; usually a
+  user-error verifying a zero-day broken-date option). Surfaced via
+  `result.warnings`.
+- *Listed library-sourced caveat* — when `exchange_calendar.library_sourced
+  is True`, the UI surfaces the existing exchange-calendar caveat that the
+  data is equity-session-based, not FX-product-specific.
+
+### 10.3 Where this lives
+
+- Engine: `fx_holiday_calculator/option.py`
+- Tests: `tests/test_option.py`
+
+## 11. FX Futures — last trade date & delivery date
+
+FX futures are exchange-listed contracts with two characteristic dates:
+
+- **Delivery date** — the 3rd Wednesday of the contract month, rolled
+  `modified_following` on the combined exchange + base RTGS + quote RTGS
+  calendar set.
+- **Last trade date** — 2 good business days before the **unrolled** 3rd
+  Wednesday, on the same combined set.
+
+The LTD anchor is the unrolled 3rd Wednesday — not the rolled delivery
+date. When 3rd Wed is a holiday and delivery rolls forward, LTD remains
+anchored to the original IMM date and does not chain off delivery. This
+matches CME Rule 25102.E for EUR/USD futures and analogous HKEX / SGX
+rules; the 9:16 a.m. CT time-of-day cut is out of v1.1 scope.
+
+### 11.1 Input modes
+
+- **Contract month** — user supplies `(year, month)` directly.
+- **IMM tenor** — user supplies `IMM1..IMM4` plus an optional `from_date`
+  (defaults to today). The contract month is resolved via
+  `next_imm_date(from_date, imm_index)`.
+
+### 11.2 Validations
+
+- `VenueNotListedError` — pair is not listed on the chosen venue.
+- `InvalidContractMonthError` — contract month is in the past relative
+  to `from_date` (or today if no `from_date`).
+- `InvalidTenorError` — `imm_tenor` is supplied but not an IMM kind.
+
+### 11.3 Warnings
+
+- Past contracts are rejected outright via `InvalidContractMonthError`
+  when `from_date is None`; there is no stale-contract warning path.
+  Historical queries are allowed via an explicit `from_date`.
+
+### 11.4 Where this lives
+
+- Engine: `fx_holiday_calculator/future.py`
+- LTD helper: `fx_holiday_calculator/conventions/business_day.py`
+  (`imm_last_trade_date`)
+- Tests: `tests/test_future.py`
+
+## 12. FX Forward outright
+
+A forward outright is a single-leg trade: agree today, settle once on the
+forward date. Mathematically the date math is identical to a standard swap
+with no near tenor (see §1–§5) — the engine reuses `calculate_swap_dates`'s
+PERIOD/IMM/BROKEN branch and discards the implicit near leg.
+
+### 12.1 Date relations
+
+- **Spot date** = `T + pair.spot_offset_days` on RTGS{base, quote, ref}.
+  The spot date is a reference value for the forward calculation; for an
+  outright there is no actual settlement at spot.
+- **Settlement date** = `spot + tenor`, rolled `modified_following` on the
+  selected calendar set (RTGS / Exchange / Both). EOM rule applies keyed
+  on spot.
+
+### 12.2 Validations
+
+- `InvalidForwardTenorError` — tenor is SPOT / ON / TN / SN (forward
+  outright requires a forward tenor; SPOT trades use the Spot/Swap tab).
+- `InvalidBrokenDateError` — rolled settlement ≤ spot (raised from the
+  underlying swap engine).
+- `InvalidTradeDateError` — propagated from the swap engine for invalid
+  trade dates.
+
+### 12.3 Where this lives
+
+- Engine wrapper: `fx_holiday_calculator/forward.py`
+- Underlying engine: `fx_holiday_calculator/swap.py` (PERIOD/IMM/BROKEN
+  branch with `near_tenor=None`)
+- Tests: `tests/test_forward.py`
+- UI: `fx_holiday_calculator/ui/product_forward.py`

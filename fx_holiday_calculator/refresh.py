@@ -25,6 +25,9 @@ _SOURCES: dict[str, tuple[str, str, str]] = {
     "USD": ("scripts.sources.federal_reserve", "fx_rtgs", "USD.json"),
     "GBP": ("scripts.sources.boe_chaps", "fx_rtgs", "GBP.json"),
     "JPY": ("scripts.sources.boj", "fx_rtgs", "JPY.json"),
+    "CNY": ("scripts.sources.cfets_cny", "fx_fixing", "CNY.json"),
+    "KRW": ("scripts.sources.kftc_krw", "fx_fixing", "KRW.json"),
+    "TWD": ("scripts.sources.taifx_twd", "fx_fixing", "TWD.json"),
 }
 
 # Library-sourced exchange venues. Refreshed via a single generator that

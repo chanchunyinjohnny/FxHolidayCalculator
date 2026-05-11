@@ -7,14 +7,14 @@ import pytest
 DATA_DIR = Path(__file__).parents[1] / "data"
 RTGS_DIR = DATA_DIR / "fx_rtgs"
 EXCH_DIR = DATA_DIR / "fx_exchange"
+FIXING_DIR = DATA_DIR / "fx_fixing"
 
 
 def _all_calendar_files() -> list[Path]:
     files: list[Path] = []
-    if RTGS_DIR.exists():
-        files += sorted(p for p in RTGS_DIR.glob("*.json") if not p.name.startswith("_"))
-    if EXCH_DIR.exists():
-        files += sorted(p for p in EXCH_DIR.glob("*.json") if not p.name.startswith("_"))
+    for d in (RTGS_DIR, EXCH_DIR, FIXING_DIR):
+        if d.exists():
+            files += sorted(p for p in d.glob("*.json") if not p.name.startswith("_"))
     return files
 
 

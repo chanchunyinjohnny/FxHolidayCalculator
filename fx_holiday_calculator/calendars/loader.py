@@ -4,6 +4,7 @@ from datetime import date, datetime
 from pathlib import Path
 
 from fx_holiday_calculator.calendars.exchange import ExchangeCalendar
+from fx_holiday_calculator.calendars.fixing import FixingCalendar
 from fx_holiday_calculator.calendars.rtgs import RtgsCalendar
 from fx_holiday_calculator.calendars.types import HolidayEntry, SourceRef
 
@@ -128,6 +129,28 @@ def load_exchange_calendar(
     return ExchangeCalendar(
         venue=blob["venue"],
         products=tuple(blob.get("products", [])),
+        entries_by_date=_build_entries(blob, origin),
+        valid_from=vf,
+        valid_until=vu,
+        library_sourced=library_sourced,
+    )
+
+
+def load_fixing_calendar(
+    currency: str, root: Path, cache_root: Path | None = None
+) -> FixingCalendar:
+    blob, origin = _load_calendar_blob(currency, root, cache_root)
+    if blob.get("calendar_kind") != "FIXING":
+        raise ValueError(f"{currency}.json is not a FIXING calendar")
+    if blob.get("currency") != currency:
+        raise ValueError(f"{currency}.json currency mismatch")
+    vf, vu = _parse_window(blob, f"{currency}.json")
+    fetcher = blob.get("default_source", {}).get("fetcher", "")
+    library_sourced = "library_fixing" in fetcher
+    return FixingCalendar(
+        currency=blob["currency"],
+        calendar_name=blob["calendar_name"],
+        operator=blob["operator"],
         entries_by_date=_build_entries(blob, origin),
         valid_from=vf,
         valid_until=vu,

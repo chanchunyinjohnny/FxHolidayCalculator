@@ -11,7 +11,7 @@ BUNDLED_DIR = Path(__file__).resolve().parents[2] / "data"
 
 def _bundled_fetched_at() -> str:
     earliest = None
-    for sub in ("fx_rtgs", "fx_exchange"):
+    for sub in ("fx_rtgs", "fx_exchange", "fx_fixing"):
         d = BUNDLED_DIR / sub
         if not d.exists():
             continue
@@ -67,4 +67,7 @@ def render() -> None:
                 sb.success(f"{code}: refreshed")
 
     sb.markdown("---")
-    sb.caption("v1 ships with 4 RTGS sources. Exchange and additional RTGS sources deferred.")
+    sb.caption(
+        "v1.1 covers 4 RTGS sources + 3 fixing sources (CFETS / KFTC / Taipei Forex). "
+        "Exchange and additional sources deferred."
+    )

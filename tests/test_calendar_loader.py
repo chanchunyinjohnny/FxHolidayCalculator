@@ -5,7 +5,12 @@ from pathlib import Path
 import pytest
 
 from fx_holiday_calculator.calendars.exchange import ExchangeCalendar
-from fx_holiday_calculator.calendars.loader import load_exchange_calendar, load_rtgs_calendar
+from fx_holiday_calculator.calendars.fixing import FixingCalendar
+from fx_holiday_calculator.calendars.loader import (
+    load_exchange_calendar,
+    load_fixing_calendar,
+    load_rtgs_calendar,
+)
 from fx_holiday_calculator.calendars.rtgs import RtgsCalendar
 from fx_holiday_calculator.calendars.types import CalendarRangeError
 
@@ -208,4 +213,131 @@ def test_cache_overlays_bundled(tmp_path):
     cal = load_rtgs_calendar("USD", root=FIXTURE_DIR, cache_root=cache)
     assert cal.is_holiday(date(2026, 12, 25)) is True
     entry = cal.get_holiday(date(2026, 12, 25))
+    assert entry.source_origin == "cache"
+
+
+def _write_fixing_blob(tmp_path: Path, currency: str, holidays: list[dict]) -> Path:
+    blob = {
+        "schema_version": 3,
+        "currency": currency,
+        "calendar_kind": "FIXING",
+        "calendar_name": f"{currency} fixing",
+        "operator": "test",
+        "valid_from": "2026-01-01",
+        "valid_until": "2030-12-31",
+        "default_source": {
+            "url": "https://x",
+            "doc_title": "x",
+            "fetched_at": "2026-01-01T00:00:00Z",
+            "fetcher": "test",
+        },
+        "holidays": holidays,
+    }
+    out = tmp_path / f"{currency}.json"
+    out.write_text(_json.dumps(blob))
+    return out
+
+
+def test_load_fixing_calendar_basic(tmp_path):
+    _write_fixing_blob(
+        tmp_path,
+        "CNY",
+        [{"date": "2026-10-01", "name": "National Day", "source": None, "note": None}],
+    )
+    cal = load_fixing_calendar("CNY", root=tmp_path)
+    assert isinstance(cal, FixingCalendar)
+    assert cal.currency == "CNY"
+    assert cal.is_holiday(date(2026, 10, 1)) is True
+    entry = cal.get_holiday(date(2026, 10, 1))
+    assert entry is not None
+    assert entry.source.url == "https://x"
+    assert entry.source_origin == "bundled"
+
+
+def test_load_fixing_calendar_rejects_wrong_kind(tmp_path):
+    blob = {
+        "schema_version": 3,
+        "currency": "CNY",
+        "calendar_kind": "RTGS",  # wrong kind
+        "calendar_name": "x",
+        "operator": "x",
+        "valid_from": "2026-01-01",
+        "valid_until": "2030-12-31",
+        "default_source": {
+            "url": "https://x",
+            "doc_title": "x",
+            "fetched_at": "2026-01-01T00:00:00Z",
+            "fetcher": "t",
+        },
+        "holidays": [],
+    }
+    (tmp_path / "CNY.json").write_text(_json.dumps(blob))
+    with pytest.raises(ValueError, match="not a FIXING calendar"):
+        load_fixing_calendar("CNY", root=tmp_path)
+
+
+def test_load_fixing_calendar_marks_library_sourced_when_fetcher_says_so(tmp_path):
+    blob = {
+        "schema_version": 3,
+        "currency": "CNY",
+        "calendar_kind": "FIXING",
+        "calendar_name": "x",
+        "operator": "x",
+        "valid_from": "2026-01-01",
+        "valid_until": "2030-12-31",
+        "default_source": {
+            "url": "https://x",
+            "doc_title": "x",
+            "fetched_at": "2026-01-01T00:00:00Z",
+            "fetcher": "scripts/sources/library_fixing.py@v1",
+        },
+        "holidays": [],
+    }
+    (tmp_path / "CNY.json").write_text(_json.dumps(blob))
+    cal = load_fixing_calendar("CNY", root=tmp_path)
+    assert cal.library_sourced is True
+
+
+def test_load_fixing_calendar_primary_fetcher_not_marked_library(tmp_path):
+    blob = {
+        "schema_version": 3,
+        "currency": "CNY",
+        "calendar_kind": "FIXING",
+        "calendar_name": "x",
+        "operator": "x",
+        "valid_from": "2026-01-01",
+        "valid_until": "2030-12-31",
+        "default_source": {
+            "url": "https://x",
+            "doc_title": "x",
+            "fetched_at": "2026-01-01T00:00:00Z",
+            "fetcher": "scripts/sources/cfets_cny.py@v1",
+        },
+        "holidays": [],
+    }
+    (tmp_path / "CNY.json").write_text(_json.dumps(blob))
+    cal = load_fixing_calendar("CNY", root=tmp_path)
+    assert cal.library_sourced is False
+
+
+def test_load_fixing_calendar_cache_overlays_bundled(tmp_path):
+    bundled = tmp_path / "bundled"
+    bundled.mkdir()
+    cache = tmp_path / "cache"
+    cache.mkdir()
+    _write_fixing_blob(
+        bundled,
+        "CNY",
+        [{"date": "2026-10-01", "name": "National Day", "source": None, "note": None}],
+    )
+    _write_fixing_blob(
+        cache,
+        "CNY",
+        [{"date": "2026-10-02", "name": "Extra closure", "source": None, "note": None}],
+    )
+    cal = load_fixing_calendar("CNY", root=bundled, cache_root=cache)
+    # Cache wins
+    assert cal.is_holiday(date(2026, 10, 2)) is True
+    assert cal.is_holiday(date(2026, 10, 1)) is False
+    entry = cal.get_holiday(date(2026, 10, 2))
     assert entry.source_origin == "cache"
