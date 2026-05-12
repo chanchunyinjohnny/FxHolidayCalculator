@@ -50,6 +50,7 @@ class NdfResult:
     fixing_trace: list[AdjustmentStep]
     calendars_used: list[str]
     warnings: list[str] = field(default_factory=list)
+    reasoning: list[str] = field(default_factory=list)
 
 
 def calculate_ndf_dates(
@@ -92,6 +93,14 @@ def calculate_ndf_dates(
     if tenor is not None and target_settlement is not None:
         raise ValueError("Provide tenor OR target_settlement, not both")
 
+    reasoning: list[str] = []
+    reasoning.append(
+        f"**Spot offset:** T+{pair.spot_offset_days} on USD RTGS only "
+        f"(non-deliverable side has no settlement leg) → "
+        f"{spot_result.spot_date.isoformat()} ({spot_result.spot_date.strftime('%a')})."
+    )
+    settle_brief = f"USD RTGS ∪ {pair.fixing_currency} fixing"
+
     if tenor is not None:
         if tenor.kind in {"SPOT", "ON", "TN", "SN"}:
             raise InvalidTenorError("NDF requires a forward tenor (PERIOD / IMM / BROKEN).")
@@ -114,24 +123,51 @@ def calculate_ndf_dates(
                     _step_for(raw_settlement, settle_cs, "rolled_eom"),
                     _step_for(settlement, settle_cs, "accepted"),
                 ]
+                reasoning.append(
+                    f"**Settlement anchor:** spot + {tenor.period_n}{tenor.period_unit} "
+                    f"= {raw_settlement.isoformat()} (raw); EOM rule fired (spot is "
+                    f"last BD of month on USD RTGS) → last BD of target month on "
+                    f"{settle_brief} = {settlement.isoformat()}."
+                )
             else:
                 settlement, settle_trace = roll_with_trace(
                     raw_settlement, settle_cs, "modified_following"
+                )
+                reasoning.append(
+                    f"**Settlement anchor:** spot + {tenor.period_n}{tenor.period_unit} "
+                    f"= {raw_settlement.isoformat()} (raw); rolled modified-following "
+                    f"on {settle_brief} → {settlement.isoformat()}."
                 )
         elif tenor.kind == "IMM":
             raw_settlement = next_imm_date(spot_result.spot_date, tenor.imm_index)
             settlement, settle_trace = roll_with_trace(
                 raw_settlement, settle_cs, "modified_following"
             )
+            reasoning.append(
+                f"**Settlement anchor:** IMM{tenor.imm_index} after spot → 3rd Wed of "
+                f"{raw_settlement.year}-{raw_settlement.month:02d} = "
+                f"{raw_settlement.isoformat()} (raw); rolled modified-following on "
+                f"{settle_brief} → {settlement.isoformat()}."
+            )
         else:  # BROKEN
             settlement, settle_trace = roll_with_trace(
                 tenor.target_date, settle_cs, "modified_following"  # type: ignore[arg-type]
+            )
+            reasoning.append(
+                f"**Settlement anchor:** user-supplied broken date "
+                f"{tenor.target_date.isoformat()} (raw); rolled modified-following on "  # type: ignore[union-attr]
+                f"{settle_brief} → {settlement.isoformat()}."
             )
     else:
         settlement, settle_trace = roll_with_trace(
             target_settlement,  # type: ignore[arg-type]
             settle_cs,
             "modified_following",
+        )
+        reasoning.append(
+            f"**Settlement anchor:** user-supplied target "
+            f"{target_settlement.isoformat()} (raw); rolled modified-following on "  # type: ignore[union-attr]
+            f"{settle_brief} → {settlement.isoformat()}."
         )
 
     if settlement <= spot_result.spot_date:
@@ -150,6 +186,11 @@ def calculate_ndf_dates(
             good_bd_count += 1
     fixing_date, fix_roll_trace = roll_with_trace(fixing_candidate, fixing_cs, "preceding")
     fixing_trace.extend(fix_roll_trace)
+    reasoning.append(
+        f"**Fixing date:** settlement − 2 good business days on "
+        f"{pair.fixing_currency} fixing calendar → {fixing_date.isoformat()} "
+        f"({fixing_date.strftime('%a')}). 2-BD lag matches EMTA / ISDA EM template."
+    )
 
     calendars_used = [
         f"USD ({usd.calendar_name})",
@@ -173,4 +214,5 @@ def calculate_ndf_dates(
         fixing_trace=fixing_trace,
         calendars_used=calendars_used,
         warnings=warnings,
+        reasoning=reasoning,
     )

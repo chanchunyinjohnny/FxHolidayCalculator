@@ -16,7 +16,7 @@ from fx_holiday_calculator.ndf import (
 )
 from fx_holiday_calculator.pairs import list_supported_pairs, parse_pair
 from fx_holiday_calculator.tenor import InvalidTenorError, parse_tenor
-from fx_holiday_calculator.ui._widgets import date_input_with_today
+from fx_holiday_calculator.ui._widgets import date_input_with_today, render_reasoning, render_trace
 
 BUNDLED = Path(__file__).resolve().parents[2] / "data"
 CACHE = Path.home() / ".fx_holiday_calculator" / "cache"
@@ -32,32 +32,6 @@ def _load_fixing(currency: str) -> FixingCalendar:
         root=BUNDLED / "fx_fixing",
         cache_root=CACHE / "fx_fixing",
     )
-
-
-def _render_trace(steps, label: str) -> None:
-    if not steps:
-        st.write(f"_{label}: no adjustment steps_")
-        return
-    with st.expander(f"{label} — {len(steps)} candidate(s)", expanded=True):
-        for s in steps:
-            cols = st.columns([1.4, 0.5, 4, 1])
-            cols[0].write(s.candidate_date.isoformat())
-            cols[1].write(s.weekday)
-            cells = []
-            for cal_label, status in s.statuses.items():
-                if status.is_good:
-                    cells.append(f"{cal_label}: ✓")
-                else:
-                    cells.append(f"{cal_label}: ✘ {status.holiday_name}")
-            cols[2].write("  ·  ".join(cells))
-            cols[3].write(s.decision)
-            for cal_label, status in s.statuses.items():
-                if status.source is not None:
-                    st.caption(
-                        f"{cal_label}: [{status.source.doc_title}]({status.source.url}) · "
-                        f"fetched {status.source.fetched_at.isoformat()} · "
-                        f"{status.source_origin}"
-                    )
 
 
 def render() -> None:
@@ -180,7 +154,9 @@ def render() -> None:
             f"**Settlement date:**  {result.settlement_date} ({result.settlement_date.strftime('%a')})"
         )
 
+        render_reasoning(result.reasoning)
+
         st.markdown("### Adjustment trace")
-        _render_trace(result.spot_trace, "Spot offset")
-        _render_trace(result.settlement_trace, "Settlement")
-        _render_trace(result.fixing_trace, "Fixing")
+        render_trace(result.spot_trace, "Spot offset")
+        render_trace(result.settlement_trace, "Settlement")
+        render_trace(result.fixing_trace, "Fixing")

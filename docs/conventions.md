@@ -41,13 +41,47 @@ forward to the next common good business day.
 > date is pushed out to become the next common business day for both currencies of
 > the pair." — [Wikipedia, *Foreign exchange date conventions*][wiki-fx-date]
 
+### 2.1 Known limitation — cross-pair intermediate hops vs. reference currency
+
+For non-USD cross pairs (e.g. EUR/JPY) with `ref="USD"`, the engine requires
+each **intermediate** day-hop in the T+N count to be a good business day in
+all three currencies (base + quote + ref). The textbook market algorithm
+(Cao 2008; Bloomberg/Reuters/EBS) is two-pass: count `pair.spot_offset_days`
+good BDs on **base + quote only**, then push the candidate spot forward if
+it lands on a ref-currency holiday. The two algorithms agree on most
+calendars; they diverge when a ref-currency holiday falls strictly *between*
+trade and spot (e.g. EUR/JPY trade on a Mon with US July 4 on the following
+Tue): convention returns T+2, the engine returns T+3.
+
+This is rare in practice — US holidays predominantly fall on Mondays, where
+both algorithms agree — and the engine errs on the side of always producing
+a date that is a good BD in every relevant currency. v1.x does not implement
+the two-pass algorithm; users who care about the Tue-US-holiday edge case
+should cross-check manually for non-USD crosses with `ref="USD"`.
+
 ## 3. Pre-spot tenors: ON, TN, SN
 
 | Tenor | Near leg | Far leg | Holiday handling on trade date |
 |---|---|---|---|
 | **ON** (Overnight) | `T` | `T+1` rolled `following` on RTGS | **Blocked** — `InvalidTradeDateError` if `T` is a weekend or holiday in either RTGS calendar |
-| **TN** (Tom-Next) | `T+1` rolled `following` on RTGS | spot | **Warns** if `T` is a weekend or holiday; computation proceeds |
+| **TN** (Tom-Next) | `T+1` rolled `following` on RTGS | `near+1` rolled `following` on RTGS | **Warns** if `T` is a weekend or holiday; computation proceeds |
 | **SN** (Spot-Next) | spot | `spot+1` rolled `following` on RTGS | No warning (spot is always rolled to a good BD by construction) |
+
+The "Next" in **Tom-Next** is the *next business day after tomorrow*, not the
+spot date. For T+2 pairs this happens to equal spot (because spot = T+2 =
+tomorrow+1 BD when no rolls intervene), which is what the textbook examples
+show. The market quotes TN as a real product on every pair, including T+1
+pairs — see `USDCAD TN FWD` on Investing.com and equivalent screens on
+Bloomberg / Reuters.
+
+### 3.1 TN ≡ SN on T+1 pairs
+
+For T+1 pairs (USD/CAD, USD/MXN, USD/TRY, USD/RUB), `near = T+1 = spot` and
+`far = T+2 = spot+1`, so TN and SN refer to the same swap. Interbank screens
+quote them at the same rate (cf. `USDCAD TN FWD` and `USDCAD SN FWD` on
+Investing.com, both bid -0.6470 ask -0.5270 at 03:08 UTC on a representative
+session). The engine returns identical near/far dates for both tenors on
+T+1 pairs by construction; it does not raise.
 
 **Why block ON but only warn for TN?** The two cases sit on opposite sides of "universal
 market practice":
@@ -55,13 +89,14 @@ market practice":
 - **ON** settles at `T+0` in both currencies. If `T` is not a good business day in
   one currency, that currency's cash leg cannot settle on `T` — the trade is
   structurally impossible. This is universal across interbank desks.
-- **TN** settles `T+1` against spot. The trade can be agreed today and settled
-  tomorrow even if today is a holiday in one currency, **provided** `T+1` is a good
-  business day in both currencies (which the near-leg roll guarantees). Practice
-  varies: some venues book TN trades on a holiday trade date, others refuse and
-  require the customer to wait for the next good business day. Because there is no
-  universal rule, the engine permits the trade and surfaces a warning, leaving the
-  decision to the user and their counterparty.
+- **TN** settles `T+1` against `T+1+1BD`. The trade can be agreed today and
+  settled tomorrow even if today is a holiday in one currency, **provided**
+  the near and far rolls land on good business days in both currencies (the
+  `following` roll guarantees this). Practice varies on whether to book TN
+  on a holiday trade date: some venues allow it, others refuse and require
+  the customer to wait. Because there is no universal rule, the engine
+  permits the trade and surfaces a warning, leaving the decision to the
+  user and their counterparty.
 
 **SN** never raises a holiday issue: the near leg equals the spot date, which is
 already adjusted to a good business day by the spot offset, and the far leg rolls
@@ -237,8 +272,32 @@ concept. The `venue` and `exchange_calendar` arguments must agree
 `VenueCalendarMismatchError` rather than silently computing on the wrong
 exchange while labelling the result with the requested venue.
 
+### 10.0 Listed-option expiry: PERIOD/BROKEN vs IMM
+
+For LISTED style, the engine handles tenors differently:
+
+- **IMM tenor** — uses a venue-aware rule: expiry = 2 good business days
+  prior to the 3rd Wednesday of the contract month, on the exchange
+  calendar. This matches the CME option spec ("2 business days prior to
+  the third Wednesday of the contract month") and the HKEX USD/CNH
+  Options spec (CNHO-S-2: "Expiry Day: Two Trading Days prior to the
+  Final Settlement Day"; FSD = rolled 3rd Wed). The two spec wordings
+  use different anchors (unrolled 3rd Wed vs. rolled FSD) but produce
+  **identical** expiry dates in every case — the back-count traversal
+  of the non-BD bridge between unrolled imm and rolled FSD is identical
+  in both directions. The engine uses the unrolled-3rd-Wed anchor as
+  the canonical form and cites both specs in the reasoning bullet. SGX
+  option-spec wording is not separately verified in v1.x; the same
+  algorithm is used with a caveat in the reasoning.
+- **PERIOD / BROKEN tenor** — falls back to "spot + tenor rolled
+  modified-following on exchange calendar". This does not match any
+  listed-product spec (real listed options have fixed contract-month
+  expiries); the PERIOD/BROKEN listed path is retained for parametric
+  exploration. For real listed-product computations, use IMM tenor.
+
 Reference: ISDA 1998 FX and Currency Options Definitions §3.2
-(Expiration Date and Settlement Date).
+(Expiration Date and Settlement Date); CME FX options chapter; HKEX
+USD/CNH Options contract specifications (CNHO-S-2).
 
 ### 10.1 Validations
 
@@ -277,9 +336,31 @@ FX futures are exchange-listed contracts with two characteristic dates:
 
 The LTD anchor is the unrolled 3rd Wednesday — not the rolled delivery
 date. When 3rd Wed is a holiday and delivery rolls forward, LTD remains
-anchored to the original IMM date and does not chain off delivery. This
-matches CME Rule 25102.E for EUR/USD futures and analogous HKEX / SGX
-rules; the 9:16 a.m. CT time-of-day cut is out of v1.1 scope.
+anchored to the original IMM date and does not chain off delivery.
+
+**Verified across all three v1.x venues:**
+
+- **CME** (e.g. 6E EUR/USD, Chapter 261): "Trading terminates at 9:16 a.m.
+  CT on the second business day prior to the third Wednesday of the
+  contract month." Final settlement on the 3rd Wed.
+- **HKEX** USD/CNH Futures (CUS, July 2022 infosheet): *Last Trading Day* =
+  "Two Trading Days prior to the third Wednesday of the Contract Month"
+  (unrolled-3rd-Wed anchor); *Final Settlement Day* = "The third Wednesday
+  of the Contract Month".
+- **SGX** USD/SGD Futures: "Two business days prior to 3rd Wednesday of
+  the contract month" (per published contract specs).
+
+All three exchanges use the same unrolled-3rd-Wed anchor for LTD, so a
+single implementation suffices. The 9:16 a.m. CT (CME) and 11:00 a.m. HKT
+(HKEX) intraday cut-offs are out of v1.x scope.
+
+> **HKEX listed options (CUS).** HKEX *options* spec (CNHO-S-2) words the
+> rule as "Two Trading Days prior to the Final Settlement Day" where FSD =
+> 3rd Wed rolled to next BD. This is *mathematically equivalent* to the
+> CME wording "2 BDs prior to the third Wednesday" — the 2-BD back-count
+> absorbs the chain of non-BDs between unrolled imm and rolled FSD. The
+> listed-option IMM engine handles both wordings via one algorithm; see
+> §10.0 above.
 
 ### 11.1 Input modes
 

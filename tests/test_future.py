@@ -68,6 +68,7 @@ def test_result_dataclass_shape():
         venue="CME",
         last_trade_date=date(2026, 6, 15),
         delivery_date=date(2026, 6, 17),
+        imm_anchor=date(2026, 6, 17),
         last_trade_trace=[],
         delivery_trace=[],
         calendars_used=[],

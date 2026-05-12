@@ -50,6 +50,7 @@ class SwapResult:
     calendars_used: list[str] = field(default_factory=list)
     calendar_mode: CalendarMode = "FX"
     warnings: list[str] = field(default_factory=list)
+    reasoning: list[str] = field(default_factory=list)
 
 
 def _build_leg_calendar_set(
@@ -66,6 +67,29 @@ def _build_leg_calendar_set(
     if calendar_mode == "EXCHANGE":
         return exch_cs
     return combine_calendar_sets(rtgs_cs, exch_cs)
+
+
+def _fmt(d: date) -> str:
+    return f"{d.isoformat()} ({d.strftime('%a')})"
+
+
+def _adjustment_rule(raw: date, final: date, trace: list[AdjustmentStep]) -> str:
+    """Compose a one-line description of which adjustment rule fired.
+
+    Looks at the trace for `rolled_eom` markers and a month-change between raw
+    and final to distinguish: no-op, EOM, modified-following forward, and
+    modified-following preceding (the post-EOM fallback)."""
+    if raw == final:
+        return "Raw candidate is already a good business day — no adjustment needed."
+    saw_eom = any(s.decision == "rolled_eom" for s in trace)
+    if saw_eom and final.month == raw.month:
+        return f"End-of-month rule fired (spot is last BD of month) → last BD of target month {_fmt(final)}."
+    if final.month != raw.month:
+        return (
+            f"Modified-following forward roll crossed into the next month; "
+            f"switched to preceding-direction roll → {_fmt(final)}."
+        )
+    return f"Modified-following: rolled forward to next good business day → {_fmt(final)}."
 
 
 def calculate_swap_dates(
@@ -106,6 +130,13 @@ def calculate_swap_dates(
         return cal_label
 
     labels = [_label_for(k, v) for k, v in leg_cs.members.items()]
+    rtgs_brief = "RTGS{" + ", ".join(rtgs_cs.members.keys()) + "}"
+    leg_brief = (
+        rtgs_brief if calendar_mode == "FX" or otc_only
+        else "Exchange{" + ", ".join(
+            k for k, v in leg_cs.members.items() if isinstance(v, ExchangeCalendar)
+        ) + "}" + (f" ∪ {rtgs_brief}" if calendar_mode == "BOTH" else "")
+    )
     base = SwapResult(
         trade_date=trade_date,
         spot_date=spot.spot_date,
@@ -114,6 +145,9 @@ def calculate_swap_dates(
         spot_trace=spot.trace,
         calendars_used=labels,
         calendar_mode=calendar_mode,
+    )
+    base.reasoning.append(
+        f"**Spot offset:** T+{pair.spot_offset_days} on {rtgs_brief} → {_fmt(spot.spot_date)}."
     )
 
     # SPOT — return only spot date, no near/far legs
@@ -134,6 +168,10 @@ def calculate_swap_dates(
             far_date, far_trace = roll_with_trace(cur, leg_cs, "following")
             base.far_date = far_date
             base.far_trace = far_trace
+            base.reasoning.append(
+                f"**ON:** near = trade date {_fmt(trade_date)}; far = T+1 ({_fmt(cur)} raw) "
+                f"rolled `following` on {rtgs_brief} → {_fmt(far_date)}."
+            )
             return base
         if far_tenor.kind == "TN":
             if not is_good_business_day(trade_date, leg_cs):
@@ -147,11 +185,27 @@ def calculate_swap_dates(
                     f"a non-business day is not universal — verify with your "
                     f"counterparty."
                 )
-            cur = trade_date + timedelta(days=1)
-            near_date, near_trace = roll_with_trace(cur, leg_cs, "following")
+            near_raw = trade_date + timedelta(days=1)
+            near_date, near_trace = roll_with_trace(near_raw, leg_cs, "following")
             base.near_date = near_date
             base.near_trace = near_trace
-            base.far_date = spot.spot_date
+            # TN's "Next" = the BD after near (not the spot date). For T+2 pairs
+            # this coincides with spot; for T+1 pairs (USD/CAD) TN collapses
+            # onto SN, which is exactly how the interbank market quotes it.
+            far_raw = near_date + timedelta(days=1)
+            far_date, far_trace = roll_with_trace(far_raw, leg_cs, "following")
+            base.far_date = far_date
+            base.far_trace = far_trace
+            collapse_note = (
+                " (T+1 pair → TN ≡ SN, both legs are (spot, spot+1))"
+                if pair.spot_offset_days < 2
+                else ""
+            )
+            base.reasoning.append(
+                f"**TN:** near = T+1 ({_fmt(near_raw)} raw) rolled `following` on "
+                f"{rtgs_brief} → {_fmt(near_date)}; far = near+1 ({_fmt(far_raw)} raw) "
+                f"rolled `following` → {_fmt(far_date)}.{collapse_note}"
+            )
             return base
         if far_tenor.kind == "SN":
             base.near_date = spot.spot_date
@@ -159,6 +213,10 @@ def calculate_swap_dates(
             far_date, far_trace = roll_with_trace(cur, leg_cs, "following")
             base.far_date = far_date
             base.far_trace = far_trace
+            base.reasoning.append(
+                f"**SN:** near = spot {_fmt(spot.spot_date)}; far = spot+1 ({_fmt(cur)} raw) "
+                f"rolled `following` on {rtgs_brief} → {_fmt(far_date)}."
+            )
             return base
 
     # PERIOD / IMM / BROKEN — standard far-only forward
@@ -169,6 +227,13 @@ def calculate_swap_dates(
             far_date, far_trace = apply_eom_with_trace(spot.spot_date, raw_far, leg_cs)
             base.far_date = far_date
             base.far_trace = far_trace
+            base.reasoning.append(
+                f"**Far anchor:** spot + {far_tenor.period_n}{far_tenor.period_unit} "
+                f"= {_fmt(raw_far)} (raw)."
+            )
+            base.reasoning.append(
+                f"**Far roll on {leg_brief}:** {_adjustment_rule(raw_far, far_date, far_trace)}"
+            )
             return base
         if far_tenor.kind == "IMM":
             raw_far = next_imm_date(spot.spot_date, far_tenor.imm_index)
@@ -176,6 +241,13 @@ def calculate_swap_dates(
             far_date, far_trace = roll_with_trace(raw_far, leg_cs, "modified_following")
             base.far_date = far_date
             base.far_trace = far_trace
+            base.reasoning.append(
+                f"**Far anchor:** IMM{far_tenor.imm_index} after spot → 3rd Wed of "
+                f"{raw_far.year}-{raw_far.month:02d} = {_fmt(raw_far)} (raw)."
+            )
+            base.reasoning.append(
+                f"**Far roll on {leg_brief}:** {_adjustment_rule(raw_far, far_date, far_trace)}"
+            )
             return base
         if far_tenor.kind == "BROKEN":
             base.near_date = spot.spot_date
@@ -192,6 +264,12 @@ def calculate_swap_dates(
                 )
             base.far_date = far_date
             base.far_trace = far_trace
+            base.reasoning.append(
+                f"**Far anchor:** user-supplied broken date {_fmt(far_tenor.target_date)} (raw)."
+            )
+            base.reasoning.append(
+                f"**Far roll on {leg_brief}:** {_adjustment_rule(far_tenor.target_date, far_date, far_trace)}"
+            )
             return base
 
     # Forward-forward swap (FFS)
@@ -203,21 +281,35 @@ def calculate_swap_dates(
                 f"near={near_tenor.kind} far={far_tenor.kind}"
             )
 
-        def _resolve_with_trace(t: Tenor) -> tuple[date, list]:
+        def _resolve_with_trace(t: Tenor) -> tuple[date, list, date, str]:
             if t.kind == "PERIOD":
                 raw = add_period(spot.spot_date, t.period_unit, t.period_n)
-                return apply_eom_with_trace(spot.spot_date, raw, leg_cs)
+                d, tr = apply_eom_with_trace(spot.spot_date, raw, leg_cs)
+                return d, tr, raw, f"spot + {t.period_n}{t.period_unit}"
             if t.kind == "IMM":
                 raw = next_imm_date(spot.spot_date, t.imm_index)
-                return roll_with_trace(raw, leg_cs, "modified_following")
-            return roll_with_trace(t.target_date, leg_cs, "modified_following")
+                d, tr = roll_with_trace(raw, leg_cs, "modified_following")
+                return d, tr, raw, f"IMM{t.imm_index} after spot → 3rd Wed of {raw.year}-{raw.month:02d}"
+            d, tr = roll_with_trace(t.target_date, leg_cs, "modified_following")
+            return d, tr, t.target_date, "user-supplied broken date"
 
-        near_d, near_tr = _resolve_with_trace(near_tenor)
-        far_d, far_tr = _resolve_with_trace(far_tenor)
+        near_d, near_tr, near_raw, near_anchor = _resolve_with_trace(near_tenor)
+        far_d, far_tr, far_raw, far_anchor = _resolve_with_trace(far_tenor)
         base.near_date = near_d
         base.near_trace = near_tr
         base.far_date = far_d
         base.far_trace = far_tr
+        base.reasoning.append(
+            "**FFS:** both legs anchored on spot (OpenGamma Strata convention)."
+        )
+        base.reasoning.append(
+            f"**Near anchor:** {near_anchor} = {_fmt(near_raw)} (raw); "
+            f"{_adjustment_rule(near_raw, near_d, near_tr)}"
+        )
+        base.reasoning.append(
+            f"**Far anchor:** {far_anchor} = {_fmt(far_raw)} (raw); "
+            f"{_adjustment_rule(far_raw, far_d, far_tr)}"
+        )
         if base.near_date <= spot.spot_date:
             raise InvalidFFSCombinationError(
                 f"FFS near_date ({base.near_date}) must be after spot_date ({spot.spot_date})"

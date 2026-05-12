@@ -606,3 +606,57 @@ def test_tn_on_good_trade_date_emits_no_warning():
         calendars=cals,
     )
     assert r.warnings == []
+
+
+def test_tn_for_t_plus_1_pair_equals_sn():
+    # USD/CAD is T+1. TN's "Next" is the BD after T+1, not spot — so TN
+    # collapses to SN. The interbank market quotes them at the same rate
+    # (cf. investing.com USDCAD forward rates table: TN ≡ SN).
+    cals = {"USD": _empty("USD"), "CAD": _empty("CAD")}
+    tn = calculate_swap_dates(
+        trade_date=date(2026, 5, 6),
+        pair=parse_pair("USD/CAD"),
+        far_tenor=parse_tenor("TN"),
+        ref_currency="none",
+        calendars=cals,
+    )
+    sn = calculate_swap_dates(
+        trade_date=date(2026, 5, 6),
+        pair=parse_pair("USD/CAD"),
+        far_tenor=parse_tenor("SN"),
+        ref_currency="none",
+        calendars=cals,
+    )
+    assert tn.near_date == sn.near_date == date(2026, 5, 7)
+    assert tn.far_date == sn.far_date == date(2026, 5, 8)
+
+
+def test_tn_for_t_plus_2_pair_far_equals_spot():
+    # For T+2 pairs, TN's far date coincides with spot — a happy coincidence
+    # of "TN.Next = near + 1 BD" and "spot = T+2", not a deliberate rule.
+    cals = {"EUR": _empty("EUR"), "USD": _empty("USD")}
+    r = calculate_swap_dates(
+        trade_date=date(2026, 5, 6),
+        pair=parse_pair("EUR/USD"),
+        far_tenor=parse_tenor("TN"),
+        ref_currency="none",
+        calendars=cals,
+    )
+    assert r.near_date == date(2026, 5, 7)
+    assert r.far_date == date(2026, 5, 8)
+    assert r.far_date == r.spot_date  # incidental, not enforced
+
+
+def test_on_for_t_plus_1_pair():
+    # ON: near = T, far = T+1 = spot for T+1 pair.
+    cals = {"USD": _empty("USD"), "CAD": _empty("CAD")}
+    r = calculate_swap_dates(
+        trade_date=date(2026, 5, 6),
+        pair=parse_pair("USD/CAD"),
+        far_tenor=parse_tenor("ON"),
+        ref_currency="none",
+        calendars=cals,
+    )
+    assert r.near_date == date(2026, 5, 6)
+    assert r.far_date == date(2026, 5, 7)
+    assert r.far_date == r.spot_date

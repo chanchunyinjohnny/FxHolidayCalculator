@@ -68,6 +68,7 @@ def test_result_dataclass_shape():
         expiry_date=date(2026, 6, 8),
         delivery_date=date(2026, 6, 10),
         style="OTC",
+        spot_trace=[],
         expiry_trace=[],
         delivery_trace=[],
         calendars_used=[],
@@ -376,3 +377,121 @@ def test_option_same_day_expiry_warning():
     )
     assert r.expiry_date == r.spot_date
     assert any("expires on spot" in w for w in r.warnings)
+
+
+# --- Listed-option IMM expiry: 2 BDs before unrolled 3rd Wed on exchange ---
+
+
+def _hol_exchange(venue: str, days: list[date]) -> ExchangeCalendar:
+    entries = {
+        d: HolidayEntry(d, "Exchange closed", None, _src(), "bundled", is_closure=True)
+        for d in days
+    }
+    return ExchangeCalendar(
+        venue=venue, products=(), entries_by_date=entries, library_sourced=False, **WINDOW
+    )
+
+
+def test_listed_imm_expiry_clean_cme_eurusd():
+    # IMM1 from May 6 2026 → contract month June 2026. 3rd Wed = 06-17 (Wed).
+    # No exchange holidays → expiry = 2 BD before = 06-15 (Mon). Delivery
+    # = expiry + 2 BD = 06-17 (Wed).
+    cals = {"EUR": _empty_rtgs("EUR"), "USD": _empty_rtgs("USD")}
+    r = calculate_option_dates(
+        trade_date=date(2026, 5, 6),
+        pair=parse_pair("EUR/USD"),
+        tenor=parse_tenor("IMM1"),
+        style="LISTED",
+        rtgs_calendars=cals,
+        exchange_calendar=_empty_exchange("CME"),
+        venue="CME",
+    )
+    assert r.expiry_date == date(2026, 6, 15)
+    assert r.delivery_date == date(2026, 6, 17)
+
+
+def test_listed_imm_expiry_clean_hkex_usdcnh():
+    # Same as above but on HKEX USD/CNH. The HKEX spec wording uses rolled
+    # FSD as the anchor; the back-count produces the identical date.
+    cals = {"USD": _empty_rtgs("USD"), "CNH": _empty_rtgs("CNH")}
+    r = calculate_option_dates(
+        trade_date=date(2026, 5, 6),
+        pair=parse_pair("USD/CNH"),
+        tenor=parse_tenor("IMM1"),
+        style="LISTED",
+        rtgs_calendars=cals,
+        exchange_calendar=_empty_exchange("HKEX"),
+        venue="HKEX",
+    )
+    assert r.expiry_date == date(2026, 6, 15)
+    assert r.delivery_date == date(2026, 6, 17)
+
+
+def test_listed_imm_expiry_skips_exchange_holiday_in_back_count():
+    # 3rd Wed = 06-17 (Wed). Make Tue 06-16 a HKEX holiday. Back-count from
+    # 06-17 skips 06-16 → expiry = 06-15 (Mon). Skipping 06-12 weekend isn't
+    # tested here; this is the holiday-skip case.
+    cals = {"USD": _empty_rtgs("USD"), "CNH": _empty_rtgs("CNH")}
+    hkex_hol = _hol_exchange("HKEX", [date(2026, 6, 16)])
+    r = calculate_option_dates(
+        trade_date=date(2026, 5, 6),
+        pair=parse_pair("USD/CNH"),
+        tenor=parse_tenor("IMM1"),
+        style="LISTED",
+        rtgs_calendars=cals,
+        exchange_calendar=hkex_hol,
+        venue="HKEX",
+    )
+    # Back from 06-17: 06-16 (holiday, skip), 06-15 (Mon, good)=1,
+    # 06-14 (Sun skip), 06-13 (Sat skip), 06-12 (Fri, good)=2 → 06-12.
+    assert r.expiry_date == date(2026, 6, 12)
+
+
+def test_listed_imm_expiry_hkex_cme_rule_equivalence():
+    # The HKEX rule and the CME rule produce identical expiry dates in
+    # every case because the back-count traverses the chain of non-BDs
+    # between the unrolled 3rd Wed and the rolled FSD identically. This
+    # test pins that property: same exchange calendar (modulo venue label),
+    # same expiry.
+    cals_eu = {"EUR": _empty_rtgs("EUR"), "USD": _empty_rtgs("USD")}
+    cals_uc = {"USD": _empty_rtgs("USD"), "CNH": _empty_rtgs("CNH")}
+    holidays = [date(2026, 6, 17), date(2026, 6, 16)]  # 3rd Wed + Tue both closed
+    cme = calculate_option_dates(
+        trade_date=date(2026, 5, 6),
+        pair=parse_pair("EUR/USD"),
+        tenor=parse_tenor("IMM1"),
+        style="LISTED",
+        rtgs_calendars=cals_eu,
+        exchange_calendar=_hol_exchange("CME", holidays),
+        venue="CME",
+    )
+    hkex = calculate_option_dates(
+        trade_date=date(2026, 5, 6),
+        pair=parse_pair("USD/CNH"),
+        tenor=parse_tenor("IMM1"),
+        style="LISTED",
+        rtgs_calendars=cals_uc,
+        exchange_calendar=_hol_exchange("HKEX", holidays),
+        venue="HKEX",
+    )
+    assert cme.expiry_date == hkex.expiry_date
+    # And the date itself: imm=06-17 holiday, 06-16 holiday → back from 06-17:
+    # 06-16 (skip), 06-15 (Mon)=1, 06-14 (Sun skip), 06-13 (Sat skip),
+    # 06-12 (Fri)=2 → expiry = 06-12.
+    assert cme.expiry_date == date(2026, 6, 12)
+
+
+def test_otc_imm_unaffected_by_listed_rule_change():
+    # OTC + IMM keeps the original "3rd Wed rolled modified-following on RTGS"
+    # behavior — no 2-BD back-count for OTC.
+    cals = {"EUR": _empty_rtgs("EUR"), "USD": _empty_rtgs("USD")}
+    r = calculate_option_dates(
+        trade_date=date(2026, 5, 6),
+        pair=parse_pair("EUR/USD"),
+        tenor=parse_tenor("IMM1"),
+        style="OTC",
+        ref_currency="none",
+        rtgs_calendars=cals,
+    )
+    # 3rd Wed = 06-17 (Wed), no RTGS holidays → no adjustment → expiry = 06-17.
+    assert r.expiry_date == date(2026, 6, 17)

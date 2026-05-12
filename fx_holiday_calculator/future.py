@@ -45,10 +45,12 @@ class FutureResult:
     venue: str
     last_trade_date: date
     delivery_date: date
+    imm_anchor: date  # unrolled 3rd Wednesday of contract month
     last_trade_trace: list[AdjustmentStep]
     delivery_trace: list[AdjustmentStep]
     calendars_used: list[str]
     warnings: list[str] = field(default_factory=list)
+    reasoning: list[str] = field(default_factory=list)
 
 
 def calculate_future_dates(
@@ -123,14 +125,31 @@ def calculate_future_dates(
     ]
 
     warnings: list[str] = []
+    combined_brief = f"{venue} ∪ RTGS{{{pair.base}, {pair.quote}}}"
+    reasoning = [
+        f"**Contract:** {pair.base}/{pair.quote} on {venue}, contract month "
+        f"{contract_month[0]}-{contract_month[1]:02d}.",
+        f"**IMM anchor:** 3rd Wednesday of contract month = "
+        f"{anchor.isoformat()} ({anchor.strftime('%a')}) (unrolled).",
+        f"**Delivery:** 3rd Wed rolled modified-following on {combined_brief} → "
+        f"{delivery_date.isoformat()} ({delivery_date.strftime('%a')}).",
+        f"**Last trade date:** 2 good business days *before the UNROLLED 3rd Wed* "
+        f"on {combined_brief} → {last_trade_date.isoformat()} "
+        f"({last_trade_date.strftime('%a')}). "
+        f"LTD anchors on the unrolled IMM date — it does *not* chain off rolled "
+        f"delivery. Same convention applies on CME (Rule 25102.E), HKEX (USD/CNH "
+        f"infosheet July 2022) and SGX (FX futures spec).",
+    ]
 
     return FutureResult(
         contract_month=contract_month,
         venue=venue,
         last_trade_date=last_trade_date,
         delivery_date=delivery_date,
+        imm_anchor=anchor,
         last_trade_trace=last_trade_trace,
         delivery_trace=delivery_trace,
         calendars_used=calendars_used,
         warnings=warnings,
+        reasoning=reasoning,
     )

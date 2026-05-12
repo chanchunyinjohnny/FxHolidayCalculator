@@ -34,6 +34,7 @@ class ForwardResult:
     calendars_used: list[str]
     calendar_mode: CalendarMode = "FX"
     warnings: list[str] = field(default_factory=list)
+    reasoning: list[str] = field(default_factory=list)
 
 
 def calculate_forward_dates(
@@ -72,4 +73,7 @@ def calculate_forward_dates(
         calendars_used=swap_result.calendars_used,
         calendar_mode=swap_result.calendar_mode,
         warnings=list(swap_result.warnings),
+        reasoning=[s.replace("**Far anchor:**", "**Settlement anchor:**")
+                   .replace("**Far roll", "**Settlement roll")
+                   for s in swap_result.reasoning],
     )

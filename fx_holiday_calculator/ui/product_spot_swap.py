@@ -21,7 +21,7 @@ from fx_holiday_calculator.swap import (
     calculate_swap_dates,
 )
 from fx_holiday_calculator.tenor import InvalidTenorError, parse_tenor
-from fx_holiday_calculator.ui._widgets import date_input_with_today
+from fx_holiday_calculator.ui._widgets import date_input_with_today, render_reasoning, render_trace
 
 BUNDLED = Path(__file__).resolve().parents[2] / "data"
 CACHE = Path.home() / ".fx_holiday_calculator" / "cache"
@@ -47,32 +47,6 @@ def _load_rtgs_set(currencies):
         )
         for c in currencies
     }
-
-
-def _render_trace(steps, label: str) -> None:
-    if not steps:
-        st.write(f"_{label}: no adjustment steps_")
-        return
-    with st.expander(f"{label} — {len(steps)} candidate(s)", expanded=True):
-        for s in steps:
-            cols = st.columns([1.4, 0.5, 4, 1])
-            cols[0].write(s.candidate_date.isoformat())
-            cols[1].write(s.weekday)
-            cells = []
-            for cal_label, status in s.statuses.items():
-                if status.is_good:
-                    cells.append(f"{cal_label}: ✓")
-                else:
-                    cells.append(f"{cal_label}: ✘ {status.holiday_name}")
-            cols[2].write("  ·  ".join(cells))
-            cols[3].write(s.decision)
-            for cal_label, status in s.statuses.items():
-                if status.source is not None:
-                    st.caption(
-                        f"{cal_label}: [{status.source.doc_title}]({status.source.url}) · "
-                        f"fetched {status.source.fetched_at.isoformat()} · "
-                        f"{status.source_origin}"
-                    )
 
 
 def render() -> None:
@@ -218,7 +192,9 @@ def render() -> None:
                 gap = (result.far_date - result.near_date).days
                 st.caption(f"Near→Far: {gap} calendar days")
 
+        render_reasoning(result.reasoning)
+
         st.markdown("### Adjustment trace")
-        _render_trace(result.spot_trace, "Spot offset")
-        _render_trace(result.near_trace, "Near leg")
-        _render_trace(result.far_trace, "Far leg")
+        render_trace(result.spot_trace, "Spot offset")
+        render_trace(result.near_trace, "Near leg")
+        render_trace(result.far_trace, "Far leg")
