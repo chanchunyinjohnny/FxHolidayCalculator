@@ -1,7 +1,16 @@
 # Streamlit Community Cloud installs from requirements.txt when present.
-# `.[extras]` installs the project's base dependencies (pyproject.toml
-# [project.dependencies]) plus the optional `extras` group, which adds
-# `exchange_calendars` so SGX/HKEX/CME library-sourced refresh works on
-# the deployed app. The constrained-corporate profile remains unaffected
-# because it installs from pyproject without this file.
-.[extras]
+#
+# We list dependencies explicitly (rather than `.[extras]`) because relying
+# on the local-project install + extras resolution is fragile on Streamlit
+# Cloud: any hiccup in building the project or resolving the extras group
+# silently drops `exchange_calendars`, which leaves SGX/HKEX/CME stuck on
+# the bundled fallback and surfaces a misleading "not installed" warning.
+#
+# The constrained-corporate profile is unaffected — it installs from
+# pyproject.toml and does not see this file.
+streamlit==1.30.*
+requests>=2.28
+pdfplumber>=0.10
+python-dateutil>=2.8
+holidays==0.45
+exchange_calendars>=4
