@@ -176,6 +176,18 @@ def render() -> None:
         if not rows:
             return
 
+        liq_rows = [r for r in rows if r.liquidity]
+        if liq_rows:
+            st.warning(
+                "Liquidity warning — these dates are flagged as thin/halted "
+                "trading even though they are not full closures:\n\n"
+                + "\n".join(
+                    f"• {r.date.isoformat()} ({r.weekday}) {r.calendar}: "
+                    f"{r.liquidity} — {r.holiday_name}"
+                    for r in liq_rows
+                )
+            )
+
         rendered = [
             {
                 "Date": r.date.isoformat(),
