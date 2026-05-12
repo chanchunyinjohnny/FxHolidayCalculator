@@ -3,6 +3,8 @@
 A Streamlit tool for double-checking FX swap dates and per-pair holiday
 calendars, with primary-source provenance for every date returned.
 
+**Try it now:** <https://fx-holiday-calculator.streamlit.app/>
+
 - **FX swap date calculator** — Standard swap (one tenor) and Forward-forward
   (two tenors). Spot, ON, TN, SN, nD/nW/nM/nY, IMM1..IMM4, broken-date.
 - **Holiday calendar** — FX-RTGS holidays for any supported currency pair,
@@ -12,7 +14,10 @@ calendars, with primary-source provenance for every date returned.
   the official document it was sourced from and the timestamp it was fetched
   at. There are no unsourced dates.
 
-## Run
+## Run locally
+
+The hosted app at <https://fx-holiday-calculator.streamlit.app/> is the
+easiest way to try the tool. To run your own copy:
 
 ```bash
 pip install -e .
