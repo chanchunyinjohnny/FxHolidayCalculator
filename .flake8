@@ -1,0 +1,19 @@
+[flake8]
+max-line-length = 120
+
+# pycodestyle 2.10 (bundled with the pinned flake8==6.0.*) mis-parses
+# f-strings: it treats `:` inside literal text (e.g. "Spot date:**") and
+# `:` inside format specs (e.g. "{month:02d}") as Python operators, and
+# treats `;` inside literal English (e.g. "rolled forward; accepted") as
+# a statement separator. The result is a flood of false-positive E231 /
+# E222 / E702 reports against perfectly correct f-string content.
+#
+# These were fixed in pycodestyle 2.11, but flake8 6.0.* pins
+# pycodestyle <2.11, and the corporate-profile install allow-list keeps
+# us on flake8 6.0.* for now. Ignore the three affected codes globally
+# so CI catches real issues (undefined names, unused imports, line
+# length, indentation) without drowning in f-string noise.
+extend-ignore =
+    E222,
+    E231,
+    E702

@@ -132,10 +132,12 @@ def calculate_swap_dates(
     labels = [_label_for(k, v) for k, v in leg_cs.members.items()]
     rtgs_brief = "RTGS{" + ", ".join(rtgs_cs.members.keys()) + "}"
     leg_brief = (
-        rtgs_brief if calendar_mode == "FX" or otc_only
-        else "Exchange{" + ", ".join(
-            k for k, v in leg_cs.members.items() if isinstance(v, ExchangeCalendar)
-        ) + "}" + (f" ∪ {rtgs_brief}" if calendar_mode == "BOTH" else "")
+        rtgs_brief
+        if calendar_mode == "FX" or otc_only
+        else "Exchange{"
+        + ", ".join(k for k, v in leg_cs.members.items() if isinstance(v, ExchangeCalendar))
+        + "}"
+        + (f" ∪ {rtgs_brief}" if calendar_mode == "BOTH" else "")
     )
     base = SwapResult(
         trade_date=trade_date,
@@ -289,7 +291,12 @@ def calculate_swap_dates(
             if t.kind == "IMM":
                 raw = next_imm_date(spot.spot_date, t.imm_index)
                 d, tr = roll_with_trace(raw, leg_cs, "modified_following")
-                return d, tr, raw, f"IMM{t.imm_index} after spot → 3rd Wed of {raw.year}-{raw.month:02d}"
+                return (
+                    d,
+                    tr,
+                    raw,
+                    f"IMM{t.imm_index} after spot → 3rd Wed of {raw.year}-{raw.month:02d}",
+                )
             d, tr = roll_with_trace(t.target_date, leg_cs, "modified_following")
             return d, tr, t.target_date, "user-supplied broken date"
 
@@ -299,9 +306,7 @@ def calculate_swap_dates(
         base.near_trace = near_tr
         base.far_date = far_d
         base.far_trace = far_tr
-        base.reasoning.append(
-            "**FFS:** both legs anchored on spot (OpenGamma Strata convention)."
-        )
+        base.reasoning.append("**FFS:** both legs anchored on spot (OpenGamma Strata convention).")
         base.reasoning.append(
             f"**Near anchor:** {near_anchor} = {_fmt(near_raw)} (raw); "
             f"{_adjustment_rule(near_raw, near_d, near_tr)}"

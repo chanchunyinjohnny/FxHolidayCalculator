@@ -11,10 +11,8 @@ delivery rolls on RTGS{base, quote} (cash legs settle bilaterally).
 Conventions: see docs/conventions.md §10.
 """
 from dataclasses import dataclass, field
-from datetime import date
+from datetime import date, timedelta
 from typing import Literal, Optional
-
-from datetime import timedelta
 
 from fx_holiday_calculator.calendars.exchange import ExchangeCalendar
 from fx_holiday_calculator.calendars.rtgs import RtgsCalendar
@@ -222,9 +220,7 @@ def calculate_option_dates(
             )
         else:
             # OTC: traditional "expiry = 3rd Wed rolled mod-following on RTGS".
-            expiry_date, expiry_trace = roll_with_trace(
-                raw_expiry, expiry_cs, "modified_following"
-            )
+            expiry_date, expiry_trace = roll_with_trace(raw_expiry, expiry_cs, "modified_following")
             reasoning.append(
                 f"**Expiry anchor:** IMM{tenor.imm_index} after spot → 3rd Wed of "
                 f"{raw_expiry.year}-{raw_expiry.month:02d} = "

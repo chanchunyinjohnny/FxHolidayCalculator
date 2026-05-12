@@ -90,9 +90,7 @@ def render() -> None:
 
     today = date.today()
     c3, c4 = st.columns(2)
-    start = date_input_with_today(
-        c3, "Start date", key="hol_start", default=date(today.year, 1, 1)
-    )
+    start = date_input_with_today(c3, "Start date", key="hol_start", default=date(today.year, 1, 1))
     end = c4.date_input("End date", value=date(today.year, 12, 31), key="hol_end")
 
     needed_rtgs = {pair.base, pair.quote}
