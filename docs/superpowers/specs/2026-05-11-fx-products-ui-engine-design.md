@@ -258,17 +258,32 @@ Side effects unchanged: writes parsed JSON to `data/fx_fixing/<CCY>.json` and ra
 
 ### 5.5 Pair table additions
 
-`pairs.py` gains three NDF entries plus two new fields on `Pair`:
+`pairs.py` gains three NDF entries plus new fields on `Pair`:
 
 ```python
+@dataclass(frozen=True)
+class ConventionSource:
+    url: str
+    doc_title: str
+    documented_at: datetime
+
+@dataclass(frozen=True)
+class PairConvention:
+    rule: str
+    description: str
+    source: ConventionSource
+
 @dataclass(frozen=True)
 class Pair:
     base: str
     quote: str
     spot_offset_days: int
     listed_on: tuple[str, ...]
-    ndf: bool = False                       # NEW
-    fixing_currency: str | None = None      # NEW — set iff ndf=True
+    ndf: bool = False                                       # NEW (v1.1)
+    fixing_currency: str | None = None                      # NEW (v1.1) — set iff ndf=True
+    default_ref_currency: str | None = None                 # NEW — documented third-currency default
+    ref_currency_source: ConventionSource | None = None     # NEW — provenance for the default ref
+    conventions: tuple[PairConvention, ...] = ()            # NEW — pair-specific carve-outs (T+1, split-settlement, …)
 
 # Additions
 _add("USD", "CNY", t=2, listed_on=(), ndf=True, fixing_currency="CNY")
@@ -277,6 +292,8 @@ _add("USD", "TWD", t=2, listed_on=(), ndf=True, fixing_currency="TWD")
 ```
 
 The existing `KRW/USD` SGX-listed deliverable entry remains. `USD/KRW` is a distinct NDF pair (different convention, different settlement currency). No collision: pair keys are `(base, quote)` tuples.
+
+`default_ref_currency` defaults to `"USD"` for non-USD crosses (per FX Global Code) and to `None` when USD is already a leg or for NDF pairs. The UI uses it to drive the reference-currency picker — see [`docs/conventions.md` §13](../../conventions.md) for the data model, the documented USD/CAD T+1 and EUR/USD split-settlement entries, and the per-date ref-calendar status surfacing.
 
 ### 5.6 Refresh integration
 

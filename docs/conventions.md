@@ -423,3 +423,113 @@ PERIOD/IMM/BROKEN branch and discards the implicit near leg.
   branch with `near_tenor=None`)
 - Tests: `tests/test_forward.py`
 - UI: `fx_holiday_calculator/ui/product_forward.py`
+
+## 13. Per-pair conventions and the default reference currency
+
+Some market conventions are pair-specific (e.g. USD/CAD's T+1 spot lag,
+EUR/USD's split-settlement carve-out for US-only holidays). Rather than
+hard-coding these in the engine or UI, the `Pair` dataclass carries
+documented metadata so each convention can be surfaced with its own
+primary source.
+
+### 13.1 Data model
+
+```python
+@dataclass(frozen=True)
+class ConventionSource:
+    url: str
+    doc_title: str
+    documented_at: datetime  # when the project last verified the citation
+
+@dataclass(frozen=True)
+class PairConvention:
+    rule: str
+    description: str
+    source: ConventionSource
+
+@dataclass(frozen=True)
+class Pair:
+    # ... existing fields ...
+    default_ref_currency: str | None = None
+    ref_currency_source: ConventionSource | None = None
+    conventions: tuple[PairConvention, ...] = ()
+```
+
+`ConventionSource` is intentionally distinct from the bundled-data
+`SourceRef` type. Bundled data is parsed from a published calendar PDF /
+HTML; pair conventions are documented market practice and cite a market
+reference (FX Global Code, CFEC, CLS Group, etc.).
+
+### 13.2 Default reference currency
+
+`default_ref_currency` codifies the per-pair "third-currency rule" — the
+calendar consulted for settlement in addition to the two leg currencies.
+
+The defaulting rule used by `pairs._add`:
+
+- If the caller passes `default_ref_currency` explicitly, that wins.
+- Otherwise, **non-USD crosses default to USD** (per FX Global Code, the
+  USD calendar is the canonical third currency).
+- Pairs where USD is already a leg get `default_ref_currency=None` —
+  USD's calendar is consulted as a leg by construction, and no separate
+  third-currency check applies.
+- NDF pairs get `default_ref_currency=None` — NDF spot rolls on USD only
+  per §9.
+
+The UI uses this field to drive the reference-currency picker:
+
+- `None`, or `default_ref_currency` matches one of the two legs → the
+  picker is hidden and `ref="none"` is fixed.
+- Otherwise → picker shows `["none", default_ref, …extras]` and defaults
+  to `default_ref`. If the user picks a different ref, the UI surfaces a
+  warning that they diverged from the documented default.
+
+### 13.3 Documented conventions in v1.x
+
+| Pair    | Rule                                      | Enforced by engine? | Source                                                  |
+|---------|-------------------------------------------|---------------------|---------------------------------------------------------|
+| USD/CAD | T+1 spot lag                              | **Yes** (§2)        | [Canadian FX Committee — Market Practices][cfec]        |
+| EUR/USD | Split-settlement on US-only holidays      | **No** — informational | [CLS Settlement — Currency Operating Hours][cls]     |
+
+The USD/CAD T+1 rule is enforced by the spot-offset engine (see §2). The
+new `PairConvention` entry attaches the primary-source citation so the
+UI can surface *why* USD/CAD is T+1.
+
+The EUR/USD split-settlement carve-out is **not** enforced by the engine
+in v1.x — the engine still treats US holidays as moving the EUR/USD spot
+date. The `PairConvention` entry documents the gap so the UI can warn
+users that a real EUR/USD desk may book the split-settlement variant
+even when this tool's date math says otherwise. Implementing the engine
+side is deferred to a future version.
+
+[cfec]: https://www.cfec.ca/files/conventions.pdf
+[cls]: https://www.cls-group.com/products/settlement/cls-settlement/
+
+### 13.4 UI surfacing
+
+Two widgets in `fx_holiday_calculator/ui/_widgets.py` consume this
+metadata:
+
+- `render_reference_status(pair, selected_ref, named_traces)` — per
+  derived date (spot offset / settlement / near leg / far leg / expiry /
+  delivery), reports whether the chosen ref calendar was consulted and
+  whether it actually moved the date. Lists the ref-currency holidays
+  that caused any rejections in the calculation window.
+- `render_pair_conventions(pair)` — renders each `PairConvention` entry
+  (rule, description, source link). No-op if `pair.conventions` is
+  empty.
+
+Both render under the "Adjustment trace" block on each product tab so
+the user sees the trace, the per-date ref-calendar verdict, and the
+documented conventions side-by-side.
+
+### 13.5 Where this lives
+
+- Model: `fx_holiday_calculator/pairs.py`
+  (`ConventionSource`, `PairConvention`, `Pair.default_ref_currency`,
+  `Pair.ref_currency_source`, `Pair.conventions`)
+- UI widgets: `fx_holiday_calculator/ui/_widgets.py`
+  (`render_reference_status`, `render_pair_conventions`)
+- Consumers: every product tab (`product_spot_swap.py`,
+  `product_forward.py`, `product_ndf.py`, `product_option.py`,
+  `product_futures.py`, `tab_holidays.py`)
