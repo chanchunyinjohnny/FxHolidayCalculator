@@ -54,6 +54,15 @@ def _refresh_library_exchange(
 ) -> RefreshResult:
     try:
         mod = importlib.import_module(_LIBRARY_EXCHANGE_MODULE)
+    except ModuleNotFoundError as exc:
+        missing = exc.name or "exchange_calendars"
+        msg = (
+            f"{missing!r} not installed — exchange-calendar refresh requires the "
+            "optional 'extras' dep group (pip install -e \".[extras]\"). "
+            "Bundled data continues to load."
+        )
+        return RefreshResult(source=venue, changed=False, error=msg, output_path=None)
+    try:
         out = mod.fetch(year_range, target, venue)
         return RefreshResult(source=venue, changed=True, error=None, output_path=out)
     except Exception as exc:

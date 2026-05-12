@@ -58,7 +58,7 @@ National (public) holidays are surfaced **for reference only** and are visually 
 
 ## 6. Project layout
 
-Mirrors `OpenFigiClient` and `FxFixParser` (Python 3.10/3.11, BOCHK env restrictions).
+Mirrors `OpenFigiClient` and `FxFixParser` (Python 3.10/3.11, constrained-corporate env restrictions).
 
 ```
 FxHolidayCalculator/
@@ -473,7 +473,7 @@ All tests offline. Run with `pytest`. No `pytest-cov`. Lint: `flake8`, `black --
 
 ## 12. Packaging
 
-- `pyproject.toml` with `setuptools`, name `fx-holiday-calculator`, `requires-python >= "3.10"`. Dependencies BOCHK-allowed: `streamlit==1.30.*`, `python-holidays` (pinned), `requests`, `pdfplumber` (or `pypdf`). Optional `[test]` extra: `pytest`, `flake8`, `black`, `isort`.
+- `pyproject.toml` with `setuptools`, name `fx-holiday-calculator`, `requires-python >= "3.10"`. Dependencies allowed under the constrained corporate profile: `streamlit==1.30.*`, `python-holidays` (pinned), `requests`, `pdfplumber` (or `pypdf`). Optional `[test]` extra: `pytest`, `flake8`, `black`, `isort`. Optional `[extras]` extra (NOT available under the constrained profile): `exchange_calendars` — required for live-refresh of `data/fx_exchange/{SGX,HKEX,CME}.json`.
 - `pack.sh` mirrors OpenFigiClient/FxFixParser; produces sdist + wheel into `dist/`.
 - `proprietary/`, `dist/`, `__pycache__`, `.pytest_cache` gitignored.
 - `run_ui.py` at repo root.

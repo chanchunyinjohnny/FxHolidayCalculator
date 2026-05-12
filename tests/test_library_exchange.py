@@ -8,8 +8,14 @@ from pathlib import Path
 
 import pytest
 
-from fx_holiday_calculator.calendars.loader import load_exchange_calendar
-from scripts.sources.library_exchange import build_payload, fetch_all
+# exchange_calendars is an optional runtime extra (see pyproject.toml's
+# `[project.optional-dependencies] extras`). Skip this module cleanly when
+# it isn't installed so the rest of the test suite still runs under the
+# constrained-corporate profile.
+pytest.importorskip("exchange_calendars")
+
+from fx_holiday_calculator.calendars.loader import load_exchange_calendar  # noqa: E402
+from scripts.sources.library_exchange import build_payload, fetch_all  # noqa: E402
 
 
 def test_build_payload_has_schema_v3_and_library_provenance():

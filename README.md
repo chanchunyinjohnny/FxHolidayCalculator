@@ -26,6 +26,21 @@ streamlit run run_ui.py
 
 Then open the displayed local URL in a browser.
 
+### Optional: refresh SGX / HKEX / CME exchange calendars
+
+The library-sourced exchange-calendar refresh pulls dates from the optional
+[`exchange_calendars`](https://pypi.org/project/exchange-calendars/) package.
+Bundled data in `data/fx_exchange/*.json` loads without it; only on-demand
+refresh of those three venues requires it.
+
+```bash
+pip install -e ".[extras]"
+```
+
+The `extras` group is separate from the project's base dependencies because
+some deployment environments restrict allowable third-party packages — leave
+it uninstalled and the tool still works against bundled data.
+
 ## v1 scope
 
 This release ships with four primary-source RTGS settlement calendars:

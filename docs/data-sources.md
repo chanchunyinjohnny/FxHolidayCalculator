@@ -373,8 +373,8 @@ following at implementation time:
 - **CME** master holiday calendar is an interactive HTML widget; the
   underlying data is loaded via XHR.
 
-Plain-HTTP scraping (the only path available under the BOCHK runtime
-constraints — no Playwright, no headless browser) cannot reach the holiday
+Plain-HTTP scraping (the only path available under the constrained-runtime
+profile — no Playwright, no headless browser) cannot reach the holiday
 data on any of these venues. The hybrid strategy ships working v1 data via
 the library while leaving the door open for primary-source fetchers as
 they become viable (PDF parsing for SGX, ICS feed if discovered, manual
@@ -520,24 +520,22 @@ requires per-currency fixing calendars sourced from primary publications.
 ### CNY — CFETS / PBoC
 
 - **Operator:** China Foreign Exchange Trade System (under PBoC).
-- **Document:** CFETS USD/CNY central parity (中间价) trading calendar.
-- **URL:** https://www.chinamoney.com.cn/english/svcrmm/
-- **Format:** HTML table.
-- **Parser:** `scripts/sources/cfets_cny.py`. Reads `<tr><td>YYYY-MM-DD</td><td>Name</td></tr>` rows from any `<table>` on the page. Filters by year_range; dedupes.
-- **Known quirks:** Real-world CFETS HTML may differ from the canonical fixture in `tests/fixtures/sources/cfets_cny/sample.html`. The fixture locks the parser contract; the live-fetch first run (Task 1.6 in the implementation plan) will likely require parser adjustments. Chinese New Year and National Day Golden Week produce multi-day closures.
+- **Document:** CFETS Foreign Exchange Trading Calendar (covers all FX
+  interbank trading days, including USD/CNY central parity / 中间价).
+- **Page (human-readable):** https://www.chinamoney.com.cn/english/svctcd/
+- **API (what the fetcher hits):** https://www.chinamoney.com.cn/ags/ms/cm-s-holiday/depFxTradingCal?selectedYear=YYYY
+- **Format:** JSON. Each call returns ~3 calendar years (always 2025 + 2027 + the requested year, as observed against the live API in 2026). Per-currency closure dates live under `data.currency[year_str]["CNY"]` as strings of the form `"Jan 01"`. Holiday names are NOT carried in the response.
+- **Parser:** `scripts/sources/cfets_cny.py`. Iterates `selectedYear` over the requested `year_range` (skipping years already covered by a previous response), dedupes by ISO date, and enriches names via `python-holidays.China(language="en_US")`. Dates the library does not name (e.g. CFETS-specific working-Saturday make-up days) fall back to a generic `"CFETS CNY market closure"` label.
+- **Validity-window clamping:** `valid_until` is clamped to the latest year actually present in the responses' `yearList`, so the downstream FixingCalendar raises `CalendarRangeError` for years CFETS has not yet published rather than silently returning False.
+- **Known quirks:** Chinese New Year and National Day Golden Week produce multi-day closures. CFETS observes additional working-Saturday make-up days that are not in `python-holidays.China` — they appear in the holiday list under the generic fallback name. The historical HTML page at `/english/svcrmm/` returns 404 and is no longer the correct path.
 - **v1.1 status:** Bundled JSON in `data/fx_fixing/CNY.json` is currently
   library-sourced from `python-holidays` (`holidays.China`) via
   `scripts/sources/library_fixing.py` and tagged `library_sourced=True`.
-  The primary fetcher `scripts/sources/cfets_cny.py` is implemented and
-  unit-tested against a canonical HTML fixture, but a successful first
-  live fetch against chinamoney.com.cn requires a network environment
-  without SSL inspection and the correct upstream calendar-page URL
-  (`/english/svcrmm/` returned 404 from BOCHK; the real path may differ —
-  verify when first running from an unrestricted environment). The
-  python-holidays approximation captures mainland China public holidays;
-  CFETS-specific quirks (working-Saturday make-up days, ad-hoc PBoC
-  closures) are NOT in python-holidays and the UI surfaces a caveat
-  banner accordingly.
+  Running the refresh flow with the primary fetcher above replaces it
+  with CFETS-authoritative data (the user cache is preferred over the
+  bundled file at load time). The constrained corporate profile may fail
+  to reach `chinamoney.com.cn` due to egress filtering; the unconstrained
+  profile fetches successfully.
 
 ### KRW — KFTC
 
@@ -553,8 +551,8 @@ requires per-currency fixing calendars sourced from primary publications.
   The primary fetcher `scripts/sources/kftc_krw.py` is implemented and
   unit-tested against a canonical HTML fixture, but a successful first
   live fetch against kftc.or.kr requires a network environment without
-  the BOCHK firewall timeout (the host was unreachable from the dev
-  env). The python-holidays approximation captures South Korean public
+  the corporate-firewall timeout observed under the constrained profile
+  (the host was unreachable from that env). The python-holidays approximation captures South Korean public
   holidays; KFTC-specific FX-market-only closures (election days where
   banks open but FX market closes, etc.) are NOT in python-holidays and
   the UI surfaces a caveat banner accordingly.
@@ -572,9 +570,9 @@ requires per-currency fixing calendars sourced from primary publications.
   `scripts/sources/library_fixing.py` and tagged `library_sourced=True`.
   The primary fetcher `scripts/sources/taifx_twd.py` is implemented and
   unit-tested against a canonical HTML fixture, but a successful first
-  live fetch against tpefx.com.tw was rejected by the BOCHK egress proxy
-  on SSL chain validation; running from an unrestricted environment is
-  required. The python-holidays approximation captures Taiwanese public
+  live fetch against tpefx.com.tw was rejected by the corporate egress
+  proxy on SSL chain validation under the constrained profile; running
+  from an unconstrained environment is required. The python-holidays approximation captures Taiwanese public
   holidays; Taipei Forex-specific quirks (typhoon closure days, make-up
   working Saturdays) are NOT in python-holidays and the UI surfaces a
   caveat banner accordingly.

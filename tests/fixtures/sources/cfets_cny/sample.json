@@ -1,0 +1,35 @@
+{
+  "head": {
+    "version": "2.0",
+    "provider": "CWAP",
+    "rep_code": "200",
+    "rep_message": "",
+    "tstext": "2026-05-12 09:35:48"
+  },
+  "data": {
+    "year": "2026",
+    "yearList": ["2025", "2026", "2027"],
+    "currency": {
+      "2026": {
+        "CNY": [
+          "Jan 01", "Jan 02",
+          "Feb 16", "Feb 17", "Feb 18", "Feb 19", "Feb 20", "Feb 23",
+          "Apr 06",
+          "May 01", "May 04", "May 05",
+          "Jun 19",
+          "Sep 25",
+          "Oct 01", "Oct 02", "Oct 05", "Oct 06", "Oct 07"
+        ],
+        "USD": ["Jan 01"]
+      },
+      "2025": {
+        "CNY": ["Jan 01", "Jan 28", "Jan 29", "Jan 30", "Jan 31"]
+      },
+      "2027": {
+        "CNY": ["Jan 01", "Feb 08", "Feb 09"]
+      }
+    },
+    "moneyTypeMap": {"CNY": "CNY", "USD": "USD"}
+  },
+  "records": []
+}

@@ -18,11 +18,20 @@ dependencies = [
 ]
 
 [project.optional-dependencies]
+# Dev / test toolchain — installable under the constrained-corporate profile.
 test = [
     "pytest>=7",
     "flake8==6.0.*",
     "black==23.11.*",
     "isort==5.9.*",
+]
+# Optional runtime extras for live-refresh of library-sourced exchange
+# calendars (SGX / HKEX / CME). NOT part of the constrained-corporate
+# allow-list — only installable under the unconstrained profile. Without
+# this group, scripts/sources/library_exchange.py raises ModuleNotFoundError
+# and the bundled data/fx_exchange/*.json continues to be served.
+# Install via: pip install -e ".[extras]" (or ".[test,extras]" for dev).
+extras = [
     "exchange_calendars>=4",
 ]
 

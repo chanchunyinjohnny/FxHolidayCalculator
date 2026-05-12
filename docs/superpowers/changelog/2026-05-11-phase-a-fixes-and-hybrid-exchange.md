@@ -125,7 +125,7 @@ What actually happened:
 
 - **SGX**: The trading-and-clearing-hours page is now a JavaScript SPA.
   Static HTML is an empty shell. `urllib`/`requests` (the only HTTP path
-  available under BOCHK constraints — no Playwright) cannot reach the
+  available under the constrained-corporate profile — no Playwright) cannot reach the
   holiday data.
 - **HKEX**: Same SPA pattern.
 - **CME**: Master holiday calendar widget is XHR-loaded.

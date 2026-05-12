@@ -20,13 +20,23 @@ The project is MIT licensed; the author's name is Chan Chun Yin Johnny. The proj
 
 - **Never commit on behalf of the user.** Always let the user review changes before committing. Do not run `git commit` unless explicitly asked.
 
-## Development environment (BOCHK)
+## Development environment
+
+The project targets two profiles. Treat the **constrained profile** as the default unless the user says otherwise — it has the stricter rules.
+
+### Constrained profile (locked-down corporate env)
 
 - **Python version:** 3.10 / 3.11 only. Not 3.13.
 - **Streamlit pinned to 1.30**. Test UI changes against this exact version.
 - **No ruff, no pytest-cov.** Use `flake8`, `black`, `isort` for linting.
-- Use the provided BOCHK conda environment to run and test code; do not use a local Python.
-- Do not install new pip dependencies outside the allowed BOCHK list.
+- Use the provided corporate conda environment to run and test code; do not use a local Python.
+- Do not install pip dependencies outside the corporate allow-list. In particular, only the packages listed under `[project] dependencies` and `[project.optional-dependencies] test` in `pyproject.toml` are guaranteed installable.
+
+### Unconstrained profile (personal / open-source use)
+
+- Same Python and Streamlit pins (kept for cross-env parity).
+- Additionally, the packages under `[project.optional-dependencies] extras` may be installed. Today that is `exchange_calendars` (used by `scripts/sources/library_exchange.py` to populate SGX / HKEX / CME calendars). Without it, those library-sourced exchange calendars cannot be refreshed live — bundled `data/fx_exchange/*.json` still loads, so engine calculations continue to work.
+- Install with: `pip install -e ".[extras]"` (add `test` for the dev toolchain).
 
 ## Streamlit 1.30 compatibility
 
