@@ -13,10 +13,7 @@ from fx_holiday_calculator.option import (
 )
 from fx_holiday_calculator.pairs import list_supported_pairs, parse_pair
 from fx_holiday_calculator.tenor import InvalidTenorError, parse_tenor
-from fx_holiday_calculator.ui._bundled import (
-    available_exchange_venues,
-    available_rtgs_currencies,
-)
+from fx_holiday_calculator.ui._bundled import available_exchange_venues, available_rtgs_currencies
 from fx_holiday_calculator.ui._widgets import (
     REF_CURRENCY_HELP,
     date_input_with_today,

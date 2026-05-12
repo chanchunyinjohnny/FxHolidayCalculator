@@ -9,10 +9,7 @@ from fx_holiday_calculator.calendars.national import get_national_calendar
 from fx_holiday_calculator.conventions.cross import relevant_venues
 from fx_holiday_calculator.holidays_view import list_holidays
 from fx_holiday_calculator.pairs import list_supported_pairs, parse_pair
-from fx_holiday_calculator.ui._bundled import (
-    available_exchange_venues,
-    available_rtgs_currencies,
-)
+from fx_holiday_calculator.ui._bundled import available_exchange_venues, available_rtgs_currencies
 from fx_holiday_calculator.ui._widgets import (
     REF_CURRENCY_HELP,
     date_input_with_today,
@@ -40,9 +37,7 @@ _CCY_TO_NATIONAL = {
 def _available_pair_codes() -> list[str]:
     rtgs = available_rtgs_currencies()
     return [
-        f"{p.base}/{p.quote}"
-        for p in list_supported_pairs()
-        if p.base in rtgs and p.quote in rtgs
+        f"{p.base}/{p.quote}" for p in list_supported_pairs() if p.base in rtgs and p.quote in rtgs
     ]
 
 

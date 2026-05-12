@@ -40,9 +40,7 @@ CACHE = Path.home() / ".fx_holiday_calculator" / "cache"
 def _available_pair_codes() -> list[str]:
     rtgs = available_rtgs_currencies()
     return [
-        f"{p.base}/{p.quote}"
-        for p in list_supported_pairs()
-        if p.base in rtgs and p.quote in rtgs
+        f"{p.base}/{p.quote}" for p in list_supported_pairs() if p.base in rtgs and p.quote in rtgs
     ]
 
 
