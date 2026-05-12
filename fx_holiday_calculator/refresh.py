@@ -13,6 +13,7 @@ import argparse
 import importlib
 import json
 import sys
+import urllib.error
 from dataclasses import dataclass
 from pathlib import Path
 
@@ -96,6 +97,11 @@ def refresh_one(
             out.parent.mkdir(parents=True, exist_ok=True)
             out.write_text(json.dumps(payload, indent=2, ensure_ascii=False) + "\n")
         return RefreshResult(source=source, changed=True, error=None, output_path=out)
+    except urllib.error.URLError as exc:
+        reason = getattr(exc, "reason", exc)
+        detail = getattr(reason, "strerror", None) or str(reason)
+        msg = f"upstream unreachable: {detail}. Bundled data continues to load."
+        return RefreshResult(source=source, changed=False, error=msg, output_path=None)
     except Exception as exc:
         return RefreshResult(source=source, changed=False, error=str(exc), output_path=None)
 

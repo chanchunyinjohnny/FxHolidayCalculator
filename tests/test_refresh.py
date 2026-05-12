@@ -1,3 +1,4 @@
+import urllib.error
 from pathlib import Path
 
 from fx_holiday_calculator.refresh import _SOURCES, RefreshResult, refresh_one
@@ -57,3 +58,20 @@ def test_refresh_fixing_sources_target_fx_fixing_subdir():
     _, subdir_twd, file_twd = _SOURCES["TWD"]
     assert subdir_twd == "fx_fixing"
     assert file_twd == "TWD.json"
+
+
+def test_refresh_one_urlerror_yields_friendly_message(tmp_path: Path, monkeypatch):
+    from scripts.sources import kftc_krw
+
+    def boom(year_range, data_root):
+        raise urllib.error.URLError(ConnectionResetError(104, "Connection reset by peer"))
+
+    monkeypatch.setattr(kftc_krw, "fetch", boom)
+
+    result = refresh_one("KRW", target=tmp_path)
+    assert result.changed is False
+    assert result.error is not None
+    assert "<urlopen error" not in result.error
+    assert "upstream unreachable" in result.error
+    assert "Connection reset by peer" in result.error
+    assert "Bundled data continues to load" in result.error
