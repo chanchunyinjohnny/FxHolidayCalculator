@@ -72,7 +72,7 @@ _EURUSD_SPLIT_SETTLEMENT = PairConvention(
         "exempts EUR/USD spot from the otherwise-standard USD-also rule."
     ),
     source=ConventionSource(
-        url="https://www.cls-group.com/products/settlement/cls-settlement/",
+        url="https://www.cls-group.com/products/settlement/clssettlement/",
         doc_title="CLS Settlement — Currency Operating Hours & Holiday Treatment",
         documented_at=_DOC_TIME,
     ),

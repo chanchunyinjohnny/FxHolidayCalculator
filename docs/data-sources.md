@@ -287,22 +287,27 @@ Using gov.hk has additional benefits over a hypothetical HKMA-PDF route:
 **File:** `data/fx_rtgs/CAD.json`
 **Fetcher:** `scripts/sources/payments_canada_lynx.py`
 
-**Upstream URL:** `https://www.payments.ca/our-systems/lynx` — operator page; calendar is typically a sub-page or a published PDF.
-**Document format:** HTML or PDF — verify at implementation time.
-**Update cadence:** Annual, late prior year.
+**Upstream URL:** `https://www.payments.ca/system-closure-schedule` — Payments Canada's "System closure schedule" page covering Lynx (and the other Payments Canada systems, which observe the same federal-holiday calendar).
+**Document format:** HTML — one `<table>` per calendar year, preceded by an `<h2 class="payments-h2--accent">YYYY</h2>` heading. Columns: `Federal holiday | Date | Date of system closure`.
+**Update cadence:** Annual. Payments Canada typically publishes the upcoming year shortly before year-end and may temporarily display only the current year (e.g. as of May 2026 only the 2026 table was on the page).
 
 **Parser strategy:**
-- Fetch the holiday list from Payments Canada's published calendar.
-- Lynx typically aligns with Bank of Canada / federal statutory holidays plus a few additional industry closures.
+- HTTP GET the schedule page; the CDN rejects non-browser User-Agents with a 403, so the fetcher advertises a recent desktop-browser UA.
+- For each `<h2 class="payments-h2--accent">YYYY</h2>` block, locate the following `<table>` and iterate `<tr>` rows.
+- Three `<td>` cells per row: holiday name, federal-holiday date (informational), system-closure date (operative).
+- Parse the third cell with a month-name regex; combine with the section year to produce ISO `YYYY-MM-DD`.
+- When the closure date differs from the federal-holiday date (substitute-Monday for weekend holidays — e.g. Boxing Day Sat 2026-12-26 observed Mon 2026-12-28), the difference is recorded in `note`.
+- `valid_from` / `valid_until` are clamped to the years actually present on the page, so the loader raises `CalendarRangeError` rather than silently treating an unpublished year as a holiday-free year.
 
 **Schema mapping:**
-- `name` ← English holiday name.
-- `note` ← `null` unless an observance day is listed separately.
+- `name` ← `Federal holiday` cell text (e.g. `"Boxing Day"`, `"National Day for Truth and Reconciliation"`).
+- `note` ← `"Substitute day — federal holiday <date-text> fell on a weekend"` for shifted observances; `null` otherwise.
 
 **Known quirks:**
 - Federal holidays only — provincial holidays (e.g. Civic Holiday in some provinces, Saint-Jean-Baptiste in Quebec) are NOT Lynx closures unless adopted nationally.
-- Boxing Day (Dec 26) is a Lynx closure even though it is not a federal statutory holiday in all provinces.
-- Family Day (third Monday of February) — confirm whether Lynx observes it; most banks do, but the source document is authoritative.
+- Boxing Day (Dec 26) is a Lynx closure even though it is not a federal statutory holiday in all provinces; when it falls on a weekend the substitute weekday is the operative closure date.
+- National Day for Truth and Reconciliation (Sep 30) was added in 2021 and is consistently in Payments Canada's list.
+- Family Day (third Monday of February) is NOT on the Payments Canada list — Lynx remains open.
 
 **Cross-check tripwire:** `python-holidays.Canada(subdiv="ON")` (Ontario, where most Canadian banking infrastructure sits) is the closest off-the-shelf approximation. Informational only.
 

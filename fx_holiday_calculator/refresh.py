@@ -28,6 +28,7 @@ _SOURCES: dict[str, tuple[str, str, str]] = {
     "JPY": ("scripts.sources.boj", "fx_rtgs", "JPY.json"),
     "HKD": ("scripts.sources.hkgov_general_holidays", "fx_rtgs", "HKD.json"),
     "CNH": ("scripts.sources.hkma_chats_cnh", "fx_rtgs", "CNH.json"),
+    "CAD": ("scripts.sources.payments_canada_lynx", "fx_rtgs", "CAD.json"),
     "CNY": ("scripts.sources.cfets_cny", "fx_fixing", "CNY.json"),
     "KRW": ("scripts.sources.kftc_krw", "fx_fixing", "KRW.json"),
     "TWD": ("scripts.sources.taifx_twd", "fx_fixing", "TWD.json"),

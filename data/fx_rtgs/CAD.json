@@ -1,0 +1,77 @@
+{
+  "schema_version": 3,
+  "currency": "CAD",
+  "calendar_kind": "RTGS",
+  "calendar_name": "Lynx",
+  "operator": "Payments Canada",
+  "valid_from": "2026-01-01",
+  "valid_until": "2026-12-31",
+  "default_source": {
+    "url": "https://www.payments.ca/system-closure-schedule",
+    "doc_title": "Payments Canada — System closure schedule (Lynx)",
+    "fetched_at": "2026-05-12T09:58:30Z",
+    "fetcher": "scripts/sources/payments_canada_lynx.py@v1"
+  },
+  "holidays": [
+    {
+      "date": "2026-01-01",
+      "name": "New Year’s Day",
+      "source": null,
+      "note": null
+    },
+    {
+      "date": "2026-04-03",
+      "name": "Good Friday",
+      "source": null,
+      "note": null
+    },
+    {
+      "date": "2026-05-18",
+      "name": "Victoria Day",
+      "source": null,
+      "note": null
+    },
+    {
+      "date": "2026-07-01",
+      "name": "Canada Day",
+      "source": null,
+      "note": null
+    },
+    {
+      "date": "2026-09-07",
+      "name": "Labour Day",
+      "source": null,
+      "note": null
+    },
+    {
+      "date": "2026-09-30",
+      "name": "National Day for Truth and Reconciliation",
+      "source": null,
+      "note": null
+    },
+    {
+      "date": "2026-10-12",
+      "name": "Thanksgiving",
+      "source": null,
+      "note": null
+    },
+    {
+      "date": "2026-11-11",
+      "name": "Remembrance Day",
+      "source": null,
+      "note": null
+    },
+    {
+      "date": "2026-12-25",
+      "name": "Christmas Day",
+      "source": null,
+      "note": null
+    },
+    {
+      "date": "2026-12-28",
+      "name": "Boxing Day",
+      "source": null,
+      "note": "Substitute day — federal holiday Saturday, December 26 fell on a weekend"
+    }
+  ]
+}

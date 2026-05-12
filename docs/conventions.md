@@ -509,7 +509,7 @@ Hong Kong use case (USD/HKD, USD/CNH, NDFs) doesn't hit split-settlement
 in the first place.
 
 [cfec]: https://www.cfec.ca/files/conventions.pdf
-[cls]: https://www.cls-group.com/products/settlement/cls-settlement/
+[cls]: https://www.cls-group.com/products/settlement/clssettlement/
 
 ### 13.4 UI surfacing
 
