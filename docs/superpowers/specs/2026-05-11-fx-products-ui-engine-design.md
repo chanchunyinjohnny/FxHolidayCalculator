@@ -272,6 +272,7 @@ class PairConvention:
     rule: str
     description: str
     source: ConventionSource
+    engine_divergence_note: str | None = None  # set when engine doesn't enforce; UI renders as warning
 
 @dataclass(frozen=True)
 class Pair:

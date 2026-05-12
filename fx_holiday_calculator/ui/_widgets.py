@@ -184,12 +184,23 @@ def render_reference_status(
 def render_pair_conventions(pair) -> None:
     """Render the pair-specific conventions section, if any are documented.
 
-    Each entry shows its rule, a short description, and a source link.
-    Renders nothing if the pair has no documented conventions.
+    Entries are split into two visual treatments:
+    - Engine-enforced conventions (e.g. USD/CAD T+1) render as plain
+      informational text.
+    - Conventions the engine does NOT enforce (those with a non-null
+      ``engine_divergence_note``) render as a warning box so the user is
+      aware the displayed dates may diverge from desk booking practice.
     """
     if not pair.conventions:
         return
     st.markdown("### Pair conventions")
     for conv in pair.conventions:
-        st.markdown(f"**{conv.rule}** — {conv.description}")
-        st.caption(f"Source: [{conv.source.doc_title}]({conv.source.url})")
+        if conv.engine_divergence_note is not None:
+            st.warning(
+                f"**{conv.rule}** — {conv.description}\n\n"
+                f"**Tool behavior:** {conv.engine_divergence_note}\n\n"
+                f"Source: [{conv.source.doc_title}]({conv.source.url})"
+            )
+        else:
+            st.markdown(f"**{conv.rule}** — {conv.description}")
+            st.caption(f"Source: [{conv.source.doc_title}]({conv.source.url})")

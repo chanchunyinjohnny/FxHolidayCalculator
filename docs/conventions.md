@@ -446,6 +446,7 @@ class PairConvention:
     rule: str
     description: str
     source: ConventionSource
+    engine_divergence_note: str | None = None  # set when engine doesn't enforce the convention
 
 @dataclass(frozen=True)
 class Pair:
@@ -497,10 +498,14 @@ UI can surface *why* USD/CAD is T+1.
 
 The EUR/USD split-settlement carve-out is **not** enforced by the engine
 in v1.x — the engine still treats US holidays as moving the EUR/USD spot
-date. The `PairConvention` entry documents the gap so the UI can warn
-users that a real EUR/USD desk may book the split-settlement variant
-even when this tool's date math says otherwise. Implementing the engine
-side is deferred to a future version.
+date (full-shift). The `PairConvention` entry has a non-null
+`engine_divergence_note`, which causes the UI to render the entry as a
+prominent yellow warning box (rather than plain informational text) so
+the user knows the displayed dates may diverge from desk booking
+practice. Implementing the engine side (per-currency settle dates) is
+deferred — the warning route is sufficient for v1.x because the typical
+Hong Kong use case (USD/HKD, USD/CNH, NDFs) doesn't hit split-settlement
+in the first place.
 
 [cfec]: https://www.cfec.ca/files/conventions.pdf
 [cls]: https://www.cls-group.com/products/settlement/cls-settlement/

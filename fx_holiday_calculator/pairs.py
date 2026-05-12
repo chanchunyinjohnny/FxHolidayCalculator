@@ -23,11 +23,17 @@ class ConventionSource:
 class PairConvention:
     """A documented pair-specific convention (e.g. T+1 spot lag,
     split-settlement carve-out). Each entry carries its own source so the
-    UI can surface it next to the derived dates."""
+    UI can surface it next to the derived dates.
+
+    ``engine_divergence_note`` is set when the engine does **not** implement
+    the convention, so the dates this tool produces may differ from desk
+    booking practice. The UI renders such entries as a warning box.
+    """
 
     rule: str
     description: str
     source: ConventionSource
+    engine_divergence_note: str | None = None
 
 
 # Documented at project creation (v1). Update `documented_at` when the
@@ -69,6 +75,14 @@ _EURUSD_SPLIT_SETTLEMENT = PairConvention(
         url="https://www.cls-group.com/products/settlement/cls-settlement/",
         doc_title="CLS Settlement — Currency Operating Hours & Holiday Treatment",
         documented_at=_DOC_TIME,
+    ),
+    engine_divergence_note=(
+        "This tool uses the full-shift convention — when a US-only holiday "
+        "falls on the candidate spot, the date is pushed forward on both "
+        "legs. If your counterparty books the split-settlement variant, "
+        "their EUR leg settles 1 business day earlier than the date shown "
+        "here. Confirm the booking convention with the counterparty "
+        "before relying on these dates."
     ),
 )
 
