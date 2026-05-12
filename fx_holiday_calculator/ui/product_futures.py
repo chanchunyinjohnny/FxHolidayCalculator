@@ -18,6 +18,7 @@ from fx_holiday_calculator.ui._bundled import available_exchange_venues, availab
 from fx_holiday_calculator.ui._widgets import (
     date_input_with_today,
     days_caption,
+    render_calendar_coverage,
     render_pair_conventions,
     render_reasoning,
     render_trace,
@@ -139,6 +140,14 @@ def render() -> None:
         f"{c} ({cals[c].calendar_name})" for c in sorted(needed)
     )
     st.caption("Calendars to be used: " + cal_caption)
+    render_calendar_coverage(
+        [(f"{venue} Exchange", exch_cal.valid_from, exch_cal.valid_until)]
+        + [
+            (f"{c} RTGS ({cals[c].calendar_name})", cals[c].valid_from, cals[c].valid_until)
+            for c in sorted(needed)
+        ],
+        trade_date=from_date,
+    )
 
     if st.button("Calculate", key="fut_calc"):
         try:

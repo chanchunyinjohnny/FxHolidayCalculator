@@ -27,6 +27,7 @@ from fx_holiday_calculator.ui._widgets import (
     REF_CURRENCY_HELP,
     date_input_with_today,
     days_caption,
+    render_calendar_coverage,
     render_pair_conventions,
     render_reasoning,
     render_reference_status,
@@ -128,6 +129,13 @@ def render() -> None:
 
     cal_caption = "RTGS: " + " · ".join(f"{c} ({cals[c].calendar_name})" for c in sorted(needed))
     st.caption("Calendars to be used: " + cal_caption)
+    render_calendar_coverage(
+        [
+            (f"{c} RTGS ({cals[c].calendar_name})", cals[c].valid_from, cals[c].valid_until)
+            for c in sorted(needed)
+        ],
+        trade_date=trade_date,
+    )
 
     if st.button("Calculate"):
         try:

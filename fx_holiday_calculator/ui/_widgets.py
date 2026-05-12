@@ -54,6 +54,85 @@ def days_caption(target: date, anchor: date, *, anchor_label: str = "T") -> str:
     return f" — {anchor_label}{sign}{abs(delta)} calendar {plural}"
 
 
+def render_calendar_coverage(
+    items: list[tuple[str, date, date]],
+    *,
+    trade_date: date | None = None,
+    target_date: date | None = None,
+) -> None:
+    """Render a coverage block summarising the validity window of every
+    calendar that will participate in the calculation.
+
+    ``items`` is an ordered list of ``(label, valid_from, valid_until)``
+    tuples. ``label`` is free-form (e.g. ``"USD RTGS (Federal Reserve)"`` or
+    ``"CME (Exchange)"``). The block shows each calendar's window plus the
+    effective intersected window — outside that intersection at least one
+    lookup will raise :class:`CalendarRangeError`.
+
+    The block is shown as an ``st.info`` by default and escalates to
+    ``st.warning`` when any of the following hold:
+      - the calendars do not overlap at all
+      - ``trade_date`` or ``target_date`` falls outside the effective window
+      - less than 90 days of coverage remain from today
+    """
+    if not items:
+        return
+
+    eff_from = max(vf for _, vf, _ in items)
+    eff_until = min(vu for _, _, vu in items)
+    today = date.today()
+
+    per_cal_lines = [
+        f"- **{label}**: {vf.isoformat()} → {vu.isoformat()}" for label, vf, vu in items
+    ]
+
+    reasons: list[str] = []
+    if eff_until < eff_from:
+        reasons.append(
+            f"Calendars do not overlap — latest start {eff_from.isoformat()} "
+            f"is after earliest end {eff_until.isoformat()}. No usable window."
+        )
+    else:
+        for d, label_d in ((trade_date, "Trade date"), (target_date, "Target date")):
+            if d is None:
+                continue
+            if d < eff_from or d > eff_until:
+                reasons.append(
+                    f"{label_d} {d.isoformat()} is outside the effective coverage "
+                    f"({eff_from.isoformat()} → {eff_until.isoformat()}). "
+                    "The calculation will fail with a CalendarRangeError; "
+                    "refresh the calendar data via the sidebar."
+                )
+        days_left = (eff_until - today).days
+        if not reasons and 0 <= days_left < 90:
+            reasons.append(
+                f"Only {days_left} day(s) of coverage remain after today "
+                f"({eff_until.isoformat()}). Forward / long-tenor calculations "
+                "are likely to land outside the window — refresh via the sidebar."
+            )
+        elif not reasons and days_left < 0:
+            reasons.append(
+                f"All bundled coverage ended {(-days_left)} day(s) ago "
+                f"({eff_until.isoformat()}). Refresh the calendar data via "
+                "the sidebar before relying on any dates."
+            )
+
+    if eff_until >= eff_from:
+        effective_line = (
+            f"\n\n**Effective window (intersection):** "
+            f"{eff_from.isoformat()} → {eff_until.isoformat()}"
+        )
+    else:
+        effective_line = "\n\n**Effective window:** (none — calendars do not overlap)"
+
+    body = "**Holiday-data coverage**\n\n" + "\n".join(per_cal_lines) + effective_line
+    if reasons:
+        body += "\n\n" + "\n".join(f"- {r}" for r in reasons)
+        st.warning(body)
+    else:
+        st.info(body)
+
+
 def render_reasoning(steps: list[str]) -> None:
     """Render an engine-emitted plain-English reasoning summary.
 

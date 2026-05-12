@@ -19,6 +19,7 @@ from fx_holiday_calculator.tenor import InvalidTenorError, parse_tenor
 from fx_holiday_calculator.ui._widgets import (
     date_input_with_today,
     days_caption,
+    render_calendar_coverage,
     render_pair_conventions,
     render_reasoning,
     render_trace,
@@ -111,6 +112,18 @@ def render() -> None:
     st.caption(
         f"Calendars to be used: RTGS: USD ({usd.calendar_name}) | "
         f"Fixing: {fixing.currency} ({fixing.calendar_name})"
+    )
+    render_calendar_coverage(
+        [
+            (f"USD RTGS ({usd.calendar_name})", usd.valid_from, usd.valid_until),
+            (
+                f"{fixing.currency} Fixing ({fixing.calendar_name})",
+                fixing.valid_from,
+                fixing.valid_until,
+            ),
+        ],
+        trade_date=trade_date,
+        target_date=target_date,
     )
 
     if st.button("Calculate", key="ndf_calc"):
