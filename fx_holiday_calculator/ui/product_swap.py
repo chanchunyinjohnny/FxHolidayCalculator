@@ -22,9 +22,11 @@ from fx_holiday_calculator.swap import (
     calculate_swap_dates,
 )
 from fx_holiday_calculator.tenor import InvalidTenorError, parse_tenor
+from fx_holiday_calculator.ui._bundled import available_rtgs_currencies
 from fx_holiday_calculator.ui._widgets import (
     REF_CURRENCY_HELP,
     date_input_with_today,
+    days_caption,
     render_pair_conventions,
     render_reasoning,
     render_reference_status,
@@ -34,15 +36,13 @@ from fx_holiday_calculator.ui._widgets import (
 BUNDLED = Path(__file__).resolve().parents[2] / "data"
 CACHE = Path.home() / ".fx_holiday_calculator" / "cache"
 
-# v1: only these RTGS calendars are bundled.
-AVAILABLE_RTGS = {"EUR", "USD", "GBP", "JPY"}
-
 
 def _available_pair_codes() -> list[str]:
+    rtgs = available_rtgs_currencies()
     return [
         f"{p.base}/{p.quote}"
         for p in list_supported_pairs()
-        if p.base in AVAILABLE_RTGS and p.quote in AVAILABLE_RTGS
+        if p.base in rtgs and p.quote in rtgs
     ]
 
 
@@ -68,8 +68,8 @@ def render() -> None:
     pair_codes = _available_pair_codes()
     if not pair_codes:
         st.warning(
-            "No supported pairs available — v1 ships with 4 RTGS calendars "
-            "(EUR/USD/GBP/JPY) and the bundled data may not be loaded yet."
+            "No supported pairs available — no bundled RTGS calendars were "
+            "found under data/fx_rtgs."
         )
         return
 
@@ -203,11 +203,20 @@ def render() -> None:
 
         st.markdown("### Result")
         st.write(f"**Trade date:** {result.trade_date} ({result.trade_date.strftime('%a')})")
-        st.write(f"**Spot date:**  {result.spot_date} ({result.spot_date.strftime('%a')})")
+        st.write(
+            f"**Spot date:**  {result.spot_date} ({result.spot_date.strftime('%a')})"
+            f"{days_caption(result.spot_date, result.trade_date)}"
+        )
         if result.near_date:
-            st.write(f"**Near leg:**   {result.near_date} ({result.near_date.strftime('%a')})")
+            st.write(
+                f"**Near leg:**   {result.near_date} ({result.near_date.strftime('%a')})"
+                f"{days_caption(result.near_date, result.trade_date)}"
+            )
         if result.far_date:
-            st.write(f"**Far leg:**    {result.far_date} ({result.far_date.strftime('%a')})")
+            st.write(
+                f"**Far leg:**    {result.far_date} ({result.far_date.strftime('%a')})"
+                f"{days_caption(result.far_date, result.trade_date)}"
+            )
             if result.near_date:
                 gap = (result.far_date - result.near_date).days
                 st.caption(f"Near→Far: {gap} calendar days")

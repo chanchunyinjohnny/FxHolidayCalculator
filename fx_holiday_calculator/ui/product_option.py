@@ -13,9 +13,14 @@ from fx_holiday_calculator.option import (
 )
 from fx_holiday_calculator.pairs import list_supported_pairs, parse_pair
 from fx_holiday_calculator.tenor import InvalidTenorError, parse_tenor
+from fx_holiday_calculator.ui._bundled import (
+    available_exchange_venues,
+    available_rtgs_currencies,
+)
 from fx_holiday_calculator.ui._widgets import (
     REF_CURRENCY_HELP,
     date_input_with_today,
+    days_caption,
     render_pair_conventions,
     render_reasoning,
     render_reference_status,
@@ -25,22 +30,14 @@ from fx_holiday_calculator.ui._widgets import (
 BUNDLED = Path(__file__).resolve().parents[2] / "data"
 CACHE = Path.home() / ".fx_holiday_calculator" / "cache"
 
-AVAILABLE_RTGS = {"EUR", "USD", "GBP", "JPY"}
-
 
 def _available_pairs() -> list[str]:
+    rtgs = available_rtgs_currencies()
     return [
         f"{p.base}/{p.quote}"
         for p in list_supported_pairs()
-        if not p.ndf and p.base in AVAILABLE_RTGS and p.quote in AVAILABLE_RTGS
+        if not p.ndf and p.base in rtgs and p.quote in rtgs
     ]
-
-
-def _available_exchange_venues() -> set[str]:
-    bundled = BUNDLED / "fx_exchange"
-    if not bundled.exists():
-        return set()
-    return {p.stem for p in bundled.glob("*.json") if not p.name.startswith("_")}
 
 
 def render() -> None:
@@ -88,7 +85,7 @@ def render() -> None:
 
     venue: str | None = None
     if style_key == "LISTED":
-        available = _available_exchange_venues()
+        available = available_exchange_venues()
         valid_for_pair = [v for v in pair.listed_on if v in available]
         if not valid_for_pair:
             st.error(
@@ -162,10 +159,18 @@ def render() -> None:
 
         st.markdown("### Result")
         st.write(f"**Trade date:**     {result.trade_date} ({result.trade_date.strftime('%a')})")
-        st.write(f"**Spot date:**      {result.spot_date} ({result.spot_date.strftime('%a')})")
-        st.write(f"**Expiry date:**    {result.expiry_date} ({result.expiry_date.strftime('%a')})")
         st.write(
-            f"**Delivery date:**  {result.delivery_date} ({result.delivery_date.strftime('%a')})"
+            f"**Spot date:**      {result.spot_date} ({result.spot_date.strftime('%a')})"
+            f"{days_caption(result.spot_date, result.trade_date)}"
+        )
+        st.write(
+            f"**Expiry date:**    {result.expiry_date} ({result.expiry_date.strftime('%a')})"
+            f"{days_caption(result.expiry_date, result.trade_date)}"
+        )
+        st.write(
+            f"**Delivery date:**  {result.delivery_date} "
+            f"({result.delivery_date.strftime('%a')})"
+            f"{days_caption(result.delivery_date, result.trade_date)}"
         )
 
         render_reasoning(result.reasoning)

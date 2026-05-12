@@ -7,12 +7,8 @@ BUNDLED = Path(__file__).resolve().parents[2] / "data"
 
 _DEFERRED = [
     ("CHF", "RTGS", "SIX SIC"),
-    ("CAD", "RTGS", "Payments Canada Lynx"),
     ("AUD", "RTGS", "RBA RITS"),
     ("SGD", "RTGS", "MAS MEPS+ (PDF)"),
-    ("CME", "EXCHANGE", "CME FX futures"),
-    ("HKEX", "EXCHANGE", "HKEX FX futures"),
-    ("SGX", "EXCHANGE", "SGX FX futures"),
 ]
 
 
@@ -68,7 +64,7 @@ There are no unsourced dates.
     )
 
     st.markdown(
-        "**Products supported (v1.1):**\n"
+        "**Products supported:**\n"
         "- Spot (single-date: trade date → spot date on RTGS calendars)\n"
         "- Swap (ON/TN/SN short-dated, standard single-tenor swap, "
         "forward-forward swap; cross-spot included)\n"
@@ -85,17 +81,19 @@ There are no unsourced dates.
     else:
         st.write("_No bundled data found._")
 
-    st.markdown("### Deferred sources (v1.1+)")
+    st.markdown("### Deferred sources")
     deferred_rows = [{"Code": c, "Kind": k, "Description": d} for (c, k, d) in _DEFERRED]
     st.dataframe(deferred_rows, use_container_width=True)
     st.caption(
-        "v1 ships with EUR, USD, GBP, JPY, HKD, CNH RTGS calendars. The deferred "
-        "sources are blocked or PDF-based and require manual data sourcing in production."
+        "The deferred sources are blocked or PDF-based and require manual data "
+        "sourcing in production. Currencies and venues currently bundled are "
+        "listed in the table above."
     )
 
     st.markdown(
         "**Fixing calendars (NDF):**\n"
-        "- **CNY** — CFETS / PBoC ([chinamoney.com.cn](https://www.chinamoney.com.cn/english/svcrmm/))\n"
+        "- **CNY** — CFETS / PBoC "
+        "([chinamoney.com.cn — Trading Calendar](https://www.chinamoney.com.cn/english/svctcd/))\n"
         "- **KRW** — KFTC ([kftc.or.kr](https://www.kftc.or.kr/en/))\n"
         "- **TWD** — Taipei Forex Inc. ([tpefx.com.tw](https://www.tpefx.com.tw/))"
     )

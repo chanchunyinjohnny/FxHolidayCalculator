@@ -58,8 +58,10 @@ _USDCAD_T1 = PairConvention(
         "still chain off the T+1 spot date."
     ),
     source=ConventionSource(
-        url="https://www.cfec.ca/files/conventions.pdf",
-        doc_title="Canadian Foreign Exchange Committee — Canadian FX Market Practices",
+        # Original cfec.ca PDF (conventions.pdf) is no longer hosted; the
+        # CFEC's canonical home is now the Bank of Canada page below.
+        url="https://www.bankofcanada.ca/markets/canadian-foreign-exchange-committee/",
+        doc_title="Canadian Foreign Exchange Committee — Bank of Canada",
         documented_at=_DOC_TIME,
     ),
 )
@@ -73,7 +75,7 @@ _EURUSD_SPLIT_SETTLEMENT = PairConvention(
     ),
     source=ConventionSource(
         url="https://www.cls-group.com/products/settlement/clssettlement/",
-        doc_title="CLS Settlement — Currency Operating Hours & Holiday Treatment",
+        doc_title="CLSSettlement (CLS Group)",
         documented_at=_DOC_TIME,
     ),
     engine_divergence_note=(

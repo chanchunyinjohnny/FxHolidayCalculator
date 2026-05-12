@@ -40,6 +40,20 @@ def date_input_with_today(container, label: str, key: str, *, default: date | No
     return value
 
 
+def days_caption(target: date, anchor: date, *, anchor_label: str = "T") -> str:
+    """Return a short ` — T+N days` suffix for inline date display.
+
+    Counts calendar days from ``anchor`` to ``target``. Returns an empty
+    string when the two dates coincide (no useful information to add).
+    """
+    delta = (target - anchor).days
+    if delta == 0:
+        return ""
+    sign = "+" if delta > 0 else "−"
+    plural = "day" if abs(delta) == 1 else "days"
+    return f" — {anchor_label}{sign}{abs(delta)} calendar {plural}"
+
+
 def render_reasoning(steps: list[str]) -> None:
     """Render an engine-emitted plain-English reasoning summary.
 

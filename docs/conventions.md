@@ -508,7 +508,7 @@ deferred — the warning route is sufficient for v1.x because the typical
 Hong Kong use case (USD/HKD, USD/CNH, NDFs) doesn't hit split-settlement
 in the first place.
 
-[cfec]: https://www.cfec.ca/files/conventions.pdf
+[cfec]: https://www.bankofcanada.ca/markets/canadian-foreign-exchange-committee/
 [cls]: https://www.cls-group.com/products/settlement/clssettlement/
 
 ### 13.4 UI surfacing

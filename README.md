@@ -43,9 +43,11 @@ it uninstalled and the tool still works against bundled data.
 
 ## v1 scope
 
-This release ships with four primary-source RTGS settlement calendars:
-**EUR (TARGET2)**, **USD (Fedwire)**, **GBP (CHAPS)**, **JPY (BoJ-NET)**.
-Supported currency pairs are the EUR/USD/GBP/JPY combinations.
+This release ships with primary-source RTGS settlement calendars for
+**EUR (TARGET2)**, **USD (Fedwire)**, **GBP (CHAPS)**, **JPY (BoJ-NET)**,
+**HKD (CHATS)**, **CNH (offshore CNY clearing in Hong Kong)**, and
+**CAD (Lynx)**. Supported currency pairs are any combination of those
+seven currencies that is registered in `fx_holiday_calculator/pairs.py`.
 
 Three FX-listed exchange venues ship in **library-sourced** form:
 **SGX (XSES)**, **HKEX (XHKG)**, **CME (CMES)** — data is generated from
@@ -53,7 +55,8 @@ the open-source [`exchange_calendars`](https://pypi.org/project/exchange-calenda
 package rather than scraped from venue documents. Read the caveat below
 before relying on these for real settlement decisions.
 
-Additional RTGS sources (HKD, CNH, CHF, CAD, AUD, SGD) are deferred.
+Additional RTGS sources (CHF, AUD, SGD) are deferred — see the About
+tab for the current deferred list.
 
 ### ⚠ Exchange calendar caveat
 

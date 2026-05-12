@@ -15,9 +15,11 @@ from fx_holiday_calculator.calendars.types import CalendarRangeError
 from fx_holiday_calculator.pairs import list_supported_pairs, parse_pair
 from fx_holiday_calculator.swap import InvalidTradeDateError, calculate_swap_dates
 from fx_holiday_calculator.tenor import parse_tenor
+from fx_holiday_calculator.ui._bundled import available_rtgs_currencies
 from fx_holiday_calculator.ui._widgets import (
     REF_CURRENCY_HELP,
     date_input_with_today,
+    days_caption,
     render_pair_conventions,
     render_reasoning,
     render_reference_status,
@@ -27,14 +29,13 @@ from fx_holiday_calculator.ui._widgets import (
 BUNDLED = Path(__file__).resolve().parents[2] / "data"
 CACHE = Path.home() / ".fx_holiday_calculator" / "cache"
 
-AVAILABLE_RTGS = {"EUR", "USD", "GBP", "JPY"}
-
 
 def _available_pair_codes() -> list[str]:
+    rtgs = available_rtgs_currencies()
     return [
         f"{p.base}/{p.quote}"
         for p in list_supported_pairs()
-        if p.base in AVAILABLE_RTGS and p.quote in AVAILABLE_RTGS
+        if p.base in rtgs and p.quote in rtgs
     ]
 
 
@@ -118,7 +119,10 @@ def render() -> None:
 
         st.markdown("### Result")
         st.write(f"**Trade date:** {result.trade_date} ({result.trade_date.strftime('%a')})")
-        st.write(f"**Spot date:**  {result.spot_date} ({result.spot_date.strftime('%a')})")
+        st.write(
+            f"**Spot date:**  {result.spot_date} ({result.spot_date.strftime('%a')})"
+            f"{days_caption(result.spot_date, result.trade_date)}"
+        )
 
         render_reasoning(result.reasoning)
 

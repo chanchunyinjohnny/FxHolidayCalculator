@@ -9,6 +9,10 @@ from fx_holiday_calculator.calendars.national import get_national_calendar
 from fx_holiday_calculator.conventions.cross import relevant_venues
 from fx_holiday_calculator.holidays_view import list_holidays
 from fx_holiday_calculator.pairs import list_supported_pairs, parse_pair
+from fx_holiday_calculator.ui._bundled import (
+    available_exchange_venues,
+    available_rtgs_currencies,
+)
 from fx_holiday_calculator.ui._widgets import (
     REF_CURRENCY_HELP,
     date_input_with_today,
@@ -18,29 +22,27 @@ from fx_holiday_calculator.ui._widgets import (
 BUNDLED = Path(__file__).resolve().parents[2] / "data"
 CACHE = Path.home() / ".fx_holiday_calculator" / "cache"
 
-AVAILABLE_RTGS = {"EUR", "USD", "GBP", "JPY"}
 
-
-def _available_exchange_venues() -> set[str]:
-    bundled = BUNDLED / "fx_exchange"
-    if not bundled.exists():
-        return set()
-    return {p.stem for p in bundled.glob("*.json") if not p.name.startswith("_")}
-
-
+# ISO country codes for `python-holidays` lookup, keyed by currency.
+# Only currencies for which a national mapping exists are populated; the
+# UI only consults this when the user opts in to national reference data.
 _CCY_TO_NATIONAL = {
     "USD": "US",
     "EUR": "DE",
     "GBP": "GB",
     "JPY": "JP",
+    "CAD": "CA",
+    "HKD": "HK",
+    "CNH": "CN",
 }
 
 
 def _available_pair_codes() -> list[str]:
+    rtgs = available_rtgs_currencies()
     return [
         f"{p.base}/{p.quote}"
         for p in list_supported_pairs()
-        if p.base in AVAILABLE_RTGS and p.quote in AVAILABLE_RTGS
+        if p.base in rtgs and p.quote in rtgs
     ]
 
 
@@ -81,7 +83,8 @@ def render() -> None:
         index=0,
         horizontal=True,
         help=(
-            "FX = RTGS settlement calendars (EUR/USD/GBP/JPY). "
+            "FX = RTGS settlement calendars for the pair's legs (and the "
+            "reference currency if selected). "
             "Exchange = FX-futures venues (CME/HKEX/SGX). "
             "Both = union. Exchange and Both require bundled exchange data."
         ),
@@ -125,7 +128,7 @@ def render() -> None:
 
     exch_cals: dict = {}
     if cal_mode_key in {"EXCHANGE", "BOTH"}:
-        available_venues = _available_exchange_venues()
+        available_venues = available_exchange_venues()
         needed_venues = set(relevant_venues(pair, ref))  # type: ignore[arg-type]
         missing = sorted(needed_venues - available_venues)
         if missing:

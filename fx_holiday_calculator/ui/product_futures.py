@@ -14,8 +14,13 @@ from fx_holiday_calculator.future import (
 )
 from fx_holiday_calculator.pairs import list_supported_pairs, parse_pair
 from fx_holiday_calculator.tenor import InvalidTenorError, parse_tenor
+from fx_holiday_calculator.ui._bundled import (
+    available_exchange_venues,
+    available_rtgs_currencies,
+)
 from fx_holiday_calculator.ui._widgets import (
     date_input_with_today,
+    days_caption,
     render_pair_conventions,
     render_reasoning,
     render_trace,
@@ -24,24 +29,14 @@ from fx_holiday_calculator.ui._widgets import (
 BUNDLED = Path(__file__).resolve().parents[2] / "data"
 CACHE = Path.home() / ".fx_holiday_calculator" / "cache"
 
-# v1: only these RTGS calendars are bundled. Pairs whose base or quote is
-# outside this set can't be computed and shouldn't appear in the selector.
-AVAILABLE_RTGS = {"EUR", "USD", "GBP", "JPY"}
-
 
 def _listed_pairs() -> list[str]:
+    rtgs = available_rtgs_currencies()
     return [
         f"{p.base}/{p.quote}"
         for p in list_supported_pairs()
-        if p.listed_on and p.base in AVAILABLE_RTGS and p.quote in AVAILABLE_RTGS
+        if p.listed_on and p.base in rtgs and p.quote in rtgs
     ]
-
-
-def _available_exchange_venues() -> set[str]:
-    bundled = BUNDLED / "fx_exchange"
-    if not bundled.exists():
-        return set()
-    return {p.stem for p in bundled.glob("*.json") if not p.name.startswith("_")}
 
 
 def render() -> None:
@@ -59,7 +54,7 @@ def render() -> None:
     col1, col2 = st.columns(2)
     pair_code = col1.selectbox("Currency pair", listed, key="fut_pair")
     pair = parse_pair(pair_code)
-    available_venues = _available_exchange_venues()
+    available_venues = available_exchange_venues()
     valid_venues = [v for v in pair.listed_on if v in available_venues]
     if not valid_venues:
         st.error(
@@ -184,11 +179,20 @@ def render() -> None:
         st.markdown("### Result")
         cm = result.contract_month
         st.write(f"**Contract:**         {cm[0]}-{cm[1]:02d} ({venue})")
+        # Futures have no "trade date" input — anchor the days-from display
+        # against the reference date the user supplied (IMM-tenor mode) or
+        # today's date (contract-month mode).
+        anchor = from_date if from_date is not None else date.today()
+        anchor_label = "ref" if from_date is not None else "today"
         st.write(
-            f"**Last trade date:**  {result.last_trade_date} ({result.last_trade_date.strftime('%a')})"
+            f"**Last trade date:**  {result.last_trade_date} "
+            f"({result.last_trade_date.strftime('%a')})"
+            f"{days_caption(result.last_trade_date, anchor, anchor_label=anchor_label)}"
         )
         st.write(
-            f"**Delivery date:**    {result.delivery_date} ({result.delivery_date.strftime('%a')})"
+            f"**Delivery date:**    {result.delivery_date} "
+            f"({result.delivery_date.strftime('%a')})"
+            f"{days_caption(result.delivery_date, anchor, anchor_label=anchor_label)}"
         )
 
         render_reasoning(result.reasoning)

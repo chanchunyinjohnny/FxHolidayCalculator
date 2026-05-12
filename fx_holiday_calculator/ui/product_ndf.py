@@ -18,6 +18,7 @@ from fx_holiday_calculator.pairs import list_supported_pairs, parse_pair
 from fx_holiday_calculator.tenor import InvalidTenorError, parse_tenor
 from fx_holiday_calculator.ui._widgets import (
     date_input_with_today,
+    days_caption,
     render_pair_conventions,
     render_reasoning,
     render_trace,
@@ -151,12 +152,18 @@ def render() -> None:
 
         st.markdown("### Result")
         st.write(f"**Trade date:**       {result.trade_date} ({result.trade_date.strftime('%a')})")
-        st.write(f"**Spot date:**        {result.spot_date} ({result.spot_date.strftime('%a')})")
         st.write(
-            f"**Fixing date:**      {result.fixing_date} ({result.fixing_date.strftime('%a')})"
+            f"**Spot date:**        {result.spot_date} ({result.spot_date.strftime('%a')})"
+            f"{days_caption(result.spot_date, result.trade_date)}"
         )
         st.write(
-            f"**Settlement date:**  {result.settlement_date} ({result.settlement_date.strftime('%a')})"
+            f"**Fixing date:**      {result.fixing_date} ({result.fixing_date.strftime('%a')})"
+            f"{days_caption(result.fixing_date, result.trade_date)}"
+        )
+        st.write(
+            f"**Settlement date:**  {result.settlement_date} "
+            f"({result.settlement_date.strftime('%a')})"
+            f"{days_caption(result.settlement_date, result.trade_date)}"
         )
 
         render_reasoning(result.reasoning)
