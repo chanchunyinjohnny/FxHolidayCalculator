@@ -31,7 +31,11 @@ def date_input_with_today(container, label: str, key: str, *, default: date | No
         default = date.today()
     input_col, btn_col = container.columns([3, 1])
     value = input_col.date_input(label, value=default, key=key)
-    btn_col.write("")  # spacer so the button aligns below the label, not with it
+    # Streamlit 1.30: an empty `write("")` collapses to ~0px, so the button
+    # ends up next to the label. A non-breaking space inside a sized markdown
+    # reserves a label-row's worth of height so the button lines up with the
+    # input box on the same row.
+    btn_col.markdown("<div style='height: 1.85em'>&nbsp;</div>", unsafe_allow_html=True)
     btn_col.button("Today", key=f"{key}__today", on_click=_make_today_setter(key))
     return value
 

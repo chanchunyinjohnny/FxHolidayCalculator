@@ -16,17 +16,20 @@ def render() -> None:
         product_futures,
         product_ndf,
         product_option,
-        product_spot_swap,
+        product_spot,
+        product_swap,
     )
 
-    sub = st.tabs(["Spot / Swap", "Forward", "NDF", "Option", "Futures"])
+    sub = st.tabs(["Spot", "Swap", "Forward", "NDF", "Option", "Futures"])
     with sub[0]:
-        product_spot_swap.render()
+        product_spot.render()
     with sub[1]:
-        product_forward.render()
+        product_swap.render()
     with sub[2]:
-        product_ndf.render()
+        product_forward.render()
     with sub[3]:
-        product_option.render()
+        product_ndf.render()
     with sub[4]:
+        product_option.render()
+    with sub[5]:
         product_futures.render()

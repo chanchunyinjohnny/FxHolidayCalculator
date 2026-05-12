@@ -71,9 +71,10 @@ There are no unsourced dates.
 
     st.markdown(
         "**Products supported (v1.1):**\n"
-        "- Spot / Swap (covers spot, cross-spot, ON/TN/SN, standard swap, "
-        "forward-forward swap; forward outright also accessible here)\n"
-        "- Forward outright (focused sub-tab; same engine as Spot/Swap)\n"
+        "- Spot (single-date: trade date → spot date on RTGS calendars)\n"
+        "- Swap (ON/TN/SN short-dated, standard single-tenor swap, "
+        "forward-forward swap; cross-spot included)\n"
+        "- Forward outright (focused sub-tab; same engine as Swap)\n"
         "- NDF (USD/CNY, USD/KRW, USD/TWD — primary-source fixing)\n"
         "- FX Option (OTC and Listed)\n"
         "- FX Futures (CME / HKEX / SGX)"

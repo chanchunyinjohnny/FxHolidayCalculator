@@ -410,7 +410,8 @@ PERIOD/IMM/BROKEN branch and discards the implicit near leg.
 ### 12.2 Validations
 
 - `InvalidForwardTenorError` — tenor is SPOT / ON / TN / SN (forward
-  outright requires a forward tenor; SPOT trades use the Spot/Swap tab).
+  outright requires a forward tenor; SPOT trades use the Spot tab, and
+  ON/TN/SN use the Swap tab).
 - `InvalidBrokenDateError` — rolled settlement ≤ spot (raised from the
   underlying swap engine).
 - `InvalidTradeDateError` — propagated from the swap engine for invalid
@@ -535,6 +536,6 @@ documented conventions side-by-side.
   `Pair.ref_currency_source`, `Pair.conventions`)
 - UI widgets: `fx_holiday_calculator/ui/_widgets.py`
   (`render_reference_status`, `render_pair_conventions`)
-- Consumers: every product tab (`product_spot_swap.py`,
+- Consumers: every product tab (`product_spot.py`, `product_swap.py`,
   `product_forward.py`, `product_ndf.py`, `product_option.py`,
   `product_futures.py`, `tab_holidays.py`)

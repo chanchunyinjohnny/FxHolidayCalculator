@@ -6,6 +6,15 @@
 **Builds on:** `docs/superpowers/specs/2026-05-06-fx-holiday-calculator-design.md`
 **License:** MIT
 
+> **Amendment 2026-05-12:** The combined "Spot / Swap" sub-tab described
+> in §3.1 and §3.3 has been split into two sibling sub-tabs — **Spot** and
+> **Swap** — for product-taxonomy consistency with Forward / NDF / Option /
+> Futures. Spot is a single-date product (T+N from trade date, no EOM); Swap
+> covers ON/TN/SN, standard single-tenor swap, and forward-forward swap. The
+> file `product_spot_swap.py` was renamed to `product_swap.py` and a new
+> `product_spot.py` was added. See
+> `docs/superpowers/plans/2026-05-12-split-spot-and-swap-tabs.md`.
+
 ---
 
 ## 1. Purpose
@@ -35,17 +44,18 @@ The provenance contract from the v1 design is unchanged: every holiday returned 
 [ Calculator ]   [ Holiday Calendar ]   [ About / Sources ]
 ```
 
-Inside Calculator, four sub-tabs:
+Inside Calculator, sub-tabs (post-2026-05-12 amendment — see header):
 
 ```
-[ Spot / Swap ]   [ NDF ]   [ Option ]   [ Futures ]
+[ Spot ]   [ Swap ]   [ Forward ]   [ NDF ]   [ Option ]   [ Futures ]
 ```
 
 ### 3.2 Per-product UI surface
 
 | Sub-tab | Inputs | Outputs |
 |---|---|---|
-| **Spot / Swap** | Pair (full list) · Trade date · Swap kind (Standard / FFS) · Tenor(s) · Reference currency · Calendar mode (FX/Exchange/Both) | Spot · Near · Far · Per-leg adjustment trace |
+| **Spot** (post-amendment) | Pair (full list) · Trade date · Reference currency | Spot · Spot-offset adjustment trace |
+| **Swap** (post-amendment, was "Spot / Swap") | Pair (full list) · Trade date · Swap kind (Standard / FFS) · Tenor(s) (SPOT blocked — redirects to Spot tab) · Reference currency · Calendar mode (FX/Exchange/Both) | Spot · Near · Far · Per-leg adjustment trace |
 | **NDF** | Pair (USD/CNY, USD/KRW, USD/TWD) · Trade date · Input mode radio (Tenor / Maturity) · Tenor (forward-only: PERIOD / IMM / BROKEN — SPOT/ON/TN/SN omitted from the picker per §8.3) or target settlement date | Spot · Settlement · Fixing · Per-leg adjustment trace |
 | **Option** | Pair (full list) · Trade date · Tenor · Reference currency · Style radio (OTC / Listed) · Venue (when Listed) | Spot · Expiry · Delivery · Per-leg adjustment trace |
 | **Futures** | Pair (listed pairs only) · Venue (CME/HKEX/SGX, filtered) · Input mode radio (Contract month / IMM tenor) · Contract month picker or IMM tenor + reference date | Last trade date · Delivery date · Per-leg adjustment trace |
@@ -58,8 +68,9 @@ The Holiday Calendar tab is unchanged. It already supports the FX / Exchange / B
 fx_holiday_calculator/ui/
 ├── app.py                  # top-level tabs (Calculator / Holidays / About)
 ├── sidebar.py              # unchanged
-├── tab_calculator.py       # NEW — hosts the 4 product sub-tabs
-├── product_spot_swap.py    # renamed from tab_swap.py
+├── tab_calculator.py       # NEW — hosts the product sub-tabs
+├── product_spot.py         # NEW post-2026-05-12 (split from product_spot_swap.py)
+├── product_swap.py         # renamed from tab_swap.py (post-2026-05-12: was product_spot_swap.py)
 ├── product_ndf.py          # NEW
 ├── product_option.py       # NEW
 ├── product_futures.py      # NEW

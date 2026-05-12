@@ -2,6 +2,8 @@
 
 > **For agentic workers:** REQUIRED SUB-SKILL: Use superpowers:subagent-driven-development (recommended) or superpowers:executing-plans to implement this plan task-by-task. Steps use checkbox (`- [ ]`) syntax for tracking.
 
+> **Amendment 2026-05-12:** Task 5.1 of this plan renamed `tab_swap.py` to `product_spot_swap.py` and registered it as a single "Spot / Swap" sub-tab. That tab has since been split into separate **Spot** and **Swap** sub-tabs; `product_spot_swap.py` was renamed to `product_swap.py` and a new `product_spot.py` was added. References to `product_spot_swap.py` and the combined "Spot / Swap" sub-tab below are historical — current state lives in `docs/superpowers/plans/2026-05-12-split-spot-and-swap-tabs.md`.
+
 **Goal:** Extend the FX Holiday Calculator from a single "Swap Date Calculator" tab into a product-aware tool: Spot/Swap (existing), NDF (new — CNY/KRW/TWD fixing calendars), FX Option (new — OTC + Listed), FX Futures (new — CME/HKEX/SGX). Adds three new primary-source fixing calendars and four engine modules.
 
 **Architecture:** Per-product engine modules (`ndf.py`, `option.py`, `future.py`) sitting alongside the existing `swap.py`, all composing shared helpers from `conventions/`. New `calendars/fixing.py` mirrors the RTGS calendar pattern. UI restructures into nested tabs: `Calculator | Holidays | About`, with the Calculator parent hosting four product sub-tabs.

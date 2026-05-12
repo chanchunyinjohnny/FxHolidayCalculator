@@ -1,10 +1,11 @@
-"""Spot / Swap product sub-tab.
+"""FX Swap product sub-tab.
 
-Renders the existing engine surface (calculate_swap_dates) under a
-product-aware label. Covers spot, cross-spot, ON/TN/SN, forward outright,
-standard swap, and forward-forward swap — all rolling on RTGS settlement
-calendars. Exchange calendars are not consulted: OTC swap/forward
+Covers ON / TN / SN short-dated swaps, standard (single-tenor) swaps,
+and forward-forward swaps (two tenors). All legs roll on RTGS settlement
+calendars; exchange calendars are not consulted because OTC swap
 settlement is bilateral and venue-independent.
+
+Pure spot date calculations live in the Spot tab.
 """
 
 from pathlib import Path
@@ -57,10 +58,11 @@ def _load_rtgs_set(currencies):
 
 
 def render() -> None:
-    st.subheader("Spot & Swap Date Calculator")
+    st.subheader("FX Swap Date Calculator")
     st.caption(
-        "Covers spot, cross-spot, ON/TN/SN, forward outright, standard swap, "
-        "and forward-forward swap. All rolling on RTGS settlement calendars."
+        "Covers ON / TN / SN short-dated swaps, standard (single-tenor) swaps, "
+        "and forward-forward swaps. All legs roll on RTGS settlement calendars. "
+        "For a pure spot date, use the Spot tab."
     )
 
     pair_codes = _available_pair_codes()
@@ -84,7 +86,7 @@ def render() -> None:
     near_tenor_str: str | None = None
     if swap_kind.startswith("Standard"):
         far_tenor_str = st.text_input(
-            "Tenor (e.g. SPOT, ON, 3M, IMM1, 2026-08-15)",
+            "Tenor (e.g. ON, TN, SN, 3M, IMM1, 2026-08-15)",
             value="3M",
             key="swap_far_tenor_std",
         )
@@ -135,6 +137,13 @@ def render() -> None:
         try:
             far_tenor = parse_tenor(far_tenor_str)
             near_tenor = parse_tenor(near_tenor_str) if near_tenor_str else None
+            if far_tenor.kind == "SPOT" and near_tenor is None:
+                st.info(
+                    "SPOT is a single-date product — please use the **Spot** tab. "
+                    "The Swap tab is for two-leg products (ON/TN/SN, standard swap, "
+                    "forward-forward swap)."
+                )
+                return
             result = calculate_swap_dates(
                 trade_date=trade_date,
                 pair=pair,
