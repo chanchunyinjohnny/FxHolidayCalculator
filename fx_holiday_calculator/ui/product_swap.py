@@ -99,7 +99,6 @@ def render() -> None:
 
     # Reference-currency picker: shown only when the pair has a documented
     # third-currency convention AND the reference is not already a leg.
-    # v1 ref currency restriction: only {none, USD, EUR} since HKD/CNH not loaded.
     leg_ccys = {pair.base, pair.quote}
     pair_default = pair.default_ref_currency
     if pair_default is None or pair_default in leg_ccys:
@@ -107,7 +106,7 @@ def render() -> None:
     else:
         # Build options around the pair's documented default.
         ref_options = ["none"]
-        for c in (pair_default, "USD", "EUR"):
+        for c in (pair_default, "USD", "EUR", "HKD", "CNH"):
             if c not in ref_options and c not in leg_ccys:
                 ref_options.append(c)
         ref = st.radio(
@@ -115,8 +114,7 @@ def render() -> None:
             ref_options,
             index=ref_options.index(pair_default),
             horizontal=True,
-            help=REF_CURRENCY_HELP
-            + " In v1, HKD and CNH refs are not available (calendars deferred).",
+            help=REF_CURRENCY_HELP,
             key="swap_ref",
         )
 

@@ -169,61 +169,83 @@ A fetcher must:
 
 ## HKD — CHATS
 
-**Identity:** HKMA Hong Kong dollar CHATS clearing calendar. HKD CHATS is closed on these days; HKD cannot settle.
+**Identity:** Hong Kong dollar CHATS clearing calendar. HKD CHATS is closed on these days; HKD cannot settle.
 **Calendar kind:** `RTGS`
 **File:** `data/fx_rtgs/HKD.json`
-**Fetcher:** `scripts/sources/hkma_chats_hkd.py`
+**Fetcher:** `scripts/sources/hkgov_general_holidays.py`
 
-**Upstream URL (primary):** `https://www.hkma.gov.hk/eng/key-functions/international-financial-centre/infrastructure/clearing-and-settlement-systems/`
-**Upstream document(s):** HKMA publishes annual CHATS calendar PDFs linked from the page above. The fetcher must locate the most recent HKD-CHATS calendar PDF (filenames vary by year).
-**Document format:** PDF — typically a one-page calendar grid or a list of dates per year.
-**Update cadence:** Published in late autumn of the prior year (typically Nov–Dec).
+**Upstream URL (primary):** `https://www.gov.hk/en/about/abouthk/holiday/<YYYY>.htm` — the HKSAR Government's annual general-holidays page (one URL per year; the `index.htm` page lists the published years).
+**Document format:** HTML table — each row carries `desc` (holiday name), `date` (e.g. `17 February`), `weekday` columns.
+**Update cadence:** Annual. The HKSAR Government typically gazettes the next calendar year mid-year and publishes the corresponding page shortly after.
+
+### Why gov.hk is the right primary source (and not an HKMA PDF)
+
+Earlier drafts of this document assumed HKMA published a standalone annual
+CHATS-holiday PDF. That assumption was wrong:
+
+1. The originally-cited listing page (`/key-functions/international-financial-centre/infrastructure/clearing-and-settlement-systems/`) returns 404; the closest live HKMA page on payment systems does not link out to a CHATS holiday calendar.
+2. HKICL (the system operator) does not publish a public standalone settlement-day calendar PDF — operational schedules are circulated to participants via member-only channels.
+3. Instead, HKICL's **HKD Clearing House Rules** (the public, redacted operating-rules document) define the working calendar by reference to the statutory General Holidays Ordinance. Specifically, "Working Day" is defined as: *"a day other than a Saturday, a general holiday as specified in the General Holidays Ordinance (Cap. 149 of the Laws of Hong Kong) and any other day on which a relevant GTRS or BOJ-NET JGB Services does not operate."*
+4. That makes the statutory General Holidays list (the Schedule to Cap. 149, gazetted annually by the HKSAR Government and re-published in HTML form at `gov.hk/en/about/abouthk/holiday/<YYYY>.htm`) the legally authoritative primary source for HKD CHATS settlement holidays.
+
+Using gov.hk has additional benefits over a hypothetical HKMA-PDF route:
+
+- The HTML structure is stable (`<tr>` rows with `class="desc"`/`class="date"`/`class="weekday"` cells), unlike PDF layouts that change year-to-year.
+- Sunday-substitution is already applied in the published table, so we do not have to re-implement the General Holidays Ordinance substitution rule.
+- One stable URL pattern per year — no PDF link discovery needed.
 
 **Parser strategy:**
-- Discover the active PDF link from the listing page.
-- Download the PDF; extract text via `pdfplumber`.
-- Parse listed holiday dates; the PDF generally includes both date and the Hong Kong public-holiday name (English).
-- Persist the raw PDF to `data/fx_rtgs/_raw/HKD.pdf`.
+- For each year in the requested range, HTTP GET `https://www.gov.hk/en/about/abouthk/holiday/<year>.htm`.
+- 404 means "the HKSAR Government has not yet gazetted this year"; the fetcher skips that year silently. The resulting `valid_until` is clamped to the latest year actually parsed, so `RtgsCalendar.is_holiday` raises `CalendarRangeError` for dates beyond — no silent fallthrough.
+- For each year-page, extract `<tr>`/`<td>` rows; the regex pattern is `<td class="desc">...</td><td class="date">DD Month</td><td class="weekday">...</td>`.
+- Skip the first row whose `date` cell is blank — that is the "Every Sunday" perennial entry, not a dated holiday.
+- Persist each raw HTML to `data/fx_rtgs/_raw/HKD-<year>.html` so `git diff` shows what the source said at fetch time.
 
 **Schema mapping:**
-- `name` ← English holiday name as printed in the PDF.
-- `note` ← `"observed"` suffix when applicable (e.g. day after Christmas observed when Boxing Day falls on a Sunday).
+- `name` ← the statutory English name as printed in the page (e.g. *"Lunar New Year's Day"*, *"The day following Ching Ming Festival"*).
+- `note` ← `null` for all entries; the substitution rule is already baked into the gazetted date.
+- Per-entry `source` override: every entry points to the actual year page used (e.g. `.../holiday/2026.htm`) so multi-year payloads preserve which page each date came from.
+- `default_source` cites the annual index page as the stable landing URL.
 
 **Known quirks:**
-- HK public holidays vs. HKD CHATS holidays are usually the same set, but typhoon T8+ closures can affect a settlement day mid-day. We model these only when HKMA confirms a full-day CHATS closure (rare).
-- Lunar New Year: typically 3 contiguous holidays (LNY day 1–3); the dates shift each year and require the Chinese lunisolar calendar.
-- Boxing Day observance: when Christmas falls on Friday and Boxing Day on Saturday, the following Monday becomes a substitute holiday.
+- The statutory list includes Saturday dates (e.g. *"The day following Good Friday"* falling on Sat 4 Apr 2026). HKD CHATS already excludes Saturdays via the "other than a Saturday" clause in the Working Day definition, so those entries are operationally redundant — they are kept in the JSON for fidelity to the statutory list.
+- Typhoon T8+ ad-hoc closures are NOT covered by the General Holidays Ordinance and therefore not in this source. They would require per-entry overrides pointing to the specific HKMA / HKICL participant notice (deferred — manual add when needed).
 
-**Cross-check tripwire:** `python-holidays.HongKong()` aligns most years but does not always model HKMA's exact CHATS list (especially typhoon adjustments). Tripwire is informational only.
+**Cross-check tripwire:** `python-holidays.HongKong()` is a reasonable approximation but bumps occasionally lag the gazetted list. Informational tripwire only.
 
 ---
 
 ## CNH — CNY clearing in Hong Kong
 
-**Identity:** HKMA's offshore CNY (CNH) clearing schedule. Operated under the CNH RTGS clearing arrangement; this is the calendar that determines whether CNH can settle in Hong Kong. Distinct from onshore CNY (mainland CIPS/CNAPS).
+**Identity:** Offshore CNY (CNH) clearing schedule operated through HKMA's RMB RTGS in Hong Kong. This is the calendar that determines whether CNH can settle. Distinct from onshore CNY (mainland CIPS/CNAPS).
 **Calendar kind:** `RTGS`
 **File:** `data/fx_rtgs/CNH.json`
 **Fetcher:** `scripts/sources/hkma_chats_cnh.py`
 
-**Upstream URL (primary):** `https://www.hkma.gov.hk/eng/key-functions/international-financial-centre/infrastructure/clearing-and-settlement-systems/` (same listing page as HKD CHATS, separate PDF)
-**Upstream document(s):** HKMA publishes the annual CNY-clearing-in-HK holiday schedule as a separate PDF, distinct from the HKD-CHATS PDF.
-**Document format:** PDF.
-**Update cadence:** Published in late autumn of the prior year.
+**Upstream sources (composite primary):**
+
+1. **Hong Kong leg.** Same source as HKD-CHATS — the HKSAR Government's annual general-holidays pages at `https://www.gov.hk/en/about/abouthk/holiday/<YYYY>.htm`. The HKICL Renminbi Clearing House Rules apply the same Cap. 149 "Working Day" definition as HKD-CHATS, so the HK leg of the CNH calendar is, in law, the General Holidays Ordinance list.
+2. **Mainland PRC leg.** The CFETS FX Trading Calendar served by chinamoney.com.cn (the same primary source we use for the onshore CNY NDF fixing calendar). Mainland market closures drain RMB liquidity and operationally close offshore CNH clearing for those dates. Reused from `scripts/sources/cfets_cny.py`.
+
+**Default-source citation:** `https://www.hkma.gov.hk/eng/key-functions/international-financial-centre/financial-market-infrastructure/payment-systems/` — HKMA's payment-systems landing page, used purely as the stable cite for the *system* (HKMA RMB RTGS); the actual per-entry provenance is carried on each holiday's `source` override.
 
 **Parser strategy:**
-- Discover the CNY-clearing PDF (named distinct from HKD CHATS — verify at implementation time).
-- Download; extract text via `pdfplumber`.
-- Parse listed holidays; the schedule is the union of HK public holidays and selected mainland China holidays (because CNY in HK is settled via the HK clearing bank, but PBoC mainland closures still affect liquidity).
+- Call `hkgov_general_holidays.fetch_pages` to pull each year's gov.hk page (skipping 404s); call `cfets_cny._fetch_year` for each `selectedYear` step until CFETS no longer extends coverage.
+- Union the two date sets. On conflict (date in both legs), the HK source wins (HK is the operative jurisdiction for the offshore clearing system); the PRC co-closure is recorded in `note`.
+- Each entry carries a per-entry `source` override: gov.hk year page for HK-driven dates, the chinamoney.com.cn API page for PRC-only dates. Provenance is therefore granular — every closure is traceable to a specific document.
+- Validity window is clamped to the intersection of the two legs' coverage. If HK only publishes 2026 and CFETS publishes 2025/2026/2027, CNH is valid for 2026 only.
+- Persist raw artifacts under `data/fx_rtgs/_raw/HKD-<year>.html` (HK leg, reused) and `data/fx_rtgs/_raw/CNH-cfets-<year>.json` (PRC leg).
 
 **Schema mapping:**
-- `name` ← English holiday name (e.g. `"National Day (China)"`, `"Labour Day (China)"`).
-- `note` ← `"China public holiday — onshore market closure affects offshore clearing"` for entries that exist due to mainland PRC holidays, else `null`.
+- `name` ← HK statutory English name for HK-driven entries; CFETS/python-holidays English name for PRC-only entries (with the generic fallback `"CFETS CNY market closure"` for working-Saturday make-up days that python-holidays does not name).
+- `note` ← `"HK general holiday; mainland PRC market also closed"` for overlap dates; `"PRC public holiday — onshore CNY market closure affects offshore CNH clearing"` for PRC-only entries; `null` for HK-only entries.
 
 **Known quirks:**
 - CNH calendar is the **union** of HK and PRC closures — both holiday sets close offshore CNH clearing.
-- Mainland China holidays: Spring Festival (Lunar New Year) is typically a 7-day block; Labour Day (May 1) is typically 3–5 days; National Day (Oct 1) is typically 7 days. Exact dates published by State Council each year, usually December.
-- Working-Saturdays: PRC sometimes designates a Saturday as a make-up working day adjacent to a holiday block. These do NOT make CNH settle on that Saturday — RTGS still observes weekend closure regardless.
-- Typhoon T8+ closures: same caveat as HKD.
+- Mainland China holidays: Spring Festival (Lunar New Year) is typically a 7-day block; Labour Day (May 1) is typically 3–5 days; National Day (Oct 1) is typically 7 days. The CFETS API reflects whatever State Council gazettes for the year.
+- Working-Saturdays: PRC sometimes designates a Saturday as a make-up working day adjacent to a holiday block. These do **not** make CNH settle on that Saturday — RTGS still observes weekend closure regardless. The CFETS API does not list working-Saturdays as closures, so the data is naturally correct on this point.
+- Typhoon T8+ closures: same caveat as HKD — not in either primary source. Per-entry overrides would be the route to model them.
+- Working-Saturdays still appear in CFETS' PRC closure dataset *occasionally* (e.g. May 4 / Oct 4–7 make-up working days that fall on a normal weekday). Those are PRC closures and are correctly included.
 
 **Cross-check tripwire:** No clean library equivalent. `python-holidays.HongKong()` UNION `python-holidays.China()` is a reasonable approximation; tripwire is informational only and a mismatch produces a comment, not a failure.
 

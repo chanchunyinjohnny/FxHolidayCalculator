@@ -6,8 +6,6 @@ import streamlit as st
 BUNDLED = Path(__file__).resolve().parents[2] / "data"
 
 _DEFERRED = [
-    ("HKD", "RTGS", "HKMA CHATS (PDF)"),
-    ("CNH", "RTGS", "HKMA CNY clearing in HK (PDF)"),
     ("CHF", "RTGS", "SIX SIC"),
     ("CAD", "RTGS", "Payments Canada Lynx"),
     ("AUD", "RTGS", "RBA RITS"),
@@ -91,8 +89,8 @@ There are no unsourced dates.
     deferred_rows = [{"Code": c, "Kind": k, "Description": d} for (c, k, d) in _DEFERRED]
     st.dataframe(deferred_rows, use_container_width=True)
     st.caption(
-        "v1 ships with EUR, USD, GBP, JPY RTGS calendars only. The deferred sources "
-        "are blocked or PDF-based and require manual data sourcing in production."
+        "v1 ships with EUR, USD, GBP, JPY, HKD, CNH RTGS calendars. The deferred "
+        "sources are blocked or PDF-based and require manual data sourcing in production."
     )
 
     st.markdown(
