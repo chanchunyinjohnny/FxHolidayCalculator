@@ -9,7 +9,11 @@ from fx_holiday_calculator.calendars.national import get_national_calendar
 from fx_holiday_calculator.conventions.cross import relevant_venues
 from fx_holiday_calculator.holidays_view import list_holidays
 from fx_holiday_calculator.pairs import list_supported_pairs, parse_pair
-from fx_holiday_calculator.ui._widgets import date_input_with_today
+from fx_holiday_calculator.ui._widgets import (
+    REF_CURRENCY_HELP,
+    date_input_with_today,
+    render_pair_conventions,
+)
 
 BUNDLED = Path(__file__).resolve().parents[2] / "data"
 CACHE = Path.home() / ".fx_holiday_calculator" / "cache"
@@ -53,16 +57,21 @@ def render() -> None:
     pair_code = col1.selectbox("Currency pair", pair_codes, index=default_idx, key="hol_pair")
     pair = parse_pair(pair_code)
 
-    has_usd = "USD" in {pair.base, pair.quote}
-    if has_usd:
+    leg_ccys = {pair.base, pair.quote}
+    pair_default = pair.default_ref_currency
+    if pair_default is None or pair_default in leg_ccys:
         ref = "none"
     else:
-        ref_options = ["none", "USD", "EUR"]
+        ref_options = ["none"]
+        for c in (pair_default, "USD", "EUR"):
+            if c not in ref_options and c not in leg_ccys:
+                ref_options.append(c)
         ref = col2.radio(
-            "Reference currency",
+            f"Reference currency (pair default: {pair_default})",
             ref_options,
-            index=ref_options.index("USD"),
+            index=ref_options.index(pair_default),
             horizontal=True,
+            help=REF_CURRENCY_HELP,
             key="hol_ref",
         )
 
@@ -150,6 +159,8 @@ def render() -> None:
                 "holidays observed by CME Globex FX futures). "
                 "See `docs/data-sources.md` for the full caveat."
             )
+
+    render_pair_conventions(pair)
 
     if st.button("Show"):
         rows = list_holidays(

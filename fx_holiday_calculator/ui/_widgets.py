@@ -6,6 +6,12 @@ from datetime import date
 
 import streamlit as st
 
+REF_CURRENCY_HELP = (
+    "Additional currency whose holiday calendar is consulted for settlement "
+    "of this pair (per market convention). Only meaningful when neither "
+    "leg of the pair is the reference currency."
+)
+
 
 def _make_today_setter(key: str):
     def _setter():
@@ -75,3 +81,115 @@ def render_trace(steps, label: str) -> None:
                         f"fetched {status.source.fetched_at.isoformat()} · "
                         f"{status.source_origin}"
                     )
+
+
+def render_reference_status(
+    *,
+    pair,
+    selected_ref: str,
+    named_traces: list[tuple[str, list]],
+) -> None:
+    """Show whether the reference calendar applied for each derived date.
+
+    - ``pair``: the Pair being calculated against
+    - ``selected_ref``: the ref-currency the user chose ("none" or a code)
+    - ``named_traces``: ordered (label, trace) pairs, e.g.
+      [("Spot offset", spot_trace), ("Far leg", far_trace)]
+
+    Renders a small section explaining:
+      * which reference currency (if any) is in force
+      * for each derived date, whether the ref calendar bound (caused a
+        rejection) or merely applied without impact, plus the list of
+        ref-currency holidays consulted in the window.
+    """
+    st.markdown("### Reference calendar")
+
+    leg_ccys = {pair.base, pair.quote}
+    pair_default = pair.default_ref_currency
+
+    # Static pair-level attribute: what the convention says for this pair.
+    if pair_default is None or pair_default in leg_ccys:
+        if pair_default in leg_ccys:
+            reason = (
+                f"{pair_default} is already one of the pair's legs, so its calendar "
+                "is consulted as a leg — there is no separate third-currency check."
+            )
+        else:
+            reason = "No third-currency convention is documented for this pair."
+        st.caption(f"**No third-currency rule** — {reason}")
+        return
+
+    # Pair has a meaningful default reference currency.
+    ref_src = pair.ref_currency_source
+    if ref_src is not None:
+        st.caption(
+            f"**Documented convention:** {pair.base}/{pair.quote} consults "
+            f"**{pair_default}**'s calendar as a third-currency check "
+            f"([{ref_src.doc_title}]({ref_src.url}))."
+        )
+    else:
+        st.caption(
+            f"**Documented convention:** {pair.base}/{pair.quote} consults "
+            f"**{pair_default}**'s calendar as a third-currency check."
+        )
+
+    if selected_ref == "none":
+        st.info(
+            f"You opted out — **{pair_default}**'s calendar was not checked for this calculation."
+        )
+        return
+
+    if selected_ref != pair_default:
+        st.warning(
+            f"You picked **{selected_ref}** instead of the documented default "
+            f"**{pair_default}**."
+        )
+
+    # Per-date status: did the ref calendar get checked, and did it move
+    # the date? Phrased to read like a quant's pre-trade verification note.
+    holidays_in_window: dict[str, str] = {}
+    rows: list[tuple[str, str]] = []
+    for label, trace in named_traces:
+        if not trace:
+            continue
+        checked = False
+        moved = False
+        for step in trace:
+            if selected_ref in step.statuses:
+                checked = True
+                status = step.statuses[selected_ref]
+                if not status.is_good and step.decision == "reject_holiday":
+                    moved = True
+                    holidays_in_window[step.candidate_date.isoformat()] = (
+                        status.holiday_name or "(unnamed)"
+                    )
+        if not checked:
+            verdict = f"{selected_ref} calendar was not checked"
+        elif moved:
+            verdict = f"{selected_ref} holiday moved this date"
+        else:
+            verdict = f"{selected_ref} calendar was checked — no {selected_ref} holidays in window"
+        rows.append((label, verdict))
+
+    for label, verdict in rows:
+        st.write(f"- **{label}:** {verdict}")
+
+    if holidays_in_window:
+        st.caption(
+            f"**{selected_ref} holidays that moved a date:** "
+            + " · ".join(f"{d} ({n})" for d, n in sorted(holidays_in_window.items()))
+        )
+
+
+def render_pair_conventions(pair) -> None:
+    """Render the pair-specific conventions section, if any are documented.
+
+    Each entry shows its rule, a short description, and a source link.
+    Renders nothing if the pair has no documented conventions.
+    """
+    if not pair.conventions:
+        return
+    st.markdown("### Pair conventions")
+    for conv in pair.conventions:
+        st.markdown(f"**{conv.rule}** — {conv.description}")
+        st.caption(f"Source: [{conv.source.doc_title}]({conv.source.url})")

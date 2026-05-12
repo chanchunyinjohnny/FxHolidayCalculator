@@ -13,7 +13,14 @@ from fx_holiday_calculator.forward import InvalidForwardTenorError, calculate_fo
 from fx_holiday_calculator.pairs import list_supported_pairs, parse_pair
 from fx_holiday_calculator.swap import InvalidBrokenDateError, InvalidTradeDateError
 from fx_holiday_calculator.tenor import InvalidTenorError, parse_tenor
-from fx_holiday_calculator.ui._widgets import date_input_with_today, render_reasoning, render_trace
+from fx_holiday_calculator.ui._widgets import (
+    REF_CURRENCY_HELP,
+    date_input_with_today,
+    render_pair_conventions,
+    render_reasoning,
+    render_reference_status,
+    render_trace,
+)
 
 BUNDLED = Path(__file__).resolve().parents[2] / "data"
 CACHE = Path.home() / ".fx_holiday_calculator" / "cache"
@@ -54,16 +61,21 @@ def render() -> None:
 
     pair = parse_pair(pair_code)
 
-    has_usd = "USD" in {pair.base, pair.quote}
-    if has_usd:
+    leg_ccys = {pair.base, pair.quote}
+    pair_default = pair.default_ref_currency
+    if pair_default is None or pair_default in leg_ccys:
         ref = "none"
     else:
-        ref_options = ["none", "USD", "EUR"]
+        ref_options = ["none"]
+        for c in (pair_default, "USD", "EUR"):
+            if c not in ref_options and c not in leg_ccys:
+                ref_options.append(c)
         ref = st.radio(
-            "Reference currency",
+            f"Reference currency (pair default: {pair_default})",
             ref_options,
-            index=ref_options.index("USD"),
+            index=ref_options.index(pair_default),
             horizontal=True,
+            help=REF_CURRENCY_HELP,
             key="fwd_ref",
         )
 
@@ -123,3 +135,13 @@ def render() -> None:
         st.markdown("### Adjustment trace")
         render_trace(result.spot_trace, "Spot offset")
         render_trace(result.settlement_trace, "Settlement")
+
+        render_reference_status(
+            pair=pair,
+            selected_ref=ref,
+            named_traces=[
+                ("Spot offset", result.spot_trace),
+                ("Settlement", result.settlement_trace),
+            ],
+        )
+        render_pair_conventions(pair)

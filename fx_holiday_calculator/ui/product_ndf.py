@@ -16,7 +16,12 @@ from fx_holiday_calculator.ndf import (
 )
 from fx_holiday_calculator.pairs import list_supported_pairs, parse_pair
 from fx_holiday_calculator.tenor import InvalidTenorError, parse_tenor
-from fx_holiday_calculator.ui._widgets import date_input_with_today, render_reasoning, render_trace
+from fx_holiday_calculator.ui._widgets import (
+    date_input_with_today,
+    render_pair_conventions,
+    render_reasoning,
+    render_trace,
+)
 
 BUNDLED = Path(__file__).resolve().parents[2] / "data"
 CACHE = Path.home() / ".fx_holiday_calculator" / "cache"
@@ -159,4 +164,5 @@ def render() -> None:
         st.markdown("### Adjustment trace")
         render_trace(result.spot_trace, "Spot offset")
         render_trace(result.settlement_trace, "Settlement")
+        render_pair_conventions(pair)
         render_trace(result.fixing_trace, "Fixing")

@@ -21,7 +21,14 @@ from fx_holiday_calculator.swap import (
     calculate_swap_dates,
 )
 from fx_holiday_calculator.tenor import InvalidTenorError, parse_tenor
-from fx_holiday_calculator.ui._widgets import date_input_with_today, render_reasoning, render_trace
+from fx_holiday_calculator.ui._widgets import (
+    REF_CURRENCY_HELP,
+    date_input_with_today,
+    render_pair_conventions,
+    render_reasoning,
+    render_reference_status,
+    render_trace,
+)
 
 BUNDLED = Path(__file__).resolve().parents[2] / "data"
 CACHE = Path.home() / ".fx_holiday_calculator" / "cache"
@@ -88,20 +95,26 @@ def render() -> None:
 
     pair = parse_pair(pair_code)
 
+    # Reference-currency picker: shown only when the pair has a documented
+    # third-currency convention AND the reference is not already a leg.
     # v1 ref currency restriction: only {none, USD, EUR} since HKD/CNH not loaded.
-    # Cross-currency rule only applies when the pair does NOT contain USD; for
-    # USD pairs the ref picker is hidden and ref is fixed to "none".
-    has_usd = "USD" in {pair.base, pair.quote}
-    if has_usd:
+    leg_ccys = {pair.base, pair.quote}
+    pair_default = pair.default_ref_currency
+    if pair_default is None or pair_default in leg_ccys:
         ref = "none"
     else:
-        ref_options = ["none", "USD", "EUR"]
+        # Build options around the pair's documented default.
+        ref_options = ["none"]
+        for c in (pair_default, "USD", "EUR"):
+            if c not in ref_options and c not in leg_ccys:
+                ref_options.append(c)
         ref = st.radio(
-            "Reference currency",
+            f"Reference currency (pair default: {pair_default})",
             ref_options,
-            index=ref_options.index("USD"),
+            index=ref_options.index(pair_default),
             horizontal=True,
-            help="In v1, HKD and CNH refs are not available (calendars deferred).",
+            help=REF_CURRENCY_HELP
+            + " In v1, HKD and CNH refs are not available (calendars deferred).",
             key="swap_ref",
         )
 
@@ -198,3 +211,14 @@ def render() -> None:
         render_trace(result.spot_trace, "Spot offset")
         render_trace(result.near_trace, "Near leg")
         render_trace(result.far_trace, "Far leg")
+
+        render_reference_status(
+            pair=pair,
+            selected_ref=ref,
+            named_traces=[
+                ("Spot offset", result.spot_trace),
+                ("Near leg", result.near_trace),
+                ("Far leg", result.far_trace),
+            ],
+        )
+        render_pair_conventions(pair)
