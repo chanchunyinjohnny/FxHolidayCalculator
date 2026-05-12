@@ -49,41 +49,64 @@ def _group_library_sourced(codes: tuple[str, ...], subdir: str, marker: str | No
     return False
 
 
+def _earliest_fetched_at(root: Path, *, recursive: bool) -> str | None:
+    earliest = None
+    if not root.exists():
+        return None
+    paths = root.rglob("*.json") if recursive else root.glob("*.json")
+    for p in paths:
+        try:
+            blob = json.loads(p.read_text())
+            stamp = blob["default_source"]["fetched_at"]
+            if earliest is None or stamp < earliest:
+                earliest = stamp
+        except Exception:
+            continue
+    return earliest
+
+
 def _bundled_fetched_at() -> str:
     earliest = None
     for sub in ("fx_rtgs", "fx_exchange", "fx_fixing"):
-        d = BUNDLED_DIR / sub
-        if not d.exists():
-            continue
-        for p in d.glob("*.json"):
-            try:
-                blob = json.loads(p.read_text())
-                stamp = blob["default_source"]["fetched_at"]
-                if earliest is None or stamp < earliest:
-                    earliest = stamp
-            except Exception:
-                continue
+        stamp = _earliest_fetched_at(BUNDLED_DIR / sub, recursive=False)
+        if stamp and (earliest is None or stamp < earliest):
+            earliest = stamp
     return earliest or "(no data)"
 
 
-def _cache_status() -> str:
-    if not CACHE_DIR.exists() or not any(CACHE_DIR.rglob("*.json")):
-        return "(empty)"
-    return "live cache present"
+def _cache_fetched_at() -> str | None:
+    return _earliest_fetched_at(CACHE_DIR, recursive=True)
+
+
+def _is_benign_refresh_error(msg: str) -> bool:
+    """True for failures where bundled/cached data continues to load unchanged.
+
+    These are expected outcomes (missing optional dep, documented network
+    egress restrictions to a known-flaky source) and shouldn't render as
+    red errors in the UI.
+    """
+    return "upstream unreachable" in msg or "not installed" in msg
 
 
 def render() -> None:
     sb = st.sidebar
     sb.header("Data origin")
     sb.write(f"Bundled fetched: **{_bundled_fetched_at()}**")
-    sb.write(f"Cache: **{_cache_status()}**")
+    cache_stamp = _cache_fetched_at()
+    if cache_stamp:
+        sb.write(f"Cache fetched: **{cache_stamp}**")
+    else:
+        sb.write("Cache: **(empty)**")
 
     if sb.button("↻ Refresh all sources"):
         with sb.status("Refreshing all sources…", expanded=True) as status:
             results = refresh_all(CACHE_DIR)
             for r in results:
                 if r.error:
-                    sb.error(f"{r.source}: {r.error}")
+                    if _is_benign_refresh_error(r.error):
+                        sb.warning(f"{r.source}: {r.error}")
+                    else:
+                        sb.error(f"{r.source}: {r.error}")
                 else:
                     sb.success(f"{r.source}: refreshed")
             status.update(label="Refresh complete", state="complete")
@@ -108,7 +131,10 @@ def render() -> None:
             if cols[1].button("↻", key=f"refresh_{code}"):
                 r = refresh_one(code, CACHE_DIR)
                 if r.error:
-                    sb.error(f"{code}: {r.error}")
+                    if _is_benign_refresh_error(r.error):
+                        sb.warning(f"{code}: {r.error}")
+                    else:
+                        sb.error(f"{code}: {r.error}")
                 else:
                     sb.success(f"{code}: refreshed")
 
