@@ -9,6 +9,7 @@ from fx_holiday_calculator.calendars.national import get_national_calendar
 from fx_holiday_calculator.conventions.cross import relevant_venues
 from fx_holiday_calculator.holidays_view import list_holidays
 from fx_holiday_calculator.pairs import list_supported_pairs, parse_pair
+from fx_holiday_calculator.ui._widgets import date_input_with_today
 
 BUNDLED = Path(__file__).resolve().parents[2] / "data"
 CACHE = Path.home() / ".fx_holiday_calculator" / "cache"
@@ -53,15 +54,17 @@ def render() -> None:
     pair = parse_pair(pair_code)
 
     has_usd = "USD" in {pair.base, pair.quote}
-    ref_options = ["none", "USD", "EUR"]
-    default_ref = "none" if has_usd else "USD"
-    ref = col2.radio(
-        "Reference currency",
-        ref_options,
-        index=ref_options.index(default_ref),
-        horizontal=True,
-        key="hol_ref",
-    )
+    if has_usd:
+        ref = "none"
+    else:
+        ref_options = ["none", "USD", "EUR"]
+        ref = col2.radio(
+            "Reference currency",
+            ref_options,
+            index=ref_options.index("USD"),
+            horizontal=True,
+            key="hol_ref",
+        )
 
     cal_mode = st.radio(
         "Calendar mode",
@@ -87,7 +90,9 @@ def render() -> None:
 
     today = date.today()
     c3, c4 = st.columns(2)
-    start = c3.date_input("Start date", value=date(today.year, 1, 1), key="hol_start")
+    start = date_input_with_today(
+        c3, "Start date", key="hol_start", default=date(today.year, 1, 1)
+    )
     end = c4.date_input("End date", value=date(today.year, 12, 31), key="hol_end")
 
     needed_rtgs = {pair.base, pair.quote}

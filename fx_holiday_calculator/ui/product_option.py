@@ -1,6 +1,5 @@
 """Option product sub-tab — OTC and Listed FX options."""
 
-from datetime import date
 from pathlib import Path
 
 import streamlit as st
@@ -14,6 +13,7 @@ from fx_holiday_calculator.option import (
 )
 from fx_holiday_calculator.pairs import list_supported_pairs, parse_pair
 from fx_holiday_calculator.tenor import InvalidTenorError, parse_tenor
+from fx_holiday_calculator.ui._widgets import date_input_with_today
 
 BUNDLED = Path(__file__).resolve().parents[2] / "data"
 CACHE = Path.home() / ".fx_holiday_calculator" / "cache"
@@ -76,7 +76,7 @@ def render() -> None:
 
     col1, col2, col3 = st.columns(3)
     pair_code = col1.selectbox("Currency pair", pairs, key="opt_pair")
-    trade_date = col2.date_input("Trade date", value=date.today(), key="opt_trade_date")
+    trade_date = date_input_with_today(col2, "Trade date", key="opt_trade_date")
     tenor_str = col3.text_input(
         "Tenor (forward only — e.g. 1M, 3M, IMM1, 2026-08-15)",
         value="1M",
@@ -88,15 +88,17 @@ def render() -> None:
     style_key = "OTC" if style == "OTC" else "LISTED"
 
     has_usd = "USD" in {pair.base, pair.quote}
-    ref_options = ["none", "USD", "EUR"]
-    default_ref = "none" if has_usd else "USD"
-    ref = st.radio(
-        "Reference currency (OTC only — ignored for Listed)",
-        ref_options,
-        index=ref_options.index(default_ref),
-        horizontal=True,
-        key="opt_ref",
-    )
+    if has_usd:
+        ref = "none"
+    else:
+        ref_options = ["none", "USD", "EUR"]
+        ref = st.radio(
+            "Reference currency (OTC only — ignored for Listed)",
+            ref_options,
+            index=ref_options.index("USD"),
+            horizontal=True,
+            key="opt_ref",
+        )
 
     venue: str | None = None
     if style_key == "LISTED":

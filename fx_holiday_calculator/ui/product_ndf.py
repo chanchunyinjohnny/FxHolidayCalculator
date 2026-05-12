@@ -16,6 +16,7 @@ from fx_holiday_calculator.ndf import (
 )
 from fx_holiday_calculator.pairs import list_supported_pairs, parse_pair
 from fx_holiday_calculator.tenor import InvalidTenorError, parse_tenor
+from fx_holiday_calculator.ui._widgets import date_input_with_today
 
 BUNDLED = Path(__file__).resolve().parents[2] / "data"
 CACHE = Path.home() / ".fx_holiday_calculator" / "cache"
@@ -73,7 +74,7 @@ def render() -> None:
 
     col1, col2 = st.columns(2)
     pair_code = col1.selectbox("Currency pair", pair_codes, key="ndf_pair")
-    trade_date = col2.date_input("Trade date", value=date.today(), key="ndf_trade_date")
+    trade_date = date_input_with_today(col2, "Trade date", key="ndf_trade_date")
     pair = parse_pair(pair_code)
 
     input_mode = st.radio(

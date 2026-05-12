@@ -7,7 +7,6 @@ calendars. Exchange calendars are not consulted: OTC swap/forward
 settlement is bilateral and venue-independent.
 """
 
-from datetime import date
 from pathlib import Path
 
 import streamlit as st
@@ -22,6 +21,7 @@ from fx_holiday_calculator.swap import (
     calculate_swap_dates,
 )
 from fx_holiday_calculator.tenor import InvalidTenorError, parse_tenor
+from fx_holiday_calculator.ui._widgets import date_input_with_today
 
 BUNDLED = Path(__file__).resolve().parents[2] / "data"
 CACHE = Path.home() / ".fx_holiday_calculator" / "cache"
@@ -93,7 +93,7 @@ def render() -> None:
     col1, col2, col3 = st.columns(3)
     default_idx = pair_codes.index("EUR/USD") if "EUR/USD" in pair_codes else 0
     pair_code = col1.selectbox("Currency pair", pair_codes, index=default_idx, key="swap_pair")
-    trade_date = col2.date_input("Trade date", value=date.today(), key="swap_trade_date")
+    trade_date = date_input_with_today(col2, "Trade date", key="swap_trade_date")
     swap_kind = col3.radio(
         "Swap kind",
         ["Standard (single tenor)", "Forward-forward (two tenors)"],
@@ -115,17 +115,21 @@ def render() -> None:
     pair = parse_pair(pair_code)
 
     # v1 ref currency restriction: only {none, USD, EUR} since HKD/CNH not loaded.
+    # Cross-currency rule only applies when the pair does NOT contain USD; for
+    # USD pairs the ref picker is hidden and ref is fixed to "none".
     has_usd = "USD" in {pair.base, pair.quote}
-    ref_options = ["none", "USD", "EUR"]
-    default_ref = "none" if has_usd else "USD"
-    ref = st.radio(
-        "Reference currency",
-        ref_options,
-        index=ref_options.index(default_ref),
-        horizontal=True,
-        help="In v1, HKD and CNH refs are not available (calendars deferred).",
-        key="swap_ref",
-    )
+    if has_usd:
+        ref = "none"
+    else:
+        ref_options = ["none", "USD", "EUR"]
+        ref = st.radio(
+            "Reference currency",
+            ref_options,
+            index=ref_options.index("USD"),
+            horizontal=True,
+            help="In v1, HKD and CNH refs are not available (calendars deferred).",
+            key="swap_ref",
+        )
 
     needed = {pair.base, pair.quote}
     if ref != "none":

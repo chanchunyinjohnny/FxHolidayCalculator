@@ -14,6 +14,7 @@ from fx_holiday_calculator.future import (
 )
 from fx_holiday_calculator.pairs import list_supported_pairs, parse_pair
 from fx_holiday_calculator.tenor import InvalidTenorError, parse_tenor
+from fx_holiday_calculator.ui._widgets import date_input_with_today
 
 BUNDLED = Path(__file__).resolve().parents[2] / "data"
 CACHE = Path.home() / ".fx_holiday_calculator" / "cache"
@@ -138,7 +139,7 @@ def render() -> None:
             ["IMM1", "IMM2", "IMM3", "IMM4"],
             key="fut_imm_tenor",
         )
-        from_date = c2.date_input("Reference date", value=date.today(), key="fut_from_date")
+        from_date = date_input_with_today(c2, "Reference date", key="fut_from_date")
 
     # Load RTGS + exchange calendars.
     needed = {pair.base, pair.quote}

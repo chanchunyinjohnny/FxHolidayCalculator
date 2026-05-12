@@ -3,7 +3,6 @@
 A single-leg trade: agree today, settle once on the forward date.
 """
 
-from datetime import date
 from pathlib import Path
 
 import streamlit as st
@@ -14,6 +13,7 @@ from fx_holiday_calculator.forward import InvalidForwardTenorError, calculate_fo
 from fx_holiday_calculator.pairs import list_supported_pairs, parse_pair
 from fx_holiday_calculator.swap import InvalidBrokenDateError, InvalidTradeDateError
 from fx_holiday_calculator.tenor import InvalidTenorError, parse_tenor
+from fx_holiday_calculator.ui._widgets import date_input_with_today
 
 BUNDLED = Path(__file__).resolve().parents[2] / "data"
 CACHE = Path.home() / ".fx_holiday_calculator" / "cache"
@@ -71,7 +71,7 @@ def render() -> None:
     col1, col2, col3 = st.columns(3)
     default_idx = pair_codes.index("EUR/USD") if "EUR/USD" in pair_codes else 0
     pair_code = col1.selectbox("Currency pair", pair_codes, index=default_idx, key="fwd_pair")
-    trade_date = col2.date_input("Trade date", value=date.today(), key="fwd_trade_date")
+    trade_date = date_input_with_today(col2, "Trade date", key="fwd_trade_date")
     tenor_str = col3.text_input(
         "Tenor (forward only — e.g. 3M, IMM1, 2026-08-15)",
         value="3M",
@@ -81,15 +81,17 @@ def render() -> None:
     pair = parse_pair(pair_code)
 
     has_usd = "USD" in {pair.base, pair.quote}
-    ref_options = ["none", "USD", "EUR"]
-    default_ref = "none" if has_usd else "USD"
-    ref = st.radio(
-        "Reference currency",
-        ref_options,
-        index=ref_options.index(default_ref),
-        horizontal=True,
-        key="fwd_ref",
-    )
+    if has_usd:
+        ref = "none"
+    else:
+        ref_options = ["none", "USD", "EUR"]
+        ref = st.radio(
+            "Reference currency",
+            ref_options,
+            index=ref_options.index("USD"),
+            horizontal=True,
+            key="fwd_ref",
+        )
 
     needed = {pair.base, pair.quote}
     if ref != "none":
