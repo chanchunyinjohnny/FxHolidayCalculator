@@ -65,9 +65,10 @@ There are no unsourced dates.
 
     st.markdown(
         "**Products supported:**\n"
-        "- Spot (single-date: trade date → spot date on RTGS calendars)\n"
+        "- Spot (single-date: trade date → spot date on RTGS calendars; "
+        "cross-currency spot supported via reference currency)\n"
         "- Swap (ON/TN/SN short-dated, standard single-tenor swap, "
-        "forward-forward swap; cross-spot included)\n"
+        "forward-forward swap)\n"
         "- Forward outright (focused sub-tab; same engine as Swap)\n"
         "- NDF (USD/CNY, USD/KRW, USD/TWD — primary-source fixing)\n"
         "- FX Option (OTC and Listed)\n"
