@@ -1,0 +1,82 @@
+{
+  "schema_version": 1,
+  "venue": "HKEX",
+  "calendar_kind": "EXCHANGE_OPTIONS_CONTRACTS",
+  "valid_from": "2026-05-18",
+  "valid_until": "2026-12-14",
+  "default_source": {
+    "url": "https://www.hkex.com.hk/Products/Listed-Derivatives/Currency?sc_lang=en",
+    "doc_title": "HKEX — Listed Currency Derivatives (Contract Specifications, USD/CNH Options)",
+    "fetched_at": "2026-05-13T06:52:58Z",
+    "fetcher": "scripts/sources/hkex_options_contracts.py@v1",
+    "default_derivation_mode": "derived"
+  },
+  "contracts": [
+    {
+      "code": "CUSOK6",
+      "pair": "USD/CNH",
+      "product_name": "USD/CNH Options (CNHO)",
+      "contract_month": "2026-05",
+      "expiry_date": "2026-05-18",
+      "delivery_date": "2026-05-20",
+      "derivation_mode": "derived",
+      "source": null,
+      "note": "Derived from HKEX CNHO-S-2 (expiry = 2 Trading Days prior to FSD; FSD = 3rd-Wed rolled to next BD on HKEX). Verify against the official contract specs page before trading."
+    },
+    {
+      "code": "CUSOM6",
+      "pair": "USD/CNH",
+      "product_name": "USD/CNH Options (CNHO)",
+      "contract_month": "2026-06",
+      "expiry_date": "2026-06-15",
+      "delivery_date": "2026-06-17",
+      "derivation_mode": "derived",
+      "source": null,
+      "note": "Derived from HKEX CNHO-S-2 (expiry = 2 Trading Days prior to FSD; FSD = 3rd-Wed rolled to next BD on HKEX). Verify against the official contract specs page before trading."
+    },
+    {
+      "code": "CUSON6",
+      "pair": "USD/CNH",
+      "product_name": "USD/CNH Options (CNHO)",
+      "contract_month": "2026-07",
+      "expiry_date": "2026-07-13",
+      "delivery_date": "2026-07-15",
+      "derivation_mode": "derived",
+      "source": null,
+      "note": "Derived from HKEX CNHO-S-2 (expiry = 2 Trading Days prior to FSD; FSD = 3rd-Wed rolled to next BD on HKEX). Verify against the official contract specs page before trading."
+    },
+    {
+      "code": "CUSOQ6",
+      "pair": "USD/CNH",
+      "product_name": "USD/CNH Options (CNHO)",
+      "contract_month": "2026-08",
+      "expiry_date": "2026-08-17",
+      "delivery_date": "2026-08-19",
+      "derivation_mode": "derived",
+      "source": null,
+      "note": "Derived from HKEX CNHO-S-2 (expiry = 2 Trading Days prior to FSD; FSD = 3rd-Wed rolled to next BD on HKEX). Verify against the official contract specs page before trading."
+    },
+    {
+      "code": "CUSOU6",
+      "pair": "USD/CNH",
+      "product_name": "USD/CNH Options (CNHO)",
+      "contract_month": "2026-09",
+      "expiry_date": "2026-09-14",
+      "delivery_date": "2026-09-16",
+      "derivation_mode": "derived",
+      "source": null,
+      "note": "Derived from HKEX CNHO-S-2 (expiry = 2 Trading Days prior to FSD; FSD = 3rd-Wed rolled to next BD on HKEX). Verify against the official contract specs page before trading."
+    },
+    {
+      "code": "CUSOZ6",
+      "pair": "USD/CNH",
+      "product_name": "USD/CNH Options (CNHO)",
+      "contract_month": "2026-12",
+      "expiry_date": "2026-12-14",
+      "delivery_date": "2026-12-16",
+      "derivation_mode": "derived",
+      "source": null,
+      "note": "Derived from HKEX CNHO-S-2 (expiry = 2 Trading Days prior to FSD; FSD = 3rd-Wed rolled to next BD on HKEX). Verify against the official contract specs page before trading."
+    }
+  ]
+}

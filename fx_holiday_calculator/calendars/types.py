@@ -71,3 +71,18 @@ class ContractEntry:
     source: SourceRef
     source_origin: SourceOrigin
     note: str | None = None
+
+
+@dataclass(frozen=True)
+class OptionContractEntry:
+    venue: str
+    code: str
+    pair: str
+    product_name: str
+    contract_month: str  # "YYYY-MM"
+    expiry_date: date
+    delivery_date: date
+    derivation_mode: DerivationMode
+    source: SourceRef
+    source_origin: SourceOrigin
+    note: str | None = None

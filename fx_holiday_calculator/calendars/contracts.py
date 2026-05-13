@@ -10,7 +10,7 @@ back to the venue's documented rule, or was curated by a maintainer.
 from dataclasses import dataclass
 from datetime import date
 
-from fx_holiday_calculator.calendars.types import ContractEntry
+from fx_holiday_calculator.calendars.types import ContractEntry, OptionContractEntry
 
 
 def _pair_keys(p: str) -> set[str]:
@@ -61,4 +61,44 @@ class ContractCalendar:
         # Sort chronologically by last trading day; ties broken by code so the
         # ordering is stable regardless of JSON insertion order.
         out.sort(key=lambda e: (e.last_trading_day, e.code))
+        return out
+
+
+@dataclass
+class OptionsContractCalendar:
+    """Per-venue collection of `OptionContractEntry` rows. Parallels
+    `ContractCalendar` for listed-option contracts. Field names match
+    option-native vocabulary (expiry / delivery) rather than the
+    futures-native LTD / settlement."""
+
+    venue: str
+    entries: tuple[OptionContractEntry, ...]
+    default_derivation_mode_is_derived: bool = False
+
+    def get(self, code: str) -> OptionContractEntry | None:
+        c = code.upper()
+        for e in self.entries:
+            if e.code.upper() == c:
+                return e
+        return None
+
+    def has_derived_rows(self) -> bool:
+        return any(e.derivation_mode == "derived" for e in self.entries)
+
+    def iter_listing(
+        self,
+        *,
+        pair: str | None = None,
+        asof: date | None = None,
+        include_expired: bool = False,
+    ) -> list[OptionContractEntry]:
+        wanted_pair_keys = _pair_keys(pair) if pair else None
+        out: list[OptionContractEntry] = []
+        for e in self.entries:
+            if wanted_pair_keys is not None and e.pair.upper() not in wanted_pair_keys:
+                continue
+            if not include_expired and asof is not None and e.expiry_date < asof:
+                continue
+            out.append(e)
+        out.sort(key=lambda e: (e.expiry_date, e.code))
         return out

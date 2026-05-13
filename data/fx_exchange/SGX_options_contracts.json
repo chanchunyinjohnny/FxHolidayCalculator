@@ -1,0 +1,82 @@
+{
+  "schema_version": 1,
+  "venue": "SGX",
+  "calendar_kind": "EXCHANGE_OPTIONS_CONTRACTS",
+  "valid_from": "2026-05-18",
+  "valid_until": "2026-12-14",
+  "default_source": {
+    "url": "https://www.sgx.com/derivatives/products/fx",
+    "doc_title": "SGX — FX Derivatives Product Page (USD/CNH Futures Options)",
+    "fetched_at": "2026-05-13T06:55:41Z",
+    "fetcher": "scripts/sources/sgx_options_contracts.py@v1",
+    "default_derivation_mode": "derived"
+  },
+  "contracts": [
+    {
+      "code": "UCOK6",
+      "pair": "USD/CNH",
+      "product_name": "USD/CNH Futures Options",
+      "contract_month": "2026-05",
+      "expiry_date": "2026-05-18",
+      "delivery_date": "2026-05-20",
+      "derivation_mode": "derived",
+      "source": null,
+      "note": "Derived using the 2-BD-before-3rd-Wed rule on the SGX calendar (SGX option spec wording not separately verified in v1.x — same convention as CME and HKEX). Verify against the official SGX contract specs page before trading."
+    },
+    {
+      "code": "UCOM6",
+      "pair": "USD/CNH",
+      "product_name": "USD/CNH Futures Options",
+      "contract_month": "2026-06",
+      "expiry_date": "2026-06-15",
+      "delivery_date": "2026-06-17",
+      "derivation_mode": "derived",
+      "source": null,
+      "note": "Derived using the 2-BD-before-3rd-Wed rule on the SGX calendar (SGX option spec wording not separately verified in v1.x — same convention as CME and HKEX). Verify against the official SGX contract specs page before trading."
+    },
+    {
+      "code": "UCON6",
+      "pair": "USD/CNH",
+      "product_name": "USD/CNH Futures Options",
+      "contract_month": "2026-07",
+      "expiry_date": "2026-07-13",
+      "delivery_date": "2026-07-15",
+      "derivation_mode": "derived",
+      "source": null,
+      "note": "Derived using the 2-BD-before-3rd-Wed rule on the SGX calendar (SGX option spec wording not separately verified in v1.x — same convention as CME and HKEX). Verify against the official SGX contract specs page before trading."
+    },
+    {
+      "code": "UCOQ6",
+      "pair": "USD/CNH",
+      "product_name": "USD/CNH Futures Options",
+      "contract_month": "2026-08",
+      "expiry_date": "2026-08-17",
+      "delivery_date": "2026-08-19",
+      "derivation_mode": "derived",
+      "source": null,
+      "note": "Derived using the 2-BD-before-3rd-Wed rule on the SGX calendar (SGX option spec wording not separately verified in v1.x — same convention as CME and HKEX). Verify against the official SGX contract specs page before trading."
+    },
+    {
+      "code": "UCOU6",
+      "pair": "USD/CNH",
+      "product_name": "USD/CNH Futures Options",
+      "contract_month": "2026-09",
+      "expiry_date": "2026-09-14",
+      "delivery_date": "2026-09-16",
+      "derivation_mode": "derived",
+      "source": null,
+      "note": "Derived using the 2-BD-before-3rd-Wed rule on the SGX calendar (SGX option spec wording not separately verified in v1.x — same convention as CME and HKEX). Verify against the official SGX contract specs page before trading."
+    },
+    {
+      "code": "UCOZ6",
+      "pair": "USD/CNH",
+      "product_name": "USD/CNH Futures Options",
+      "contract_month": "2026-12",
+      "expiry_date": "2026-12-14",
+      "delivery_date": "2026-12-16",
+      "derivation_mode": "derived",
+      "source": null,
+      "note": "Derived using the 2-BD-before-3rd-Wed rule on the SGX calendar (SGX option spec wording not separately verified in v1.x — same convention as CME and HKEX). Verify against the official SGX contract specs page before trading."
+    }
+  ]
+}

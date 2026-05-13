@@ -1,0 +1,269 @@
+{
+  "schema_version": 1,
+  "venue": "CME",
+  "calendar_kind": "EXCHANGE_OPTIONS_CONTRACTS",
+  "valid_from": "2026-06-15",
+  "valid_until": "2027-03-15",
+  "default_source": {
+    "url": "https://www.cmegroup.com/markets/fx.html",
+    "doc_title": "CME Group — FX Options Contract Specifications",
+    "fetched_at": "2026-05-13T06:50:06Z",
+    "fetcher": "scripts/sources/cme_options_contracts.py@v1",
+    "default_derivation_mode": "derived"
+  },
+  "contracts": [
+    {
+      "code": "EUOM6",
+      "pair": "EUR/USD",
+      "product_name": "Options on Euro FX Futures",
+      "contract_month": "2026-06",
+      "expiry_date": "2026-06-15",
+      "delivery_date": "2026-06-17",
+      "derivation_mode": "derived",
+      "source": null,
+      "note": "Derived from CME's standard rule (expiry = 2 BDs prior to 3rd Wed of contract month on CME calendar; delivery = expiry + spot offset on RTGS{base, quote}). Verify against the official contract specs page before trading."
+    },
+    {
+      "code": "EUON6",
+      "pair": "EUR/USD",
+      "product_name": "Options on Euro FX Futures",
+      "contract_month": "2026-07",
+      "expiry_date": "2026-07-13",
+      "delivery_date": "2026-07-15",
+      "derivation_mode": "derived",
+      "source": null,
+      "note": "Derived from CME's standard rule (expiry = 2 BDs prior to 3rd Wed of contract month on CME calendar; delivery = expiry + spot offset on RTGS{base, quote}). Verify against the official contract specs page before trading."
+    },
+    {
+      "code": "EUOQ6",
+      "pair": "EUR/USD",
+      "product_name": "Options on Euro FX Futures",
+      "contract_month": "2026-08",
+      "expiry_date": "2026-08-17",
+      "delivery_date": "2026-08-19",
+      "derivation_mode": "derived",
+      "source": null,
+      "note": "Derived from CME's standard rule (expiry = 2 BDs prior to 3rd Wed of contract month on CME calendar; delivery = expiry + spot offset on RTGS{base, quote}). Verify against the official contract specs page before trading."
+    },
+    {
+      "code": "EUOU6",
+      "pair": "EUR/USD",
+      "product_name": "Options on Euro FX Futures",
+      "contract_month": "2026-09",
+      "expiry_date": "2026-09-14",
+      "delivery_date": "2026-09-16",
+      "derivation_mode": "derived",
+      "source": null,
+      "note": "Derived from CME's standard rule (expiry = 2 BDs prior to 3rd Wed of contract month on CME calendar; delivery = expiry + spot offset on RTGS{base, quote}). Verify against the official contract specs page before trading."
+    },
+    {
+      "code": "EUOZ6",
+      "pair": "EUR/USD",
+      "product_name": "Options on Euro FX Futures",
+      "contract_month": "2026-12",
+      "expiry_date": "2026-12-14",
+      "delivery_date": "2026-12-16",
+      "derivation_mode": "derived",
+      "source": null,
+      "note": "Derived from CME's standard rule (expiry = 2 BDs prior to 3rd Wed of contract month on CME calendar; delivery = expiry + spot offset on RTGS{base, quote}). Verify against the official contract specs page before trading."
+    },
+    {
+      "code": "EUOH7",
+      "pair": "EUR/USD",
+      "product_name": "Options on Euro FX Futures",
+      "contract_month": "2027-03",
+      "expiry_date": "2027-03-15",
+      "delivery_date": "2027-03-17",
+      "derivation_mode": "derived",
+      "source": null,
+      "note": "Derived from CME's standard rule (expiry = 2 BDs prior to 3rd Wed of contract month on CME calendar; delivery = expiry + spot offset on RTGS{base, quote}). Verify against the official contract specs page before trading."
+    },
+    {
+      "code": "GBOM6",
+      "pair": "GBP/USD",
+      "product_name": "Options on British Pound Futures",
+      "contract_month": "2026-06",
+      "expiry_date": "2026-06-15",
+      "delivery_date": "2026-06-17",
+      "derivation_mode": "derived",
+      "source": null,
+      "note": "Derived from CME's standard rule (expiry = 2 BDs prior to 3rd Wed of contract month on CME calendar; delivery = expiry + spot offset on RTGS{base, quote}). Verify against the official contract specs page before trading."
+    },
+    {
+      "code": "GBON6",
+      "pair": "GBP/USD",
+      "product_name": "Options on British Pound Futures",
+      "contract_month": "2026-07",
+      "expiry_date": "2026-07-13",
+      "delivery_date": "2026-07-15",
+      "derivation_mode": "derived",
+      "source": null,
+      "note": "Derived from CME's standard rule (expiry = 2 BDs prior to 3rd Wed of contract month on CME calendar; delivery = expiry + spot offset on RTGS{base, quote}). Verify against the official contract specs page before trading."
+    },
+    {
+      "code": "GBOQ6",
+      "pair": "GBP/USD",
+      "product_name": "Options on British Pound Futures",
+      "contract_month": "2026-08",
+      "expiry_date": "2026-08-17",
+      "delivery_date": "2026-08-19",
+      "derivation_mode": "derived",
+      "source": null,
+      "note": "Derived from CME's standard rule (expiry = 2 BDs prior to 3rd Wed of contract month on CME calendar; delivery = expiry + spot offset on RTGS{base, quote}). Verify against the official contract specs page before trading."
+    },
+    {
+      "code": "GBOU6",
+      "pair": "GBP/USD",
+      "product_name": "Options on British Pound Futures",
+      "contract_month": "2026-09",
+      "expiry_date": "2026-09-14",
+      "delivery_date": "2026-09-16",
+      "derivation_mode": "derived",
+      "source": null,
+      "note": "Derived from CME's standard rule (expiry = 2 BDs prior to 3rd Wed of contract month on CME calendar; delivery = expiry + spot offset on RTGS{base, quote}). Verify against the official contract specs page before trading."
+    },
+    {
+      "code": "GBOZ6",
+      "pair": "GBP/USD",
+      "product_name": "Options on British Pound Futures",
+      "contract_month": "2026-12",
+      "expiry_date": "2026-12-14",
+      "delivery_date": "2026-12-16",
+      "derivation_mode": "derived",
+      "source": null,
+      "note": "Derived from CME's standard rule (expiry = 2 BDs prior to 3rd Wed of contract month on CME calendar; delivery = expiry + spot offset on RTGS{base, quote}). Verify against the official contract specs page before trading."
+    },
+    {
+      "code": "GBOH7",
+      "pair": "GBP/USD",
+      "product_name": "Options on British Pound Futures",
+      "contract_month": "2027-03",
+      "expiry_date": "2027-03-15",
+      "delivery_date": "2027-03-17",
+      "derivation_mode": "derived",
+      "source": null,
+      "note": "Derived from CME's standard rule (expiry = 2 BDs prior to 3rd Wed of contract month on CME calendar; delivery = expiry + spot offset on RTGS{base, quote}). Verify against the official contract specs page before trading."
+    },
+    {
+      "code": "JYOM6",
+      "pair": "USD/JPY",
+      "product_name": "Options on Japanese Yen Futures",
+      "contract_month": "2026-06",
+      "expiry_date": "2026-06-15",
+      "delivery_date": "2026-06-17",
+      "derivation_mode": "derived",
+      "source": null,
+      "note": "Derived from CME's standard rule (expiry = 2 BDs prior to 3rd Wed of contract month on CME calendar; delivery = expiry + spot offset on RTGS{base, quote}). Verify against the official contract specs page before trading."
+    },
+    {
+      "code": "JYON6",
+      "pair": "USD/JPY",
+      "product_name": "Options on Japanese Yen Futures",
+      "contract_month": "2026-07",
+      "expiry_date": "2026-07-13",
+      "delivery_date": "2026-07-15",
+      "derivation_mode": "derived",
+      "source": null,
+      "note": "Derived from CME's standard rule (expiry = 2 BDs prior to 3rd Wed of contract month on CME calendar; delivery = expiry + spot offset on RTGS{base, quote}). Verify against the official contract specs page before trading."
+    },
+    {
+      "code": "JYOQ6",
+      "pair": "USD/JPY",
+      "product_name": "Options on Japanese Yen Futures",
+      "contract_month": "2026-08",
+      "expiry_date": "2026-08-17",
+      "delivery_date": "2026-08-19",
+      "derivation_mode": "derived",
+      "source": null,
+      "note": "Derived from CME's standard rule (expiry = 2 BDs prior to 3rd Wed of contract month on CME calendar; delivery = expiry + spot offset on RTGS{base, quote}). Verify against the official contract specs page before trading."
+    },
+    {
+      "code": "JYOU6",
+      "pair": "USD/JPY",
+      "product_name": "Options on Japanese Yen Futures",
+      "contract_month": "2026-09",
+      "expiry_date": "2026-09-14",
+      "delivery_date": "2026-09-16",
+      "derivation_mode": "derived",
+      "source": null,
+      "note": "Derived from CME's standard rule (expiry = 2 BDs prior to 3rd Wed of contract month on CME calendar; delivery = expiry + spot offset on RTGS{base, quote}). Verify against the official contract specs page before trading."
+    },
+    {
+      "code": "JYOZ6",
+      "pair": "USD/JPY",
+      "product_name": "Options on Japanese Yen Futures",
+      "contract_month": "2026-12",
+      "expiry_date": "2026-12-14",
+      "delivery_date": "2026-12-16",
+      "derivation_mode": "derived",
+      "source": null,
+      "note": "Derived from CME's standard rule (expiry = 2 BDs prior to 3rd Wed of contract month on CME calendar; delivery = expiry + spot offset on RTGS{base, quote}). Verify against the official contract specs page before trading."
+    },
+    {
+      "code": "JYOH7",
+      "pair": "USD/JPY",
+      "product_name": "Options on Japanese Yen Futures",
+      "contract_month": "2027-03",
+      "expiry_date": "2027-03-15",
+      "delivery_date": "2027-03-17",
+      "derivation_mode": "derived",
+      "source": null,
+      "note": "Derived from CME's standard rule (expiry = 2 BDs prior to 3rd Wed of contract month on CME calendar; delivery = expiry + spot offset on RTGS{base, quote}). Verify against the official contract specs page before trading."
+    },
+    {
+      "code": "CDOM6",
+      "pair": "USD/CAD",
+      "product_name": "Options on Canadian Dollar Futures",
+      "contract_month": "2026-06",
+      "expiry_date": "2026-06-15",
+      "delivery_date": "2026-06-16",
+      "derivation_mode": "derived",
+      "source": null,
+      "note": "Derived from CME's standard rule (expiry = 2 BDs prior to 3rd Wed of contract month on CME calendar; delivery = expiry + spot offset on RTGS{base, quote}). Verify against the official contract specs page before trading."
+    },
+    {
+      "code": "CDON6",
+      "pair": "USD/CAD",
+      "product_name": "Options on Canadian Dollar Futures",
+      "contract_month": "2026-07",
+      "expiry_date": "2026-07-13",
+      "delivery_date": "2026-07-14",
+      "derivation_mode": "derived",
+      "source": null,
+      "note": "Derived from CME's standard rule (expiry = 2 BDs prior to 3rd Wed of contract month on CME calendar; delivery = expiry + spot offset on RTGS{base, quote}). Verify against the official contract specs page before trading."
+    },
+    {
+      "code": "CDOQ6",
+      "pair": "USD/CAD",
+      "product_name": "Options on Canadian Dollar Futures",
+      "contract_month": "2026-08",
+      "expiry_date": "2026-08-17",
+      "delivery_date": "2026-08-18",
+      "derivation_mode": "derived",
+      "source": null,
+      "note": "Derived from CME's standard rule (expiry = 2 BDs prior to 3rd Wed of contract month on CME calendar; delivery = expiry + spot offset on RTGS{base, quote}). Verify against the official contract specs page before trading."
+    },
+    {
+      "code": "CDOU6",
+      "pair": "USD/CAD",
+      "product_name": "Options on Canadian Dollar Futures",
+      "contract_month": "2026-09",
+      "expiry_date": "2026-09-14",
+      "delivery_date": "2026-09-15",
+      "derivation_mode": "derived",
+      "source": null,
+      "note": "Derived from CME's standard rule (expiry = 2 BDs prior to 3rd Wed of contract month on CME calendar; delivery = expiry + spot offset on RTGS{base, quote}). Verify against the official contract specs page before trading."
+    },
+    {
+      "code": "CDOZ6",
+      "pair": "USD/CAD",
+      "product_name": "Options on Canadian Dollar Futures",
+      "contract_month": "2026-12",
+      "expiry_date": "2026-12-14",
+      "delivery_date": "2026-12-15",
+      "derivation_mode": "derived",
+      "source": null,
+      "note": "Derived from CME's standard rule (expiry = 2 BDs prior to 3rd Wed of contract month on CME calendar; delivery = expiry + spot offset on RTGS{base, quote}). Verify against the official contract specs page before trading."
+    }
+  ]
+}

@@ -14,7 +14,8 @@ PRODUCT_MODULES = [
     "fx_holiday_calculator.ui.product_swap",
     "fx_holiday_calculator.ui.product_forward",
     "fx_holiday_calculator.ui.product_ndf",
-    "fx_holiday_calculator.ui.product_option",
+    "fx_holiday_calculator.ui.product_otc_option",
+    "fx_holiday_calculator.ui.product_listed_option",
     "fx_holiday_calculator.ui.product_futures",
     "fx_holiday_calculator.ui.tab_calculator",
 ]

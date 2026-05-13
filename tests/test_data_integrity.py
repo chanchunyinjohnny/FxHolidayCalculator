@@ -28,7 +28,11 @@ def _all_calendar_files() -> list[Path]:
 def _all_contract_files() -> list[Path]:
     if not EXCH_DIR.exists():
         return []
-    return sorted(p for p in EXCH_DIR.glob("*_contracts.json"))
+    return sorted(
+        p
+        for p in EXCH_DIR.glob("*_contracts.json")
+        if not p.name.endswith("_options_contracts.json")
+    )
 
 
 def _resolve_source(raw_entry: dict, default: dict) -> dict:
@@ -121,4 +125,56 @@ def test_every_contract_has_required_fields(path: Path):
             for k in ("url", "doc_title", "fetched_at"):
                 assert src.get(k), f"{path}: contract {code} source missing {k!r}"
             # ISO-8601 sanity
+            datetime.fromisoformat(src["fetched_at"].replace("Z", "+00:00"))
+
+
+# ----- options-contract-listings files -----
+
+
+def _all_options_contract_files() -> list[Path]:
+    if not EXCH_DIR.exists():
+        return []
+    return sorted(p for p in EXCH_DIR.glob("*_options_contracts.json"))
+
+
+@pytest.mark.parametrize("path", _all_options_contract_files(), ids=lambda p: p.name)
+def test_options_contract_file_metadata_complete(path: Path):
+    blob = json.loads(path.read_text())
+    assert blob.get("calendar_kind") == "EXCHANGE_OPTIONS_CONTRACTS", path
+    assert blob.get("venue"), path
+    src = blob["default_source"]
+    assert src["url"]
+    assert src["doc_title"]
+    assert src["fetched_at"]
+    assert src["fetcher"]
+    assert src.get("default_derivation_mode") in _ALLOWED_MODES, path
+
+
+@pytest.mark.parametrize("path", _all_options_contract_files(), ids=lambda p: p.name)
+def test_every_options_contract_has_required_fields(path: Path):
+    blob = json.loads(path.read_text())
+    default = blob["default_source"]
+    default_mode = default["default_derivation_mode"]
+    for raw in blob.get("contracts", []):
+        code = raw.get("code")
+        assert code, f"{path}: contract missing 'code'"
+        for fld in ("pair", "product_name", "contract_month"):
+            assert raw.get(fld), f"{path}: contract {code} missing {fld!r}"
+        expiry = date.fromisoformat(raw["expiry_date"])
+        delivery = date.fromisoformat(raw["delivery_date"])
+        assert (
+            expiry <= delivery
+        ), f"{path}: contract {code} has delivery {delivery} < expiry {expiry}"
+        mode = raw.get("derivation_mode") or default_mode
+        assert mode in _ALLOWED_MODES, f"{path}: contract {code} bad mode {mode!r}"
+        if mode == "manual":
+            assert raw.get(
+                "source"
+            ), f"{path}: manual contract {code} missing per-entry source override"
+            for k in ("url", "doc_title", "fetched_at"):
+                assert raw["source"].get(k), f"{path}: manual {code} source missing {k!r}"
+        else:
+            src = raw.get("source") or default
+            for k in ("url", "doc_title", "fetched_at"):
+                assert src.get(k), f"{path}: contract {code} source missing {k!r}"
             datetime.fromisoformat(src["fetched_at"].replace("Z", "+00:00"))

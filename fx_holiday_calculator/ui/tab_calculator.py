@@ -14,13 +14,24 @@ def render() -> None:
     from fx_holiday_calculator.ui import (
         product_forward,
         product_futures,
+        product_listed_option,
         product_ndf,
-        product_option,
+        product_otc_option,
         product_spot,
         product_swap,
     )
 
-    sub = st.tabs(["Spot", "Swap", "Forward", "NDF", "Option", "Futures"])
+    sub = st.tabs(
+        [
+            "Spot",
+            "Swap",
+            "Forward",
+            "NDF",
+            "FX OTC Option",
+            "FX Futures",
+            "FX Listed Option",
+        ]
+    )
     with sub[0]:
         product_spot.render()
     with sub[1]:
@@ -30,6 +41,8 @@ def render() -> None:
     with sub[3]:
         product_ndf.render()
     with sub[4]:
-        product_option.render()
+        product_otc_option.render()
     with sub[5]:
         product_futures.render()
+    with sub[6]:
+        product_listed_option.render()

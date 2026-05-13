@@ -29,6 +29,9 @@ Every JSON entry under `data/fx_rtgs/` and `data/fx_exchange/` is generated from
 - [HKEX — FX-futures contract listings](#hkex--fx-futures-contract-listings)
 - [SGX — FX-futures contract listings](#sgx--fx-futures-contract-listings)
 
+**FX-listed venues (options contract listings)**
+- [Listed FX options contract sources](#listed-fx-options-contract-sources)
+
 **NDF fixing calendars (v1.1)**
 - [CNY — CFETS / PBoC](#cny--cfets--pboc)
 - [KRW — KFTC](#krw--kftc)
@@ -686,6 +689,18 @@ If both scrape and derive fail (e.g. unknown venue rule because we're refreshing
 - The SGX derivatives calendar PDF is per-product (each day lists product codes closed that day), which makes parsing for "contract months" rather than "venue closures" different from the parser used for venue-holiday extraction. The contract-listing fetcher targets the contract-specs HTML / spec PDFs, not the per-day calendar.
 - USD/INR LTD aligns with the RBI reference-rate fixing calendar, which is out of scope in v1. These contracts will typically be `derivation_mode = "derived"` with a chip, or `"manual"` once a maintainer fills in the LTDs from the SGX contract calendar.
 - Mini contracts on SGX share the same listed months as the standard contract; the fetcher emits separate rows per code so the Futures tab dropdown can distinguish them.
+
+---
+
+## Listed FX options contract sources
+
+| Venue | File | Upstream URL | Doc title | Refresher | Derivation mode |
+|---|---|---|---|---|---|
+| CME | `data/fx_exchange/CME_options_contracts.json` | https://www.cmegroup.com/markets/fx.html | CME Group — FX Options Contract Specifications | `scripts/sources/cme_options_contracts.py` | derived |
+| HKEX | `data/fx_exchange/HKEX_options_contracts.json` | https://www.hkex.com.hk/Products/Listed-Derivatives/Currency?sc_lang=en | HKEX — Listed Currency Derivatives (Contract Specifications, USD/CNH Options) | `scripts/sources/hkex_options_contracts.py` | derived |
+| SGX | `data/fx_exchange/SGX_options_contracts.json` | https://www.sgx.com/derivatives/products/fx | SGX — FX Derivatives Product Page (USD/CNH Futures Options) | `scripts/sources/sgx_options_contracts.py` | derived |
+
+v1 derives monthly contracts from each venue's documented expiry rule (CME and HKEX spec wordings cited above; SGX option spec wording is not separately verified in v1.x and uses the same 2-BD-before-3rd-Wed rule by default — see `docs/conventions.md §10A.2`). True-fetch scraping per venue is a v1.x improvement.
 
 ---
 

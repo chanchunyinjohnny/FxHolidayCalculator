@@ -15,6 +15,14 @@
 > `product_spot.py` was added. See
 > `docs/superpowers/plans/2026-05-12-split-spot-and-swap-tabs.md`.
 
+> **Amendment 2026-05-13:** The single "Option" sub-tab described in §3.1
+> has been split into two sibling sub-tabs — **FX OTC Option** and
+> **FX Listed Option** — and the engine refactored accordingly (OTC math in
+> `option_otc.py`; Listed derivation in `option_listed.py`; Listed runtime
+> lookup in `options.py`, mirroring `futures.py`). See
+> `docs/superpowers/specs/2026-05-13-split-fx-option-into-otc-and-listed-design.md`
+> and `docs/superpowers/plans/2026-05-13-split-fx-option-into-otc-and-listed.md`.
+
 ---
 
 ## 1. Purpose

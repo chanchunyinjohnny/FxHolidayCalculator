@@ -243,70 +243,29 @@ the local market organisation:
   stopgap; the primary fetcher `scripts/sources/taifx_twd.py` awaits a
   successful first live run.
 
-## 10. FX Option — expiry & delivery
+## 10. FX OTC Option — expiry & delivery
 
-FX options have two characteristic dates:
+> Listed FX options are documented in §10A and use a separate contract-lookup engine (`fx_holiday_calculator.options`).
+
+FX OTC options have two characteristic dates:
 
 - **Expiry date** — the day the option contract expires.
 - **Delivery date** — the day the cash legs settle if the option is exercised.
 
 Delivery date = `apply_spot_offset(expiry, pair, RTGS{base,quote})` — the
 same business-day offset as the swap engine's spot, applied off the expiry
-instead of the trade date. Where the dates roll on different calendars
-depending on style:
+instead of the trade date.
 
-| Style  | Spot anchor calendar set       | Expiry calendar set            | Delivery calendar set      |
-|--------|--------------------------------|--------------------------------|----------------------------|
-| OTC    | RTGS{base, quote, ref}         | RTGS{base, quote, ref}         | RTGS{base, quote} only     |
-| LISTED | RTGS{base, quote}              | Exchange{venue}                | RTGS{base, quote} only     |
+| Calendar set       | Expiry                         | Delivery                   |
+|--------------------|--------------------------------|----------------------------|
+| OTC                | RTGS{base, quote, ref}         | RTGS{base, quote} only     |
 
 The delivery leg deliberately omits the reference currency: the option's
 delivery is the physical exchange of two currencies, not a cross-currency
 constrained spot.
 
-For the LISTED path the spot anchor also omits the reference currency: the
-exchange contract is venue-defined, and the spot used as the base for
-`spot + tenor` expiry computation is treated as a bilateral base/quote
-concept. The `venue` and `exchange_calendar` arguments must agree
-(`exchange_calendar.venue == venue`) — mismatches raise
-`VenueCalendarMismatchError` rather than silently computing on the wrong
-exchange while labelling the result with the requested venue.
-
-### 10.0 Listed-option expiry: PERIOD/BROKEN vs IMM
-
-For LISTED style, the engine handles tenors differently:
-
-- **IMM tenor** — uses a venue-aware rule: expiry = 2 good business days
-  prior to the 3rd Wednesday of the contract month, on the exchange
-  calendar. This matches the CME option spec ("2 business days prior to
-  the third Wednesday of the contract month") and the HKEX USD/CNH
-  Options spec (CNHO-S-2: "Expiry Day: Two Trading Days prior to the
-  Final Settlement Day"; FSD = rolled 3rd Wed). The two spec wordings
-  use different anchors (unrolled 3rd Wed vs. rolled FSD) but produce
-  **identical** expiry dates in every case — the back-count traversal
-  of the non-BD bridge between unrolled imm and rolled FSD is identical
-  in both directions. The engine uses the unrolled-3rd-Wed anchor as
-  the canonical form and cites both specs in the reasoning bullet. SGX
-  option-spec wording is not separately verified in v1.x; the same
-  algorithm is used with a caveat in the reasoning.
-- **PERIOD / BROKEN tenor** — falls back to "spot + tenor rolled
-  modified-following on exchange calendar". This does not match any
-  listed-product spec (real listed options have fixed contract-month
-  expiries); the PERIOD/BROKEN listed path is retained for parametric
-  exploration. For real listed-product computations, use IMM tenor.
-
-Reference: ISDA 1998 FX and Currency Options Definitions §3.2
-(Expiration Date and Settlement Date); CME FX options chapter; HKEX
-USD/CNH Options contract specifications (CNHO-S-2).
-
 ### 10.1 Validations
 
-- `InvalidOptionStyleError` — `style ∉ {OTC, LISTED}`.
-- `ListedOptionVenueRequiredError` — `style == LISTED` with no venue
-  provided, or venue not in `pair.listed_on`, or no exchange calendar
-  provided.
-- `VenueCalendarMismatchError` — `style == LISTED` with
-  `exchange_calendar.venue != venue`.
 - `InvalidTenorError` — tenor is SPOT / ON / TN / SN (option requires
   a forward tenor).
 
@@ -315,14 +274,72 @@ USD/CNH Options contract specifications (CNHO-S-2).
 - *Same-day expiry* — `expiry_date == spot_date` (rare; usually a
   user-error verifying a zero-day broken-date option). Surfaced via
   `result.warnings`.
-- *Listed library-sourced caveat* — when `exchange_calendar.library_sourced
-  is True`, the UI surfaces the existing exchange-calendar caveat that the
-  data is equity-session-based, not FX-product-specific.
 
 ### 10.3 Where this lives
 
-- Engine: `fx_holiday_calculator/option.py`
-- Tests: `tests/test_option.py`
+- Engine: `fx_holiday_calculator/option_otc.py`
+- Tests: `tests/test_option_otc.py`
+
+## 10A. FX Listed Option — contract lookup
+
+Listed FX options trade as fixed-month contracts. The user picks a venue and
+a contract code; expiry and delivery dates are read from the venue's bundled
+contract listings, not derived at lookup time.
+
+### 10A.1 Data flow
+
+- Refresh time: `scripts/sources/{venue}_options_contracts.py` calls
+  `fx_holiday_calculator.option_listed.derive_contract(...)` to compute
+  `(expiry_date, delivery_date)` per (pair, contract month). Results are
+  written to `data/fx_exchange/{VENUE}_options_contracts.json` with
+  `derivation_mode = "derived"` and a `note` citing the venue's rule.
+- Runtime: the Listed Option tab calls `fx_holiday_calculator.options.get_contract(venue, code)`
+  (and friends — `list_venues()`, `list_contracts()`, `days_until()`).
+
+### 10A.2 Expiry rule
+
+`derive_contract` counts 2 good business days backward from the unrolled
+3rd Wednesday of the contract month, on the venue's exchange calendar. Two
+spec wordings exist:
+
+- **CME** option-on-FX-future: "Trading terminates on the second business
+  day prior to the third Wednesday of the contract month" — anchored on
+  the UNROLLED 3rd Wed.
+- **HKEX** CNHO-S-2 (USD/CNH Options): "Expiry Day: Two Trading Days prior
+  to the Final Settlement Day" where FSD = "the third Wednesday of the
+  Contract Month. If it is not a Business Day, the Final Settlement Day
+  shall be the next Business Day" — anchored on the ROLLED FSD.
+
+These wordings produce IDENTICAL dates in every case (the chain of non-BDs
+between unrolled 3rd Wed and rolled FSD is traversed by the 2-BD back-count
+regardless of the anchor). `derive_contract` uses the unrolled anchor as
+the canonical form and surfaces the spec citation in
+`DeriveContractResult.spec_cite`.
+
+SGX FX-options expiry wording is not separately verified in v1.x; the same
+algorithm is used with a caveat in the citation string.
+
+### 10A.3 Delivery rule
+
+Delivery = expiry + `pair.spot_offset_days` good business days on
+RTGS{base, quote}. Reference currency does not enter the listed-contract
+path (cash legs are bilateral).
+
+### 10A.4 Validations
+
+- `ContractMonthDerivationError` — raised at refresh time by
+  `derive_contract` when venue ∉ `pair.listed_on`, when
+  `exchange_calendar.venue ≠ venue`, or when `contract_month` is in the
+  past (override with `from_date` for backtests).
+- `ContractNotFoundError` — raised at runtime by `options.get_contract`
+  when `(venue, code)` does not exist in the bundled JSON.
+
+### 10A.5 Implementation files
+
+- Derivation: `fx_holiday_calculator/option_listed.py`
+- Lookup facade: `fx_holiday_calculator/options.py`
+- Refreshers: `scripts/sources/{cme,hkex,sgx}_options_contracts.py`
+- Tests: `tests/test_option_listed.py`, `tests/test_options.py`
 
 ## 11. FX Futures — last trade date & delivery date
 
@@ -360,7 +377,7 @@ single implementation suffices. The 9:16 a.m. CT (CME) and 11:00 a.m. HKT
 > CME wording "2 BDs prior to the third Wednesday" — the 2-BD back-count
 > absorbs the chain of non-BDs between unrolled imm and rolled FSD. The
 > listed-option IMM engine handles both wordings via one algorithm; see
-> §10.0 above.
+> §10A.2 above.
 
 ### 11.1 Input modes
 
@@ -537,5 +554,5 @@ documented conventions side-by-side.
 - UI widgets: `fx_holiday_calculator/ui/_widgets.py`
   (`render_reference_status`, `render_pair_conventions`)
 - Consumers: every product tab (`product_spot.py`, `product_swap.py`,
-  `product_forward.py`, `product_ndf.py`, `product_option.py`,
-  `product_futures.py`, `tab_holidays.py`)
+  `product_forward.py`, `product_ndf.py`, `product_otc_option.py`,
+  `product_listed_option.py`, `product_futures.py`, `tab_holidays.py`)
