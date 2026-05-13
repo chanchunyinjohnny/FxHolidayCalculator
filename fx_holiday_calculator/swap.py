@@ -23,6 +23,7 @@ from fx_holiday_calculator.pairs import Pair
 from fx_holiday_calculator.tenor import Tenor
 
 CalendarMode = Literal["FX", "EXCHANGE", "BOTH"]
+FfsFarAnchor = Literal["spot", "near"]
 
 
 class InvalidFFSCombinationError(ValueError):
@@ -102,6 +103,7 @@ def calculate_swap_dates(
     calendars: dict[str, RtgsCalendar],
     exchange_calendars: dict[str, ExchangeCalendar] | None = None,
     calendar_mode: CalendarMode = "FX",
+    ffs_far_anchor: FfsFarAnchor = "spot",
 ) -> SwapResult:
     rtgs_cs = rtgs_calendar_set(pair, ref=ref_currency, calendars=calendars)
     # Spot offset is an FX-market concept and always rolls against RTGS.
@@ -283,30 +285,62 @@ def calculate_swap_dates(
                 f"near={near_tenor.kind} far={far_tenor.kind}"
             )
 
-        def _resolve_with_trace(t: Tenor) -> tuple[date, list, date, str]:
+        def _resolve_with_trace(
+            t: Tenor, anchor: date, anchor_label: str
+        ) -> tuple[date, list, date, str]:
             if t.kind == "PERIOD":
-                raw = add_period(spot.spot_date, t.period_unit, t.period_n)
-                d, tr = apply_eom_with_trace(spot.spot_date, raw, leg_cs)
-                return d, tr, raw, f"spot + {t.period_n}{t.period_unit}"
+                raw = add_period(anchor, t.period_unit, t.period_n)
+                d, tr = apply_eom_with_trace(anchor, raw, leg_cs)
+                return d, tr, raw, f"{anchor_label} + {t.period_n}{t.period_unit}"
             if t.kind == "IMM":
-                raw = next_imm_date(spot.spot_date, t.imm_index)
+                raw = next_imm_date(anchor, t.imm_index)
                 d, tr = roll_with_trace(raw, leg_cs, "modified_following")
                 return (
                     d,
                     tr,
                     raw,
-                    f"IMM{t.imm_index} after spot → 3rd Wed of {raw.year}-{raw.month:02d}",
+                    f"IMM{t.imm_index} after {anchor_label} → 3rd Wed of "
+                    f"{raw.year}-{raw.month:02d}",
                 )
             d, tr = roll_with_trace(t.target_date, leg_cs, "modified_following")
             return d, tr, t.target_date, "user-supplied broken date"
 
-        near_d, near_tr, near_raw, near_anchor = _resolve_with_trace(near_tenor)
-        far_d, far_tr, far_raw, far_anchor = _resolve_with_trace(far_tenor)
+        # Near is always anchored on spot.
+        near_d, near_tr, near_raw, near_anchor = _resolve_with_trace(
+            near_tenor, spot.spot_date, "spot"
+        )
         base.near_date = near_d
         base.near_trace = near_tr
+
+        if ffs_far_anchor == "near":
+            # 360T RFS convention: far tenor is measured from the *near* date,
+            # not from spot. Non-standard — see warnings below.
+            far_d, far_tr, far_raw, far_anchor = _resolve_with_trace(far_tenor, near_d, "near")
+        else:
+            far_d, far_tr, far_raw, far_anchor = _resolve_with_trace(
+                far_tenor, spot.spot_date, "spot"
+            )
         base.far_date = far_d
         base.far_trace = far_tr
-        base.reasoning.append("**FFS:** both legs anchored on spot (OpenGamma Strata convention).")
+
+        if ffs_far_anchor == "near":
+            base.reasoning.append(
+                "**FFS (near-anchored far):** near anchored on spot; far measured "
+                "from the near date (360T RFS convention — non-standard; the "
+                "interbank/Strata default is to anchor both legs on spot)."
+            )
+            base.warnings.append(
+                "Far leg is anchored on the NEAR date, not on spot. This is the "
+                "360T RFS convention and is not standard interbank practice — "
+                "OpenGamma Strata, Bloomberg, Reuters/EBS, and most desks quote "
+                "both FFS legs from spot (so a `1W-1M` swap has far = spot + 1M, "
+                "not near + 1M). Use this mode only if your counterparty / "
+                "venue (e.g. 360T RFS) explicitly requires it."
+            )
+        else:
+            base.reasoning.append(
+                "**FFS:** both legs anchored on spot (OpenGamma Strata convention)."
+            )
         base.reasoning.append(
             f"**Near anchor:** {near_anchor} = {_fmt(near_raw)} (raw); "
             f"{_adjustment_rule(near_raw, near_d, near_tr)}"

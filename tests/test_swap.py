@@ -647,6 +647,136 @@ def test_tn_for_t_plus_2_pair_far_equals_spot():
     assert r.far_date == r.spot_date  # incidental, not enforced
 
 
+def test_ffs_near_anchored_far_period():
+    # 360T RFS convention: far is measured from near, not from spot.
+    # Trade 2026-05-06; spot 2026-05-08; near = spot + 1W = 2026-05-15 (Fri);
+    # far = near + 1M = 2026-06-15 (Mon, good BD).
+    cals = {"EUR": _empty("EUR"), "USD": _empty("USD")}
+    r = calculate_swap_dates(
+        trade_date=date(2026, 5, 6),
+        pair=parse_pair("EUR/USD"),
+        near_tenor=parse_tenor("1W"),
+        far_tenor=parse_tenor("1M"),
+        ref_currency="none",
+        calendars=cals,
+        ffs_far_anchor="near",
+    )
+    assert r.spot_date == date(2026, 5, 8)
+    assert r.near_date == date(2026, 5, 15)
+    assert r.far_date == date(2026, 6, 15)
+    # Non-standard mode must emit a warning.
+    assert any("360T" in w or "NEAR" in w for w in r.warnings)
+
+
+def test_ffs_spot_anchored_default_differs_from_near_anchored():
+    # Standard (spot-anchored): near = spot + 1W, far = spot + 1M.
+    # Trade 2026-05-06; spot 2026-05-08; near = 2026-05-15; far = 2026-06-08 (Mon).
+    cals = {"EUR": _empty("EUR"), "USD": _empty("USD")}
+    spot_anchored = calculate_swap_dates(
+        trade_date=date(2026, 5, 6),
+        pair=parse_pair("EUR/USD"),
+        near_tenor=parse_tenor("1W"),
+        far_tenor=parse_tenor("1M"),
+        ref_currency="none",
+        calendars=cals,
+    )
+    near_anchored = calculate_swap_dates(
+        trade_date=date(2026, 5, 6),
+        pair=parse_pair("EUR/USD"),
+        near_tenor=parse_tenor("1W"),
+        far_tenor=parse_tenor("1M"),
+        ref_currency="none",
+        calendars=cals,
+        ffs_far_anchor="near",
+    )
+    assert spot_anchored.near_date == near_anchored.near_date == date(2026, 5, 15)
+    # Spot-anchored: far = spot + 1M = 2026-06-08
+    assert spot_anchored.far_date == date(2026, 6, 8)
+    # Near-anchored: far = near + 1M = 2026-06-15
+    assert near_anchored.far_date == date(2026, 6, 15)
+    # Default produces no convention warning; near-anchored does.
+    assert spot_anchored.warnings == []
+    assert near_anchored.warnings != []
+
+
+def test_ffs_near_anchored_far_eom_keys_on_near():
+    # Verify EOM keying differs between modes when near is EOM but spot is not.
+    # Trade 2026-04-27 (Mon) → spot = 2026-04-29 (Wed, not EOM since
+    # Apr 30 Thu is the last BD of April). Near = spot + 1M = 2026-05-29
+    # (Fri), which IS the last BD of May (May 30 Sat, May 31 Sun).
+    # Far raw (both modes) = 2026-06-29 (Mon), a good BD.
+    #   - Spot-anchored: spot is not EOM → no EOM rule → 2026-06-29.
+    #   - Near-anchored: near IS EOM → EOM rule fires → last BD of June
+    #     = 2026-06-30 (Tue).
+    cals = {"EUR": _empty("EUR"), "USD": _empty("USD")}
+    # Use 1M-2M so the legs are distinct dates.
+    r_spot = calculate_swap_dates(
+        trade_date=date(2026, 4, 27),
+        pair=parse_pair("EUR/USD"),
+        near_tenor=parse_tenor("1M"),
+        far_tenor=parse_tenor("2M"),
+        ref_currency="none",
+        calendars=cals,
+    )
+    r_near = calculate_swap_dates(
+        trade_date=date(2026, 4, 27),
+        pair=parse_pair("EUR/USD"),
+        near_tenor=parse_tenor("1M"),
+        far_tenor=parse_tenor("2M"),
+        ref_currency="none",
+        calendars=cals,
+        ffs_far_anchor="near",
+    )
+    assert r_spot.spot_date == date(2026, 4, 29)
+    assert r_spot.near_date == date(2026, 5, 29)
+    assert r_near.near_date == date(2026, 5, 29)
+    # Spot-anchored: spot is not EOM → no EOM rule → 2026-06-29.
+    assert r_spot.far_date == date(2026, 6, 29)
+    # Near-anchored: near IS EOM → EOM rule keys on near → last BD of July
+    # (Jul 31 Fri) — the EOM rule applies to the target month of the raw far
+    # date (2026-07-29 → July 2026 → 2026-07-31).
+    assert r_near.far_date == date(2026, 7, 31)
+
+
+def test_ffs_near_anchored_far_imm_uses_near_as_reference():
+    # IMM1 anchored on near = next IMM Wednesday after the near date.
+    # Trade 2026-05-06; spot = 2026-05-08; near = spot + 2M = 2026-07-08.
+    # In near-anchored mode, IMM1 after near 2026-07-08 = Sep 2026 3rd Wed
+    # = 2026-09-16. (Standard spot-anchored mode would put IMM1 in June and
+    # thus before near — an invalid FFS — so this combination only makes
+    # sense in near-anchored mode anyway.)
+    cals = {"EUR": _empty("EUR"), "USD": _empty("USD")}
+    r_near = calculate_swap_dates(
+        trade_date=date(2026, 5, 6),
+        pair=parse_pair("EUR/USD"),
+        near_tenor=parse_tenor("2M"),
+        far_tenor=parse_tenor("IMM1"),
+        ref_currency="none",
+        calendars=cals,
+        ffs_far_anchor="near",
+    )
+    assert r_near.near_date == date(2026, 7, 8)
+    assert r_near.far_date == date(2026, 9, 16)
+
+
+def test_ffs_near_anchored_still_validates_far_after_near():
+    # If far_tenor < near_tenor in near-anchored mode, far would land before
+    # near and the FFS invariant must still catch it.
+    # Actually in near-anchored mode, far is always measured FROM near, so
+    # a positive far tenor cannot land before near. But broken-date far can.
+    cals = {"EUR": _empty("EUR"), "USD": _empty("USD")}
+    with pytest.raises(InvalidFFSCombinationError):
+        calculate_swap_dates(
+            trade_date=date(2026, 5, 6),
+            pair=parse_pair("EUR/USD"),
+            near_tenor=parse_tenor("3M"),
+            far_tenor=parse_tenor("2026-06-01"),  # before near
+            ref_currency="none",
+            calendars=cals,
+            ffs_far_anchor="near",
+        )
+
+
 def test_on_for_t_plus_1_pair():
     # ON: near = T, far = T+1 = spot for T+1 pair.
     cals = {"USD": _empty("USD"), "CAD": _empty("CAD")}

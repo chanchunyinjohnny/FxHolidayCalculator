@@ -83,6 +83,7 @@ def render() -> None:
     )
 
     near_tenor_str: str | None = None
+    ffs_far_anchor = "spot"
     if swap_kind.startswith("Standard"):
         far_tenor_str = st.text_input(
             "Tenor (e.g. ON, TN, SN, 3M, IMM1, 2026-08-15)",
@@ -93,6 +94,32 @@ def render() -> None:
         c1, c2 = st.columns(2)
         near_tenor_str = c1.text_input("Near tenor (e.g. 1M)", value="1M", key="swap_near_tenor")
         far_tenor_str = c2.text_input("Far tenor (e.g. 3M)", value="3M", key="swap_far_tenor_ffs")
+        anchor_choice = st.radio(
+            "Far-leg anchoring",
+            [
+                "Spot-anchored (standard interbank / Strata convention)",
+                "Near-anchored (360T RFS - non-standard)",
+            ],
+            index=0,
+            key="swap_ffs_far_anchor",
+            help=(
+                "Standard interbank practice quotes both FFS legs from spot. "
+                "Example: a 1W-1M swap has the near leg at spot+1W and the "
+                "far leg at spot+1M. The 360T RFS platform instead "
+                "interprets the far tenor as measured from the near date "
+                "(far at near+1M). This is uncommon; only use it if your "
+                "counterparty or venue requires it."
+            ),
+        )
+        ffs_far_anchor = "near" if anchor_choice.startswith("Near") else "spot"
+        if ffs_far_anchor == "near":
+            st.info(
+                "**Non-standard mode.** Far leg will be measured from the "
+                "NEAR date, not from spot. This is the 360T RFS convention. "
+                "OpenGamma Strata, Bloomberg, and most interbank desks "
+                "anchor both legs on spot. Confirm with your counterparty "
+                "or venue."
+            )
 
     pair = parse_pair(pair_code)
 
@@ -155,6 +182,7 @@ def render() -> None:
                 near_tenor=near_tenor,
                 ref_currency=ref,  # type: ignore[arg-type]
                 calendars=cals,
+                ffs_far_anchor=ffs_far_anchor,  # type: ignore[arg-type]
             )
         except (
             InvalidTenorError,

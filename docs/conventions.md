@@ -155,6 +155,23 @@ FFS validations:
   roll to ≤ spot).
 - `far_date` must be strictly after `near_date`.
 
+### 5.1 Optional near-anchored far leg (360T RFS convention)
+
+`calculate_swap_dates()` accepts an `ffs_far_anchor` parameter:
+
+- `"spot"` (default) — both legs anchored on spot, as described above.
+- `"near"` — far tenor is measured from the **near date** instead of from
+  spot. For an input like `near=1W, far=1M` the engine computes
+  `far_date = near_date + 1M` (modified-following + EOM keyed on near).
+
+The 360T RFS platform expects FFS quotes in this near-anchored form: a
+`1W-1M` FF swap on 360T means "near = spot + 1W, far = near + 1M". This is
+**not standard interbank practice** — Bloomberg, Reuters/EBS, and OpenGamma
+Strata all anchor both legs on spot. When `ffs_far_anchor="near"` the engine
+emits a convention warning on `SwapResult.warnings` to flag the deviation.
+
+Use this mode only if your counterparty / venue explicitly requires it.
+
 ## 6. Cross rule
 
 When a swap involves a non-USD pair and a reference currency is specified, the spot
