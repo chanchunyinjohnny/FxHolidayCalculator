@@ -1,0 +1,76 @@
+{
+  "schema_version": 1,
+  "venue": "SGX",
+  "calendar_kind": "EXCHANGE_CONTRACTS",
+  "valid_from": "2026-05-18",
+  "valid_until": "2026-12-14",
+  "default_source": {
+    "url": "https://www.sgx.com/derivatives/products/currency-futures",
+    "doc_title": "SGX — Currency Futures Contract Specifications",
+    "fetched_at": "2026-05-13T01:44:29Z",
+    "fetcher": "scripts/sources/sgx_contracts.py@v1",
+    "default_derivation_mode": "derived"
+  },
+  "contracts": [
+    {
+      "code": "UCK6",
+      "pair": "USD/CNH",
+      "product_name": "USD/CNH (TC) Futures",
+      "contract_month": "2026-05",
+      "last_trading_day": "2026-05-18",
+      "settlement_date": "2026-05-20",
+      "first_notice_day": null,
+      "derivation_mode": "derived",
+      "source": null,
+      "note": "Derived from SGX's standard rule (3rd-Wednesday IMM convention, mod-following on SGX ∪ base/quote RTGS). For products where a leg currency is not bundled (e.g. INR, KRW), the BD-counting falls back to whichever calendars are present. Verify against the official contract specs page before trading."
+    },
+    {
+      "code": "UCM6",
+      "pair": "USD/CNH",
+      "product_name": "USD/CNH (TC) Futures",
+      "contract_month": "2026-06",
+      "last_trading_day": "2026-06-15",
+      "settlement_date": "2026-06-17",
+      "first_notice_day": null,
+      "derivation_mode": "derived",
+      "source": null,
+      "note": "Derived from SGX's standard rule (3rd-Wednesday IMM convention, mod-following on SGX ∪ base/quote RTGS). For products where a leg currency is not bundled (e.g. INR, KRW), the BD-counting falls back to whichever calendars are present. Verify against the official contract specs page before trading."
+    },
+    {
+      "code": "UCN6",
+      "pair": "USD/CNH",
+      "product_name": "USD/CNH (TC) Futures",
+      "contract_month": "2026-07",
+      "last_trading_day": "2026-07-13",
+      "settlement_date": "2026-07-15",
+      "first_notice_day": null,
+      "derivation_mode": "derived",
+      "source": null,
+      "note": "Derived from SGX's standard rule (3rd-Wednesday IMM convention, mod-following on SGX ∪ base/quote RTGS). For products where a leg currency is not bundled (e.g. INR, KRW), the BD-counting falls back to whichever calendars are present. Verify against the official contract specs page before trading."
+    },
+    {
+      "code": "UCU6",
+      "pair": "USD/CNH",
+      "product_name": "USD/CNH (TC) Futures",
+      "contract_month": "2026-09",
+      "last_trading_day": "2026-09-14",
+      "settlement_date": "2026-09-16",
+      "first_notice_day": null,
+      "derivation_mode": "derived",
+      "source": null,
+      "note": "Derived from SGX's standard rule (3rd-Wednesday IMM convention, mod-following on SGX ∪ base/quote RTGS). For products where a leg currency is not bundled (e.g. INR, KRW), the BD-counting falls back to whichever calendars are present. Verify against the official contract specs page before trading."
+    },
+    {
+      "code": "UCZ6",
+      "pair": "USD/CNH",
+      "product_name": "USD/CNH (TC) Futures",
+      "contract_month": "2026-12",
+      "last_trading_day": "2026-12-14",
+      "settlement_date": "2026-12-16",
+      "first_notice_day": null,
+      "derivation_mode": "derived",
+      "source": null,
+      "note": "Derived from SGX's standard rule (3rd-Wednesday IMM convention, mod-following on SGX ∪ base/quote RTGS). For products where a leg currency is not bundled (e.g. INR, KRW), the BD-counting falls back to whichever calendars are present. Verify against the official contract specs page before trading."
+    }
+  ]
+}

@@ -3,10 +3,11 @@ import logging
 from datetime import date, datetime
 from pathlib import Path
 
+from fx_holiday_calculator.calendars.contracts import ContractCalendar
 from fx_holiday_calculator.calendars.exchange import ExchangeCalendar
 from fx_holiday_calculator.calendars.fixing import FixingCalendar
 from fx_holiday_calculator.calendars.rtgs import RtgsCalendar
-from fx_holiday_calculator.calendars.types import HolidayEntry, SourceRef
+from fx_holiday_calculator.calendars.types import ContractEntry, HolidayEntry, SourceRef
 
 _log = logging.getLogger(__name__)
 
@@ -133,6 +134,71 @@ def load_exchange_calendar(
         valid_from=vf,
         valid_until=vu,
         library_sourced=library_sourced,
+    )
+
+
+def _allowed_modes() -> set[str]:
+    return {"scrape", "derived", "manual"}
+
+
+def load_contract_calendar(
+    venue: str, root: Path, cache_root: Path | None = None
+) -> ContractCalendar:
+    """Load `<venue>_contracts.json` (cache > bundled) into a `ContractCalendar`.
+
+    Per-entry `source` overrides win over `default_source`; per-entry
+    `derivation_mode` overrides win over `default_source.default_derivation_mode`.
+    Manual entries without their own `source` override fall back to the file
+    default, which is intentional — the data-integrity test is the gate that
+    flags missing manual-row provenance, not this loader.
+    """
+    name = f"{venue}_contracts"
+    blob, origin = _load_calendar_blob(name, root, cache_root)
+    if blob.get("calendar_kind") != "EXCHANGE_CONTRACTS":
+        raise ValueError(f"{name}.json is not an EXCHANGE_CONTRACTS file")
+    if blob.get("venue") != venue:
+        raise ValueError(f"{name}.json venue mismatch")
+    default_src_raw = blob["default_source"]
+    default_src = _parse_source(default_src_raw)
+    default_mode = default_src_raw.get("default_derivation_mode")
+    if default_mode not in _allowed_modes():
+        raise ValueError(
+            f"{name}.json default_derivation_mode={default_mode!r}; expected one of "
+            f"{sorted(_allowed_modes())}"
+        )
+
+    entries: list[ContractEntry] = []
+    for raw in blob.get("contracts", []):
+        mode = raw.get("derivation_mode") or default_mode
+        if mode not in _allowed_modes():
+            raise ValueError(
+                f"{name}.json contract {raw.get('code')!r}: invalid derivation_mode={mode!r}"
+            )
+        src = _parse_source(raw["source"]) if raw.get("source") else default_src
+        ltd = date.fromisoformat(raw["last_trading_day"])
+        settle = date.fromisoformat(raw["settlement_date"])
+        fnd_raw = raw.get("first_notice_day")
+        fnd = date.fromisoformat(fnd_raw) if fnd_raw else None
+        entries.append(
+            ContractEntry(
+                venue=venue,
+                code=raw["code"],
+                pair=raw["pair"],
+                product_name=raw["product_name"],
+                contract_month=raw["contract_month"],
+                last_trading_day=ltd,
+                settlement_date=settle,
+                first_notice_day=fnd,
+                derivation_mode=mode,  # type: ignore[arg-type]
+                source=src,
+                source_origin=origin,  # type: ignore[arg-type]
+                note=raw.get("note"),
+            )
+        )
+    return ContractCalendar(
+        venue=venue,
+        entries=tuple(entries),
+        default_derivation_mode_is_derived=(default_mode == "derived"),
     )
 
 

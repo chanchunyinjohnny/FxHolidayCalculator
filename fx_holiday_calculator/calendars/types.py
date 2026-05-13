@@ -6,6 +6,8 @@ SourceOrigin = Literal["bundled", "cache", "live", "library"]
 
 LiquidityFlag = Literal["normal", "thin", "halted"]
 
+DerivationMode = Literal["scrape", "derived", "manual"]
+
 
 class CalendarRangeError(LookupError):
     """Raised when a calendar is queried outside its bundled validity window.
@@ -53,3 +55,19 @@ class CalendarStatus:
     source: SourceRef | None
     source_origin: SourceOrigin | None
     liquidity: LiquidityFlag | None = None  # set even when is_good=True
+
+
+@dataclass(frozen=True)
+class ContractEntry:
+    venue: str
+    code: str
+    pair: str
+    product_name: str
+    contract_month: str  # "YYYY-MM"
+    last_trading_day: date
+    settlement_date: date
+    first_notice_day: date | None
+    derivation_mode: DerivationMode
+    source: SourceRef
+    source_origin: SourceOrigin
+    note: str | None = None

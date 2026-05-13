@@ -1,209 +1,127 @@
-"""Futures product sub-tab — CME / HKEX / SGX FX futures."""
+"""Futures product sub-tab — listed-contract lookup.
+
+Replaces the earlier tenor-driven futures tab. The new flow mirrors a market
+maker's actual workflow: pick an exchange, pick a contract from the venue's
+published listings, get its key dates plus business-days-remaining against
+an as-of date.
+
+Per-contract provenance is surfaced as a badge:
+- ``scrape``  → grey "scraped from venue page" (no warning).
+- ``derived`` → yellow warning; the row was generated from the venue's
+  standard rule because the live scrape failed or did not cover this month.
+- ``manual``  → blue "manual override" chip; a maintainer curated this row.
+
+The derivation logic itself lives in ``scripts/sources/<venue>_contracts.py``
+(invoked by the fetcher path) and ``fx_holiday_calculator/future.py``. The
+UI consumes already-resolved ``ContractEntry`` rows from
+``fx_holiday_calculator.futures``.
+"""
 
 from datetime import date
-from pathlib import Path
 
 import streamlit as st
 
-from fx_holiday_calculator.calendars.loader import load_exchange_calendar, load_rtgs_calendar
-from fx_holiday_calculator.calendars.types import CalendarRangeError
-from fx_holiday_calculator.future import (
-    InvalidContractMonthError,
-    VenueNotListedError,
-    calculate_future_dates,
-)
-from fx_holiday_calculator.pairs import list_supported_pairs, parse_pair
-from fx_holiday_calculator.tenor import InvalidTenorError, parse_tenor
-from fx_holiday_calculator.ui._bundled import available_exchange_venues, available_rtgs_currencies
-from fx_holiday_calculator.ui._widgets import (
-    date_input_with_today,
-    days_caption,
-    render_calendar_coverage,
-    render_pair_conventions,
-    render_reasoning,
-    render_trace,
-)
-
-BUNDLED = Path(__file__).resolve().parents[2] / "data"
-CACHE = Path.home() / ".fx_holiday_calculator" / "cache"
+from fx_holiday_calculator.futures import days_until, list_contracts, list_venues
 
 
-def _listed_pairs() -> list[str]:
-    rtgs = available_rtgs_currencies()
-    return [
-        f"{p.base}/{p.quote}"
-        for p in list_supported_pairs()
-        if p.listed_on and p.base in rtgs and p.quote in rtgs
-    ]
+def _render_provenance(contract) -> None:
+    src = contract.source
+    mode = contract.derivation_mode
+    if mode == "derived":
+        st.warning(
+            "Derived from venue rule — not scraped from the official contract "
+            "page. Verify before trading. If this contract has non-standard "
+            "key dates, add a manual override to the JSON."
+        )
+    elif mode == "manual":
+        st.info("Manual override — dates curated by a maintainer.")
+    # Provenance caption is shown for all modes so the user can audit.
+    badge = {"scrape": "scrape", "derived": "derived ⚠", "manual": "manual"}[mode]
+    st.caption(
+        f"Source: [{src.doc_title}]({src.url}) — fetched "
+        f"{src.fetched_at:%Y-%m-%d}  ·  derivation: `{badge}`"
+    )
 
 
 def render() -> None:
-    st.subheader("FX Futures Date Calculator")
+    st.subheader("FX Futures — listed contract lookup")
     st.caption(
-        "Last trade date + delivery date for CME / HKEX / SGX FX futures. "
-        "LTD is anchored to the unrolled 3rd Wednesday of the contract month."
+        "Pick an exchange, then a listed contract. Dates come from the venue's "
+        "published contract calendar where possible. Rows derived from the "
+        "venue's standard rule carry a yellow warning."
     )
 
-    listed = _listed_pairs()
-    if not listed:
-        st.warning("No listed pairs available.")
-        return
-
-    col1, col2 = st.columns(2)
-    pair_code = col1.selectbox("Currency pair", listed, key="fut_pair")
-    pair = parse_pair(pair_code)
-    available_venues = available_exchange_venues()
-    valid_venues = [v for v in pair.listed_on if v in available_venues]
-    if not valid_venues:
-        st.error(
-            f"{pair_code} has no bundled exchange calendar. "
-            f"Listed on {pair.listed_on}, but none bundled."
-        )
-        return
-    venue = col2.selectbox("Venue", valid_venues, key="fut_venue")
-
-    input_mode = st.radio(
-        "Input mode",
-        ["Contract month", "IMM tenor"],
-        horizontal=True,
-        key="fut_input_mode",
-    )
-
-    contract_month: tuple[int, int] | None = None
-    imm_tenor_str: str | None = None
-    from_date: date | None = None
-    if input_mode == "Contract month":
-        today = date.today()
-        c1, c2 = st.columns(2)
-        year = c1.number_input(
-            "Year",
-            min_value=today.year,
-            max_value=today.year + 5,
-            value=today.year,
-            step=1,
-            key="fut_year",
-        )
-        month_name = c2.selectbox(
-            "Month",
-            ["Jan", "Feb", "Mar", "Apr", "May", "Jun", "Jul", "Aug", "Sep", "Oct", "Nov", "Dec"],
-            index=today.month - 1,
-            key="fut_month",
-        )
-        month_idx = [
-            "Jan",
-            "Feb",
-            "Mar",
-            "Apr",
-            "May",
-            "Jun",
-            "Jul",
-            "Aug",
-            "Sep",
-            "Oct",
-            "Nov",
-            "Dec",
-        ].index(month_name) + 1
-        contract_month = (int(year), int(month_idx))
-    else:
-        c1, c2 = st.columns(2)
-        imm_tenor_str = c1.selectbox(
-            "IMM tenor",
-            ["IMM1", "IMM2", "IMM3", "IMM4"],
-            key="fut_imm_tenor",
-        )
-        from_date = date_input_with_today(c2, "Reference date", key="fut_from_date")
-
-    # Load RTGS + exchange calendars.
-    needed = {pair.base, pair.quote}
-    try:
-        cals = {
-            c: load_rtgs_calendar(c, root=BUNDLED / "fx_rtgs", cache_root=CACHE / "fx_rtgs")
-            for c in sorted(needed)
-        }
-    except FileNotFoundError as exc:
-        st.error(f"RTGS calendar missing: {exc}")
-        return
-    try:
-        exch_cal = load_exchange_calendar(
-            venue, root=BUNDLED / "fx_exchange", cache_root=CACHE / "fx_exchange"
-        )
-    except FileNotFoundError as exc:
-        st.error(f"Exchange calendar missing: {exc}")
-        return
-    if exch_cal.library_sourced:
+    venues = list_venues()
+    if not venues:
         st.warning(
-            f"Exchange calendar caveat — {venue} is library-sourced (equity session). "
-            "FX-futures holidays may differ. See docs/data-sources.md."
+            "No exchange contract-listings files bundled. Run "
+            "`python -m fx_holiday_calculator.refresh` to generate them."
         )
+        return
 
-    cal_caption = f"Exchange: {venue} | RTGS: " + " · ".join(
-        f"{c} ({cals[c].calendar_name})" for c in sorted(needed)
+    venue = st.radio("Exchange", venues, horizontal=True, key="fut_v2_venue")
+
+    # Pair filter — discovered from contracts actually present on this venue.
+    try:
+        all_contracts = list_contracts(venue, include_expired=True)
+    except FileNotFoundError as exc:
+        st.error(f"Contract-listings file missing for {venue}: {exc}")
+        return
+    if not all_contracts:
+        st.info(f"No contracts bundled for {venue}.")
+        return
+
+    pair_options = ["Any"] + sorted({c.pair for c in all_contracts})
+    pair_filter = st.selectbox("Pair (optional)", pair_options, key="fut_v2_pair")
+
+    include_expired = st.checkbox("Include expired contracts", value=False, key="fut_v2_exp")
+
+    pair_arg = None if pair_filter == "Any" else pair_filter
+    contracts = list_contracts(
+        venue, pair=pair_arg, asof=date.today(), include_expired=include_expired
     )
-    st.caption("Calendars to be used: " + cal_caption)
-    render_calendar_coverage(
-        [(f"{venue} Exchange", exch_cal.valid_from, exch_cal.valid_until)]
-        + [
-            (f"{c} RTGS ({cals[c].calendar_name})", cals[c].valid_from, cals[c].valid_until)
-            for c in sorted(needed)
-        ],
-        trade_date=from_date,
+    if not contracts:
+        st.info("No contracts match this filter.")
+        return
+
+    labels = [f"{c.code} · {c.product_name} · {c.contract_month}" for c in contracts]
+    idx = st.selectbox(
+        "Contract",
+        list(range(len(contracts))),
+        format_func=lambda i: labels[i],
+        key="fut_v2_contract",
     )
+    contract = contracts[idx]
 
-    if st.button("Calculate", key="fut_calc"):
-        try:
-            if input_mode == "Contract month":
-                result = calculate_future_dates(
-                    pair=pair,
-                    venue=venue,
-                    contract_month=contract_month,
-                    rtgs_calendars=cals,
-                    exchange_calendar=exch_cal,
-                )
-            else:
-                result = calculate_future_dates(
-                    pair=pair,
-                    venue=venue,
-                    imm_tenor=parse_tenor(imm_tenor_str),  # type: ignore[arg-type]
-                    from_date=from_date,
-                    rtgs_calendars=cals,
-                    exchange_calendar=exch_cal,
-                )
-        except (
-            VenueNotListedError,
-            InvalidContractMonthError,
-            InvalidTenorError,
-        ) as exc:
-            st.error(f"Invalid input: {exc}")
-            return
-        except CalendarRangeError as exc:
-            st.error(f"Calculation lands outside bundled window: {exc}")
-            return
+    asof = st.date_input("As of", value=date.today(), key="fut_v2_asof")
+    countdown = days_until(contract, asof)
 
-        if result.warnings:
-            st.warning("\n\n".join(f"• {w}" for w in result.warnings))
+    # Per-row provenance chip / banner.
+    _render_provenance(contract)
 
-        st.markdown("### Result")
-        cm = result.contract_month
-        st.write(f"**Contract:**         {cm[0]}-{cm[1]:02d} ({venue})")
-        # Futures have no "trade date" input — anchor the days-from display
-        # against the reference date the user supplied (IMM-tenor mode) or
-        # today's date (contract-month mode).
-        anchor = from_date if from_date is not None else date.today()
-        anchor_label = "ref" if from_date is not None else "today"
-        st.write(
-            f"**Last trade date:**  {result.last_trade_date} "
-            f"({result.last_trade_date.strftime('%a')})"
-            f"{days_caption(result.last_trade_date, anchor, anchor_label=anchor_label)}"
-        )
-        st.write(
-            f"**Delivery date:**    {result.delivery_date} "
-            f"({result.delivery_date.strftime('%a')})"
-            f"{days_caption(result.delivery_date, anchor, anchor_label=anchor_label)}"
-        )
+    st.markdown("### Result")
+    st.write(f"**Contract:**        {contract.code}  ({contract.pair}, {contract.product_name})")
+    st.write(f"**Contract month:**  {contract.contract_month}")
+    st.write(
+        f"**Last Trading Day:** {contract.last_trading_day} "
+        f"({contract.last_trading_day.strftime('%a')})  ·  "
+        f"{countdown.business_days_to_ltd} business days from {asof}  "
+        f"({countdown.calendar_days_to_ltd} calendar)"
+    )
+    st.write(
+        f"**Settlement date:**  {contract.settlement_date} "
+        f"({contract.settlement_date.strftime('%a')})  ·  "
+        f"{countdown.business_days_to_settlement} business days from {asof}  "
+        f"({countdown.calendar_days_to_settlement} calendar)"
+    )
+    if contract.first_notice_day:
+        st.write(f"**First notice day:** {contract.first_notice_day}")
+    st.caption(f"Business-day calendar used: {countdown.bd_calendar_used}")
+    if contract.note:
+        st.caption(contract.note)
 
-        render_reasoning(result.reasoning)
 
-        st.markdown("### Adjustment trace")
-        render_trace(result.last_trade_trace, "Last trade date")
-        render_trace(result.delivery_trace, "Delivery date")
-        render_pair_conventions(pair)
+def render_lookup() -> None:
+    """Alias for the new lookup-style render. Kept so callers that prefer the
+    explicit name don't have to know that `render` was repurposed."""
+    render()
