@@ -18,8 +18,12 @@ from scripts.sources._provenance import now_iso_utc, write_calendar_json
 
 _FETCHER = "scripts/sources/hkex_options_contracts.py@v1"
 _VENUE = "HKEX"
-_SPECS_LANDING_URL = "https://www.hkex.com.hk/Products/Listed-Derivatives/Currency?sc_lang=en"
-_DOC_TITLE = "HKEX — Listed Currency Derivatives (Contract Specifications, USD/CNH Options)"
+_SPECS_LANDING_URL = (
+    "https://www.hkex.com.hk/Products/Listed-Derivatives/Foreign-Exchange?sc_lang=en"
+)
+_DOC_TITLE = (
+    "HKEX — Foreign Exchange (Listed Derivatives, Contract Specifications, USD/CNH Options)"
+)
 
 _HKEX_PRODUCTS: dict[str, tuple[str, str]] = {
     "USD/CNH": ("CUSO", "USD/CNH Options (CNHO)"),

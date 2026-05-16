@@ -1,7 +1,11 @@
 """TARGET2 closure days — deterministic rule, no scraping.
 
-Source citation: https://www.ecb.europa.eu/paym/target/target2/profuse/calendar/html/index.en.html
+Source citation: https://www.ecb.europa.eu/paym/target/t2/html/index.en.html
 The rule is encoded directly in this module per docs/data-sources.md#eur--target2.
+
+Note: in March 2023 the Eurosystem consolidated TARGET2 and T2S into the
+new T2 RTGS service. The six TARGET closing days (1 Jan, Good Friday,
+Easter Monday, 1 May, 25 Dec, 26 Dec) are unchanged from TARGET2.
 """
 
 from __future__ import annotations
@@ -13,9 +17,9 @@ from dateutil.easter import easter
 
 from scripts.sources._provenance import now_iso_utc, write_calendar_json, write_raw
 
-_URL = "https://www.ecb.europa.eu/paym/target/target2/profuse/calendar/html/index.en.html"
-_DOC_TITLE = "TARGET2 / T2 calendar — Eurosystem"
-_FETCHER = "scripts/sources/ecb_target2.py@v1"
+_URL = "https://www.ecb.europa.eu/paym/target/t2/html/index.en.html"
+_DOC_TITLE = "T2 — Eurosystem RTGS service (operating days)"
+_FETCHER = "scripts/sources/ecb_target2.py@v2"
 
 
 def _holidays_for_year(year: int) -> list[dict]:

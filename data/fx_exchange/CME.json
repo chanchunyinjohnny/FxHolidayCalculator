@@ -12,11 +12,11 @@
     "USD/ZAR Futures"
   ],
   "valid_from": "2026-01-01",
-  "valid_until": "2027-05-11",
+  "valid_until": "2027-05-14",
   "default_source": {
     "url": "https://pypi.org/project/exchange-calendars/",
-    "doc_title": "exchange_calendars v4.13.1, calendar=CMES (equity session)",
-    "fetched_at": "2026-05-11T03:19:13Z",
+    "doc_title": "exchange_calendars v4.13.2, calendar=CMES (equity session)",
+    "fetched_at": "2026-05-16T15:43:01Z",
     "fetcher": "scripts/sources/library_exchange.py@v1"
   },
   "holidays": [

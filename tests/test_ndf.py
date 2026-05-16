@@ -111,6 +111,47 @@ def test_tenor_driven_fixing_skips_fixing_holiday():
     assert r.fixing_date == date(2026, 8, 6)
 
 
+def test_fixing_back_count_requires_usd_open():
+    """Per EMTA / ISDA EM template, the 2-BD fixing back-count requires both
+    the fixing centre and New York to be open. A USD-only holiday strictly
+    between settlement and what would otherwise be the fixing date must push
+    the fixing date one BD earlier."""
+    # Set up a USD holiday on Fri 2026-08-07 (US-only; CNY fixing is open).
+    usd_hol = HolidayEntry(
+        date=date(2026, 8, 7),
+        name="Mock USD-only holiday",
+        note=None,
+        source=_src(),
+        source_origin="bundled",
+        is_closure=True,
+    )
+    usd = RtgsCalendar(
+        currency="USD",
+        calendar_name="USD",
+        operator="x",
+        entries_by_date={date(2026, 8, 7): usd_hol},
+        **WINDOW,
+    )
+    fix = _empty_fixing("CNY")
+    cals = {"USD": usd}
+    r = calculate_ndf_dates(
+        trade_date=date(2026, 5, 6),  # Wed
+        pair=parse_pair("USD/CNY"),
+        tenor=parse_tenor("3M"),
+        rtgs_calendars=cals,
+        fixing_calendar=fix,
+    )
+    # Settlement = spot + 3M = 2026-08-08 (Sat) -> mod-following on
+    # USD ∪ CNY-fixing -> Mon 2026-08-10 (USD holiday is Fri, doesn't affect
+    # forward roll from Sat).
+    assert r.settlement_date == date(2026, 8, 10)
+    # Fixing back-count from Mon 2026-08-10 on USD ∪ CNY:
+    # Sun 8-9 (weekend), Sat 8-8 (weekend), Fri 8-7 (USD holiday — REJECT),
+    # Thu 8-6 (good, count=1), Wed 8-5 (good, count=2). Pre-fix code would
+    # have walked on CNY only and returned Fri 8-7 as the fixing date.
+    assert r.fixing_date == date(2026, 8, 5)
+
+
 def test_tenor_driven_imm_tenor():
     cals = {"USD": _empty_rtgs("USD")}
     fix = _empty_fixing("CNY")

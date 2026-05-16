@@ -278,6 +278,78 @@ def render_reference_status(
         )
 
 
+def render_liquidity_warnings(traces, calendars: dict) -> None:
+    """Surface per-calendar liquidity flags across a set of adjustment traces.
+
+    ``traces`` is an iterable of trace lists (each element a list of
+    AdjustmentStep). ``calendars`` is a dict keyed by the leading token of
+    the per-step ``cal_label`` (typically a currency code like ``"EUR"`` or
+    a venue code) mapping to a calendar object exposing ``.get_holiday``.
+
+    For each step whose per-calendar status carries a non-empty
+    ``liquidity`` annotation, the helper emits one bullet listing the
+    date, weekday, calendar label, liquidity flag and (when resolvable
+    via ``calendars``) the holiday entry name. Duplicates across traces
+    are collapsed. Renders nothing when no flags are present.
+    """
+    if not calendars:
+        return
+    alerts: list[str] = []
+    for trace in traces:
+        if not trace:
+            continue
+        for step in trace:
+            for cal_label, status in step.statuses.items():
+                if not status.liquidity:
+                    continue
+                token = cal_label.split(" ")[0]
+                cal = calendars.get(token)
+                entry_note = ""
+                if cal is not None:
+                    entry = cal.get_holiday(step.candidate_date)
+                    if entry:
+                        entry_note = f" — {entry.name}"
+                alerts.append(
+                    f"{step.candidate_date.isoformat()} ({step.weekday}) "
+                    f"{cal_label}: {status.liquidity}{entry_note}"
+                )
+
+    if not alerts:
+        return
+
+    seen: set[str] = set()
+    unique: list[str] = []
+    for a in alerts:
+        if a not in seen:
+            seen.add(a)
+            unique.append(a)
+    st.warning(
+        "Liquidity warning — these dates are flagged as thin/halted trading "
+        "even though they don't block the calculation:\n\n" + "\n".join(f"• {a}" for a in unique)
+    )
+
+
+def render_trade_date_weekend_warning(trade_date: date) -> None:
+    """Render a pre-click warning if ``trade_date`` is a Saturday or Sunday.
+
+    Calendar coverage may not extend far enough to flag holidays for every
+    currency, so we only check weekends here. Most products require a good
+    business day on the trade date; landing on a weekend usually means the
+    calculation will fail or be rolled.
+    """
+    wd = trade_date.weekday()
+    if wd == 5:
+        day_name = "Saturday"
+    elif wd == 6:
+        day_name = "Sunday"
+    else:
+        return
+    st.warning(
+        f"Trade date {trade_date.isoformat()} falls on a {day_name} — most "
+        "products require a good business day; calculation may fail or roll."
+    )
+
+
 def render_pair_conventions(pair) -> None:
     """Render the pair-specific conventions section, if any are documented.
 

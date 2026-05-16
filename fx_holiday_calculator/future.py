@@ -60,6 +60,7 @@ def calculate_future_dates(
     contract_month: Optional[tuple[int, int]] = None,
     imm_tenor: Optional[Tenor] = None,
     from_date: Optional[date] = None,
+    today: Optional[date] = None,
     rtgs_calendars: dict[str, RtgsCalendar],
     exchange_calendar: ExchangeCalendar,
 ) -> FutureResult:
@@ -78,15 +79,19 @@ def calculate_future_dates(
     if contract_month is not None and imm_tenor is not None:
         raise ValueError("Provide contract_month OR imm_tenor, not both")
 
+    # today is parametrizable so backtests / fixture-driven tests can pin the
+    # clock; system date is the operational default.
+    if today is None:
+        today = date.today()
+
     if imm_tenor is not None:
         if imm_tenor.kind != "IMM":
             raise InvalidTenorError("Futures input only accepts IMM1..IMM4 tenor")
-        anchor_date = from_date or date.today()
+        anchor_date = from_date or today
         imm_date = next_imm_date(anchor_date, imm_tenor.imm_index)
         contract_month = (imm_date.year, imm_date.month)
     assert contract_month is not None  # for type-checker
 
-    today = date.today()
     if (contract_month[0], contract_month[1]) < (today.year, today.month) and from_date is None:
         raise InvalidContractMonthError(f"Contract month {contract_month} is in the past.")
 

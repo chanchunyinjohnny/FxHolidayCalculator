@@ -59,13 +59,22 @@ def _parse_month_day(text: str, year: int) -> str | None:
 
 
 def parse_document(raw: bytes, year_range: tuple[int, int]) -> list[dict]:
-    """Pure: bytes (system-closure HTML) -> list of holiday dicts."""
+    """Pure: bytes (system-closure HTML) -> list of holiday dicts.
+
+    Raises ``RuntimeError`` if the page contains an in-range year block
+    but the table parser extracts zero rows from it — a strong signal
+    that Drupal's HTML layout changed and the regex needs updating,
+    rather than silently producing an empty calendar.
+    """
     text = raw.decode("utf-8", errors="replace")
     out: list[dict] = []
+    matched_in_range_blocks = 0
+    rows_from_matched_blocks = 0
     for ym in _YEAR_BLOCK_RE.finditer(text):
         year = int(ym.group(1))
         if not (year_range[0] <= year <= year_range[1]):
             continue
+        matched_in_range_blocks += 1
         tm = _TABLE_RE.search(ym.group("body"))
         if not tm:
             continue
@@ -89,6 +98,12 @@ def parse_document(raw: bytes, year_range: tuple[int, int]) -> list[dict]:
                     "note": note,
                 }
             )
+            rows_from_matched_blocks += 1
+    if matched_in_range_blocks > 0 and rows_from_matched_blocks == 0:
+        raise RuntimeError(
+            "Payments Canada page has in-range year blocks but zero holiday "
+            "rows parsed — page layout has changed. Update the parser."
+        )
     # Dedupe + sort (in case the page ever lists overlapping ranges).
     seen: dict[str, dict] = {}
     for h in out:

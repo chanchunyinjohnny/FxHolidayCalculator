@@ -203,7 +203,11 @@ def render() -> None:
             }
             for r in rows
         ]
-        st.dataframe(rendered, use_container_width=True)
+        st.dataframe(
+            rendered,
+            use_container_width=True,
+            column_config={"Source": st.column_config.LinkColumn("Source")},
+        )
 
         csv = (
             "Date,Day,Type,Calendar,Holiday,Closure,Liquidity,Source,Fetched,Origin\n"

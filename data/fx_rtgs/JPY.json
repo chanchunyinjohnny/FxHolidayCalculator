@@ -5,11 +5,11 @@
   "calendar_name": "BoJ-NET",
   "operator": "Bank of Japan",
   "valid_from": "2026-01-01",
-  "valid_until": "2027-12-31",
+  "valid_until": "2030-12-31",
   "default_source": {
     "url": "https://www.boj.or.jp/en/about/outline/holi.htm",
     "doc_title": "Holiday Schedule of the Bank — Bank of Japan",
-    "fetched_at": "2026-05-06T07:35:23Z",
+    "fetched_at": "2026-05-16T15:43:10Z",
     "fetcher": "scripts/sources/boj.py@v1"
   },
   "holidays": [

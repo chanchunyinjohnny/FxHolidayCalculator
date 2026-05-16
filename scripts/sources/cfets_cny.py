@@ -31,6 +31,14 @@ _FETCHER = "scripts/sources/cfets_cny.py@v2"
 _USER_AGENT = "fx-holiday-calculator/0.1"
 _FALLBACK_NAME = "CFETS CNY market closure"
 
+# Public re-exports for downstream fetchers (e.g. hkma_chats_cnh) that need to
+# cite the CFETS page as the source for the PRC leg of CNH closures. These are
+# the canonical, contract-stable names; the underscore-prefixed originals
+# remain for internal callers but should be considered an implementation detail.
+PAGE_URL = _PAGE_URL
+DOC_TITLE = _DOC_TITLE
+FETCHER = _FETCHER
+
 _MONTH_ABBR = {
     "Jan": 1,
     "Feb": 2,

@@ -74,6 +74,7 @@ def derive_contract(
     rtgs_calendars: dict[str, RtgsCalendar],
     exchange_calendar: ExchangeCalendar,
     from_date: Optional[date] = None,
+    today: Optional[date] = None,
 ) -> DeriveContractResult:
     if venue not in pair.listed_on:
         raise ContractMonthDerivationError(
@@ -85,7 +86,10 @@ def derive_contract(
             f"exchange_calendar.venue={exchange_calendar.venue!r} does not match "
             f"declared venue={venue!r}."
         )
-    today = date.today()
+    # today is parametrizable so backtests / fixture-driven tests can pin the
+    # clock; system date is the operational default.
+    if today is None:
+        today = date.today()
     if from_date is None and (contract_month[0], contract_month[1]) < (today.year, today.month):
         raise ContractMonthDerivationError(f"Contract month {contract_month} is in the past.")
 

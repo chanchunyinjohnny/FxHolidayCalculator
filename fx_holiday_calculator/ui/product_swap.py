@@ -28,10 +28,12 @@ from fx_holiday_calculator.ui._widgets import (
     date_input_with_today,
     days_caption,
     render_calendar_coverage,
+    render_liquidity_warnings,
     render_pair_conventions,
     render_reasoning,
     render_reference_status,
     render_trace,
+    render_trade_date_weekend_warning,
 )
 
 BUNDLED = Path(__file__).resolve().parents[2] / "data"
@@ -164,7 +166,9 @@ def render() -> None:
         trade_date=trade_date,
     )
 
-    if st.button("Calculate"):
+    render_trade_date_weekend_warning(trade_date)
+
+    if st.button("Calculate", key="swap_calc"):
         try:
             far_tenor = parse_tenor(far_tenor_str)
             near_tenor = parse_tenor(near_tenor_str) if near_tenor_str else None
@@ -200,37 +204,10 @@ def render() -> None:
             return
 
         # Surface liquidity warnings for any annotated dates in the calculation range.
-        liq_alerts = []
-        for trace in (result.spot_trace, result.near_trace, result.far_trace):
-            for step in trace:
-                for cal_label, status in step.statuses.items():
-                    if status.liquidity:
-                        # Try to fetch the entry name for richer detail
-                        entry_note = ""
-                        ccy = cal_label.split(" ")[0]  # "EUR (TARGET2)" -> "EUR"
-                        cal = cals.get(ccy)
-                        if cal is not None:
-                            entry = cal.get_holiday(step.candidate_date)
-                            if entry:
-                                entry_note = f" — {entry.name}"
-                        liq_alerts.append(
-                            f"{step.candidate_date.isoformat()} ({step.weekday}) "
-                            f"{cal_label}: {status.liquidity}{entry_note}"
-                        )
-
-        if liq_alerts:
-            # Deduplicate (same date/cal can appear in spot+near trace).
-            seen = set()
-            unique_alerts = []
-            for a in liq_alerts:
-                if a not in seen:
-                    seen.add(a)
-                    unique_alerts.append(a)
-            st.warning(
-                "Liquidity warning — these dates are flagged as thin/halted trading "
-                "even though they don't block the calculation:\n\n"
-                + "\n".join(f"• {a}" for a in unique_alerts)
-            )
+        render_liquidity_warnings(
+            (result.spot_trace, result.near_trace, result.far_trace),
+            cals,
+        )
 
         if result.warnings:
             st.warning("Convention warning:\n\n" + "\n".join(f"• {w}" for w in result.warnings))

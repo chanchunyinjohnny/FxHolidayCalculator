@@ -78,7 +78,11 @@ There are no unsourced dates.
     st.markdown("### Sources currently loaded (bundled)")
     rows = _summary_rows()
     if rows:
-        st.dataframe(rows, use_container_width=True)
+        st.dataframe(
+            rows,
+            use_container_width=True,
+            column_config={"Source URL": st.column_config.LinkColumn("Source URL")},
+        )
     else:
         st.write("_No bundled data found._")
 

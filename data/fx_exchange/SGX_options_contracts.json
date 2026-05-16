@@ -7,7 +7,7 @@
   "default_source": {
     "url": "https://www.sgx.com/derivatives/products/fx",
     "doc_title": "SGX — FX Derivatives Product Page (USD/CNH Futures Options)",
-    "fetched_at": "2026-05-13T06:55:41Z",
+    "fetched_at": "2026-05-16T15:43:19Z",
     "fetcher": "scripts/sources/sgx_options_contracts.py@v1",
     "default_derivation_mode": "derived"
   },

@@ -7,10 +7,10 @@
   "valid_from": "2026-01-01",
   "valid_until": "2030-12-31",
   "default_source": {
-    "url": "https://www.ecb.europa.eu/paym/target/target2/profuse/calendar/html/index.en.html",
-    "doc_title": "TARGET2 / T2 calendar — Eurosystem",
-    "fetched_at": "2026-05-06T06:39:22Z",
-    "fetcher": "scripts/sources/ecb_target2.py@v1"
+    "url": "https://www.ecb.europa.eu/paym/target/t2/html/index.en.html",
+    "doc_title": "T2 — Eurosystem RTGS service (operating days)",
+    "fetched_at": "2026-05-16T15:43:10Z",
+    "fetcher": "scripts/sources/ecb_target2.py@v2"
   },
   "holidays": [
     {

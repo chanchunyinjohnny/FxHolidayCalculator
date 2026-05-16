@@ -117,13 +117,21 @@ def parse_document(raw: bytes, year: int, fetched_at: str | None = None) -> list
     specific year page (so multi-year payloads preserve which page each
     date came from). ``fetched_at`` defaults to the current UTC time
     stamp; it is injectable so tests can pin it.
+
+    Raises ``RuntimeError`` if the page yields zero parseable holiday
+    rows. gov.hk pages always carry at least one statutory holiday, so a
+    zero-row outcome means the page layout has changed and the regex no
+    longer matches — caller must update the parser, not silently produce
+    an empty calendar.
     """
     html = raw.decode("utf-8", errors="replace")
     stamp = fetched_at or now_iso_utc()
     src = _year_source(year, stamp)
     out: list[dict] = []
     seen: set[str] = set()
+    matched_rows = 0
     for m in _ROW_RE.finditer(html):
+        matched_rows += 1
         date_text = _strip_html(m.group("date"))
         if not date_text:
             # The perennial "Every Sunday" row has a blank date cell.
@@ -137,6 +145,11 @@ def parse_document(raw: bytes, year: int, fetched_at: str | None = None) -> list
         seen.add(iso)
         name = _strip_html(m.group("desc"))
         out.append({"date": iso, "name": name, "source": src, "note": None})
+    if matched_rows == 0:
+        raise RuntimeError(
+            f"gov.hk general-holidays page for {year} parsed to zero rows — "
+            f"row regex no longer matches the page layout. Update the parser."
+        )
     out.sort(key=lambda h: h["date"])
     return out
 

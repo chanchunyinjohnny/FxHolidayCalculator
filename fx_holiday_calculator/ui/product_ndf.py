@@ -20,9 +20,11 @@ from fx_holiday_calculator.ui._widgets import (
     date_input_with_today,
     days_caption,
     render_calendar_coverage,
+    render_liquidity_warnings,
     render_pair_conventions,
     render_reasoning,
     render_trace,
+    render_trade_date_weekend_warning,
 )
 
 BUNDLED = Path(__file__).resolve().parents[2] / "data"
@@ -126,6 +128,8 @@ def render() -> None:
         target_date=target_date,
     )
 
+    render_trade_date_weekend_warning(trade_date)
+
     if st.button("Calculate", key="ndf_calc"):
         try:
             if input_mode == "Tenor":
@@ -162,6 +166,11 @@ def render() -> None:
 
         if result.warnings:
             st.warning("\n\n".join(f"• {w}" for w in result.warnings))
+
+        render_liquidity_warnings(
+            (result.spot_trace, result.settlement_trace, result.fixing_trace),
+            {"USD": usd, fixing.currency: fixing},
+        )
 
         st.markdown("### Result")
         st.write(f"**Trade date:**       {result.trade_date} ({result.trade_date.strftime('%a')})")

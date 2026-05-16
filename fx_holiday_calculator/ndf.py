@@ -72,13 +72,13 @@ def calculate_ndf_dates(
     usd = rtgs_calendars["USD"]
     usd_cs = CalendarSet(members={"USD": usd})
 
-    # Combined USD + fixing for settlement roll.
+    # Combined USD + fixing for settlement roll AND fixing back-count.
+    # Per EMTA / ISDA EM template the Valuation Date requires both the
+    # fixing centre and New York to be open, so the same union drives both
+    # the settlement roll and the 2-BD fixing back-count.
     settle_cs = CalendarSet(
         members={"USD": usd, pair.fixing_currency: fixing_calendar}  # type: ignore[dict-item]
     )
-
-    # Fixing-only set for back-counting fixing date.
-    fixing_cs = CalendarSet(members={pair.fixing_currency: fixing_calendar})  # type: ignore[dict-item]
 
     if not is_good_business_day(trade_date, usd_cs):
         raise InvalidTradeDateError(
@@ -176,20 +176,29 @@ def calculate_ndf_dates(
             f"which is not after spot {spot_result.spot_date.isoformat()}."
         )
 
-    # Back-count fixing = settlement - 2 BD on the fixing calendar.
+    # Back-count fixing = settlement - 2 BD on USD ∪ fixing-currency.
+    # EMTA / ISDA EM template ("Valuation Date") defines Business Day as a
+    # day on which both the fixing centre AND New York are open — the lag
+    # is counted on the union, not on the fixing centre alone.
     fixing_trace: list[AdjustmentStep] = []
     fixing_candidate = settlement
     good_bd_count = 0
     while good_bd_count < 2:
         fixing_candidate = fixing_candidate - timedelta(days=1)
-        if is_good_business_day(fixing_candidate, fixing_cs):
+        if is_good_business_day(fixing_candidate, settle_cs):
             good_bd_count += 1
-    fixing_date, fix_roll_trace = roll_with_trace(fixing_candidate, fixing_cs, "preceding")
-    fixing_trace.extend(fix_roll_trace)
+            decision = "accepted" if good_bd_count == 2 else "back_count_step"
+        elif fixing_candidate.weekday() >= 5:
+            decision = "reject_weekend"
+        else:
+            decision = "reject_holiday"
+        fixing_trace.append(_step_for(fixing_candidate, settle_cs, decision))
+    fixing_date = fixing_candidate
     reasoning.append(
         f"**Fixing date:** settlement − 2 good business days on "
-        f"{pair.fixing_currency} fixing calendar → {fixing_date.isoformat()} "
-        f"({fixing_date.strftime('%a')}). 2-BD lag matches EMTA / ISDA EM template."
+        f"{settle_brief} → {fixing_date.isoformat()} "
+        f"({fixing_date.strftime('%a')}). 2-BD lag matches EMTA / ISDA EM template; "
+        f"the back-count requires both the fixing centre and New York to be open."
     )
 
     calendars_used = [

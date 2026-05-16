@@ -7,7 +7,7 @@
   "default_source": {
     "url": "https://www.sgx.com/derivatives/products/currency-futures",
     "doc_title": "SGX — Currency Futures Contract Specifications",
-    "fetched_at": "2026-05-13T01:44:29Z",
+    "fetched_at": "2026-05-16T15:43:19Z",
     "fetcher": "scripts/sources/sgx_contracts.py@v1",
     "default_derivation_mode": "derived"
   },

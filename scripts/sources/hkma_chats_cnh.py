@@ -52,10 +52,10 @@ _BOTH_NOTE = "HK general holiday; mainland PRC market also closed"
 
 def _cn_source(fetched_at: str) -> dict:
     return {
-        "url": cn_src._PAGE_URL,  # noqa: SLF001 — intentional reuse
-        "doc_title": cn_src._DOC_TITLE,  # noqa: SLF001
+        "url": cn_src.PAGE_URL,
+        "doc_title": cn_src.DOC_TITLE,
         "fetched_at": fetched_at,
-        "fetcher": cn_src._FETCHER,  # noqa: SLF001
+        "fetcher": cn_src.FETCHER,
     }
 
 
