@@ -16,7 +16,7 @@
   "default_source": {
     "url": "https://pypi.org/project/exchange-calendars/",
     "doc_title": "exchange_calendars v4.13.2, calendar=XSES (equity session)",
-    "fetched_at": "2026-05-16T15:43:00Z",
+    "fetched_at": "2026-06-01T08:45:12Z",
     "fetcher": "scripts/sources/library_exchange.py@v1"
   },
   "holidays": [
