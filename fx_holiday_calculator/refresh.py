@@ -47,10 +47,35 @@ class RefreshResult:
     changed: bool
     error: str | None
     output_path: Path | None
+    # A "soft" error is environmental/transient (upstream unreachable, optional
+    # dependency missing) rather than a genuine breakage. Bundled data still
+    # loads, so soft errors are reported as warnings and do NOT fail the run.
+    soft: bool = False
 
 
 def _user_cache_dir() -> Path:
     return Path.home() / ".fx_holiday_calculator" / "cache"
+
+
+# requests exception class names treated as transient network failures.
+# Matched by name to avoid importing requests in this lightweight module.
+_TRANSIENT_REQUESTS_ERRORS = {
+    "ConnectionError",
+    "Timeout",
+    "ConnectTimeout",
+    "ReadTimeout",
+    "ChunkedEncodingError",
+}
+
+
+def _is_transient_network_error(exc: BaseException) -> bool:
+    """True for transient/environmental network failures (any HTTP client)."""
+    if isinstance(exc, (urllib.error.URLError, ConnectionError, TimeoutError)):
+        return True
+    module = type(exc).__module__ or ""
+    if module.startswith("requests") and type(exc).__name__ in _TRANSIENT_REQUESTS_ERRORS:
+        return True
+    return False
 
 
 def _refresh_library_exchange(
@@ -65,7 +90,7 @@ def _refresh_library_exchange(
             "optional 'extras' dep group (pip install -e \".[extras]\"). "
             "Bundled data continues to load."
         )
-        return RefreshResult(source=venue, changed=False, error=msg, output_path=None)
+        return RefreshResult(source=venue, changed=False, error=msg, output_path=None, soft=True)
     try:
         out = mod.fetch(year_range, target, venue)
         return RefreshResult(source=venue, changed=True, error=None, output_path=out)
@@ -104,8 +129,13 @@ def refresh_one(
         reason = getattr(exc, "reason", exc)
         detail = getattr(reason, "strerror", None) or str(reason)
         msg = f"upstream unreachable: {detail}. Bundled data continues to load."
-        return RefreshResult(source=source, changed=False, error=msg, output_path=None)
+        return RefreshResult(source=source, changed=False, error=msg, output_path=None, soft=True)
     except Exception as exc:
+        if _is_transient_network_error(exc):
+            msg = f"upstream unreachable: {exc}. Bundled data continues to load."
+            return RefreshResult(
+                source=source, changed=False, error=msg, output_path=None, soft=True
+            )
         return RefreshResult(source=source, changed=False, error=str(exc), output_path=None)
 
 
@@ -136,12 +166,17 @@ def _cli() -> int:
 
     keys = args.source if args.source else list(_SOURCES.keys()) + list(_EXCHANGE_VENUES)
     results = [refresh_one(k, target, (args.year_from, args.year_to)) for k in keys]
+    hard_error = False
     for r in results:
         if r.error:
-            print(f"  [ERROR] {r.source}: {r.error}", file=sys.stderr)
+            level = "WARN" if r.soft else "ERROR"
+            print(f"  [{level}] {r.source}: {r.error}", file=sys.stderr)
+            hard_error = hard_error or not r.soft
         elif r.changed:
             print(f"  [OK]    {r.source} → {r.output_path}")
-    return 0 if all(r.error is None for r in results) else 1
+    # Soft errors (transient upstream / missing optional dep) are warnings only:
+    # bundled data still loads, so they must not fail an unattended refresh.
+    return 1 if hard_error else 0
 
 
 if __name__ == "__main__":

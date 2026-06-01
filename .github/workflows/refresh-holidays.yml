@@ -10,6 +10,12 @@ on:
         required: false
         default: ""
 
+# create-pull-request needs write access to push the branch and open the PR;
+# the default GITHUB_TOKEN is read-only unless granted here.
+permissions:
+  contents: write
+  pull-requests: write
+
 jobs:
   refresh:
     runs-on: ubuntu-latest
@@ -18,7 +24,10 @@ jobs:
       - uses: actions/setup-python@v5
         with:
           python-version: "3.11"
-      - run: pip install -e ".[test]"
+      # extras (exchange_calendars) is required here so the library-sourced
+      # SGX / HKEX / CME calendars actually refresh; without it they can never
+      # update and the job logs a missing-dependency error for each venue.
+      - run: pip install -e ".[test,extras]"
       - name: Run refresh
         run: |
           if [ -n "${{ github.event.inputs.sources }}" ]; then

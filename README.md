@@ -96,6 +96,12 @@ button or:
 python -m fx_holiday_calculator.refresh
 ```
 
+Transient upstream failures (an unreachable source) and a missing optional
+`extras` dependency are reported as warnings and exit `0` — bundled data still
+loads, so they never fail the unattended monthly refresh job. Only genuine
+breakage (e.g. a parser that can no longer read its source document) exits
+non-zero.
+
 ## Development
 
 ```bash
