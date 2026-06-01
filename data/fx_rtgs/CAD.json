@@ -9,7 +9,7 @@
   "default_source": {
     "url": "https://www.payments.ca/system-closure-schedule",
     "doc_title": "Payments Canada — System closure schedule (Lynx)",
-    "fetched_at": "2026-05-16T15:42:48Z",
+    "fetched_at": "2026-06-01T08:46:39Z",
     "fetcher": "scripts/sources/payments_canada_lynx.py@v1"
   },
   "holidays": [

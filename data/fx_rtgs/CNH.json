@@ -5,11 +5,11 @@
   "calendar_name": "Offshore CNY clearing in Hong Kong (CNH RTGS)",
   "operator": "HKMA-appointed RMB Clearing Bank (under HKICL rules)",
   "valid_from": "2026-01-01",
-  "valid_until": "2026-12-31",
+  "valid_until": "2027-12-31",
   "default_source": {
     "url": "https://www.hkma.gov.hk/eng/key-functions/international-financial-centre/financial-market-infrastructure/payment-systems/",
     "doc_title": "HKMA — Payment Systems (RMB clearing in Hong Kong)",
-    "fetched_at": "2026-05-12T09:47:13Z",
+    "fetched_at": "2026-06-01T08:46:39Z",
     "fetcher": "scripts/sources/hkma_chats_cnh.py@v1"
   },
   "holidays": [
@@ -19,7 +19,7 @@
       "source": {
         "url": "https://www.gov.hk/en/about/abouthk/holiday/2026.htm",
         "doc_title": "GovHK: General holidays for 2026",
-        "fetched_at": "2026-05-12T09:47:13Z",
+        "fetched_at": "2026-06-01T08:46:39Z",
         "fetcher": "scripts/sources/hkgov_general_holidays.py@v1"
       },
       "note": "HK general holiday; mainland PRC market also closed"
@@ -30,7 +30,7 @@
       "source": {
         "url": "https://www.chinamoney.com.cn/english/svctcd/",
         "doc_title": "CFETS FX Trading Calendar (Foreign Exchange Services)",
-        "fetched_at": "2026-05-12T09:47:13Z",
+        "fetched_at": "2026-06-01T08:46:39Z",
         "fetcher": "scripts/sources/cfets_cny.py@v2"
       },
       "note": "PRC public holiday — onshore CNY market closure affects offshore CNH clearing"
@@ -41,7 +41,7 @@
       "source": {
         "url": "https://www.chinamoney.com.cn/english/svctcd/",
         "doc_title": "CFETS FX Trading Calendar (Foreign Exchange Services)",
-        "fetched_at": "2026-05-12T09:47:13Z",
+        "fetched_at": "2026-06-01T08:46:39Z",
         "fetcher": "scripts/sources/cfets_cny.py@v2"
       },
       "note": "PRC public holiday — onshore CNY market closure affects offshore CNH clearing"
@@ -52,7 +52,7 @@
       "source": {
         "url": "https://www.gov.hk/en/about/abouthk/holiday/2026.htm",
         "doc_title": "GovHK: General holidays for 2026",
-        "fetched_at": "2026-05-12T09:47:13Z",
+        "fetched_at": "2026-06-01T08:46:39Z",
         "fetcher": "scripts/sources/hkgov_general_holidays.py@v1"
       },
       "note": "HK general holiday; mainland PRC market also closed"
@@ -63,7 +63,7 @@
       "source": {
         "url": "https://www.gov.hk/en/about/abouthk/holiday/2026.htm",
         "doc_title": "GovHK: General holidays for 2026",
-        "fetched_at": "2026-05-12T09:47:13Z",
+        "fetched_at": "2026-06-01T08:46:39Z",
         "fetcher": "scripts/sources/hkgov_general_holidays.py@v1"
       },
       "note": "HK general holiday; mainland PRC market also closed"
@@ -74,7 +74,7 @@
       "source": {
         "url": "https://www.gov.hk/en/about/abouthk/holiday/2026.htm",
         "doc_title": "GovHK: General holidays for 2026",
-        "fetched_at": "2026-05-12T09:47:13Z",
+        "fetched_at": "2026-06-01T08:46:39Z",
         "fetcher": "scripts/sources/hkgov_general_holidays.py@v1"
       },
       "note": "HK general holiday; mainland PRC market also closed"
@@ -85,7 +85,7 @@
       "source": {
         "url": "https://www.chinamoney.com.cn/english/svctcd/",
         "doc_title": "CFETS FX Trading Calendar (Foreign Exchange Services)",
-        "fetched_at": "2026-05-12T09:47:13Z",
+        "fetched_at": "2026-06-01T08:46:39Z",
         "fetcher": "scripts/sources/cfets_cny.py@v2"
       },
       "note": "PRC public holiday — onshore CNY market closure affects offshore CNH clearing"
@@ -96,7 +96,7 @@
       "source": {
         "url": "https://www.chinamoney.com.cn/english/svctcd/",
         "doc_title": "CFETS FX Trading Calendar (Foreign Exchange Services)",
-        "fetched_at": "2026-05-12T09:47:13Z",
+        "fetched_at": "2026-06-01T08:46:39Z",
         "fetcher": "scripts/sources/cfets_cny.py@v2"
       },
       "note": "PRC public holiday — onshore CNY market closure affects offshore CNH clearing"
@@ -107,7 +107,7 @@
       "source": {
         "url": "https://www.gov.hk/en/about/abouthk/holiday/2026.htm",
         "doc_title": "GovHK: General holidays for 2026",
-        "fetched_at": "2026-05-12T09:47:13Z",
+        "fetched_at": "2026-06-01T08:46:39Z",
         "fetcher": "scripts/sources/hkgov_general_holidays.py@v1"
       },
       "note": null
@@ -118,7 +118,7 @@
       "source": {
         "url": "https://www.gov.hk/en/about/abouthk/holiday/2026.htm",
         "doc_title": "GovHK: General holidays for 2026",
-        "fetched_at": "2026-05-12T09:47:13Z",
+        "fetched_at": "2026-06-01T08:46:39Z",
         "fetcher": "scripts/sources/hkgov_general_holidays.py@v1"
       },
       "note": null
@@ -129,7 +129,7 @@
       "source": {
         "url": "https://www.gov.hk/en/about/abouthk/holiday/2026.htm",
         "doc_title": "GovHK: General holidays for 2026",
-        "fetched_at": "2026-05-12T09:47:13Z",
+        "fetched_at": "2026-06-01T08:46:39Z",
         "fetcher": "scripts/sources/hkgov_general_holidays.py@v1"
       },
       "note": "HK general holiday; mainland PRC market also closed"
@@ -140,7 +140,7 @@
       "source": {
         "url": "https://www.gov.hk/en/about/abouthk/holiday/2026.htm",
         "doc_title": "GovHK: General holidays for 2026",
-        "fetched_at": "2026-05-12T09:47:13Z",
+        "fetched_at": "2026-06-01T08:46:39Z",
         "fetcher": "scripts/sources/hkgov_general_holidays.py@v1"
       },
       "note": null
@@ -151,7 +151,7 @@
       "source": {
         "url": "https://www.gov.hk/en/about/abouthk/holiday/2026.htm",
         "doc_title": "GovHK: General holidays for 2026",
-        "fetched_at": "2026-05-12T09:47:13Z",
+        "fetched_at": "2026-06-01T08:46:39Z",
         "fetcher": "scripts/sources/hkgov_general_holidays.py@v1"
       },
       "note": "HK general holiday; mainland PRC market also closed"
@@ -162,7 +162,7 @@
       "source": {
         "url": "https://www.chinamoney.com.cn/english/svctcd/",
         "doc_title": "CFETS FX Trading Calendar (Foreign Exchange Services)",
-        "fetched_at": "2026-05-12T09:47:13Z",
+        "fetched_at": "2026-06-01T08:46:39Z",
         "fetcher": "scripts/sources/cfets_cny.py@v2"
       },
       "note": "PRC public holiday — onshore CNY market closure affects offshore CNH clearing"
@@ -173,7 +173,7 @@
       "source": {
         "url": "https://www.chinamoney.com.cn/english/svctcd/",
         "doc_title": "CFETS FX Trading Calendar (Foreign Exchange Services)",
-        "fetched_at": "2026-05-12T09:47:13Z",
+        "fetched_at": "2026-06-01T08:46:39Z",
         "fetcher": "scripts/sources/cfets_cny.py@v2"
       },
       "note": "PRC public holiday — onshore CNY market closure affects offshore CNH clearing"
@@ -184,7 +184,7 @@
       "source": {
         "url": "https://www.gov.hk/en/about/abouthk/holiday/2026.htm",
         "doc_title": "GovHK: General holidays for 2026",
-        "fetched_at": "2026-05-12T09:47:13Z",
+        "fetched_at": "2026-06-01T08:46:39Z",
         "fetcher": "scripts/sources/hkgov_general_holidays.py@v1"
       },
       "note": null
@@ -195,7 +195,7 @@
       "source": {
         "url": "https://www.gov.hk/en/about/abouthk/holiday/2026.htm",
         "doc_title": "GovHK: General holidays for 2026",
-        "fetched_at": "2026-05-12T09:47:13Z",
+        "fetched_at": "2026-06-01T08:46:39Z",
         "fetcher": "scripts/sources/hkgov_general_holidays.py@v1"
       },
       "note": "HK general holiday; mainland PRC market also closed"
@@ -206,7 +206,7 @@
       "source": {
         "url": "https://www.gov.hk/en/about/abouthk/holiday/2026.htm",
         "doc_title": "GovHK: General holidays for 2026",
-        "fetched_at": "2026-05-12T09:47:13Z",
+        "fetched_at": "2026-06-01T08:46:39Z",
         "fetcher": "scripts/sources/hkgov_general_holidays.py@v1"
       },
       "note": null
@@ -217,7 +217,7 @@
       "source": {
         "url": "https://www.chinamoney.com.cn/english/svctcd/",
         "doc_title": "CFETS FX Trading Calendar (Foreign Exchange Services)",
-        "fetched_at": "2026-05-12T09:47:13Z",
+        "fetched_at": "2026-06-01T08:46:39Z",
         "fetcher": "scripts/sources/cfets_cny.py@v2"
       },
       "note": "PRC public holiday — onshore CNY market closure affects offshore CNH clearing"
@@ -228,7 +228,7 @@
       "source": {
         "url": "https://www.gov.hk/en/about/abouthk/holiday/2026.htm",
         "doc_title": "GovHK: General holidays for 2026",
-        "fetched_at": "2026-05-12T09:47:13Z",
+        "fetched_at": "2026-06-01T08:46:39Z",
         "fetcher": "scripts/sources/hkgov_general_holidays.py@v1"
       },
       "note": null
@@ -239,7 +239,7 @@
       "source": {
         "url": "https://www.gov.hk/en/about/abouthk/holiday/2026.htm",
         "doc_title": "GovHK: General holidays for 2026",
-        "fetched_at": "2026-05-12T09:47:13Z",
+        "fetched_at": "2026-06-01T08:46:39Z",
         "fetcher": "scripts/sources/hkgov_general_holidays.py@v1"
       },
       "note": "HK general holiday; mainland PRC market also closed"
@@ -250,7 +250,7 @@
       "source": {
         "url": "https://www.chinamoney.com.cn/english/svctcd/",
         "doc_title": "CFETS FX Trading Calendar (Foreign Exchange Services)",
-        "fetched_at": "2026-05-12T09:47:13Z",
+        "fetched_at": "2026-06-01T08:46:39Z",
         "fetcher": "scripts/sources/cfets_cny.py@v2"
       },
       "note": "PRC public holiday — onshore CNY market closure affects offshore CNH clearing"
@@ -261,7 +261,7 @@
       "source": {
         "url": "https://www.chinamoney.com.cn/english/svctcd/",
         "doc_title": "CFETS FX Trading Calendar (Foreign Exchange Services)",
-        "fetched_at": "2026-05-12T09:47:13Z",
+        "fetched_at": "2026-06-01T08:46:39Z",
         "fetcher": "scripts/sources/cfets_cny.py@v2"
       },
       "note": "PRC public holiday — onshore CNY market closure affects offshore CNH clearing"
@@ -272,7 +272,7 @@
       "source": {
         "url": "https://www.chinamoney.com.cn/english/svctcd/",
         "doc_title": "CFETS FX Trading Calendar (Foreign Exchange Services)",
-        "fetched_at": "2026-05-12T09:47:13Z",
+        "fetched_at": "2026-06-01T08:46:39Z",
         "fetcher": "scripts/sources/cfets_cny.py@v2"
       },
       "note": "PRC public holiday — onshore CNY market closure affects offshore CNH clearing"
@@ -283,7 +283,7 @@
       "source": {
         "url": "https://www.chinamoney.com.cn/english/svctcd/",
         "doc_title": "CFETS FX Trading Calendar (Foreign Exchange Services)",
-        "fetched_at": "2026-05-12T09:47:13Z",
+        "fetched_at": "2026-06-01T08:46:39Z",
         "fetcher": "scripts/sources/cfets_cny.py@v2"
       },
       "note": "PRC public holiday — onshore CNY market closure affects offshore CNH clearing"
@@ -294,7 +294,7 @@
       "source": {
         "url": "https://www.gov.hk/en/about/abouthk/holiday/2026.htm",
         "doc_title": "GovHK: General holidays for 2026",
-        "fetched_at": "2026-05-12T09:47:13Z",
+        "fetched_at": "2026-06-01T08:46:39Z",
         "fetcher": "scripts/sources/hkgov_general_holidays.py@v1"
       },
       "note": null
@@ -305,7 +305,7 @@
       "source": {
         "url": "https://www.gov.hk/en/about/abouthk/holiday/2026.htm",
         "doc_title": "GovHK: General holidays for 2026",
-        "fetched_at": "2026-05-12T09:47:13Z",
+        "fetched_at": "2026-06-01T08:46:39Z",
         "fetcher": "scripts/sources/hkgov_general_holidays.py@v1"
       },
       "note": null
@@ -316,7 +316,326 @@
       "source": {
         "url": "https://www.gov.hk/en/about/abouthk/holiday/2026.htm",
         "doc_title": "GovHK: General holidays for 2026",
-        "fetched_at": "2026-05-12T09:47:13Z",
+        "fetched_at": "2026-06-01T08:46:39Z",
+        "fetcher": "scripts/sources/hkgov_general_holidays.py@v1"
+      },
+      "note": null
+    },
+    {
+      "date": "2027-01-01",
+      "name": "The first day of January",
+      "source": {
+        "url": "https://www.gov.hk/en/about/abouthk/holiday/2027.htm",
+        "doc_title": "GovHK: General holidays for 2027",
+        "fetched_at": "2026-06-01T08:46:39Z",
+        "fetcher": "scripts/sources/hkgov_general_holidays.py@v1"
+      },
+      "note": "HK general holiday; mainland PRC market also closed"
+    },
+    {
+      "date": "2027-02-05",
+      "name": "CFETS CNY market closure",
+      "source": {
+        "url": "https://www.chinamoney.com.cn/english/svctcd/",
+        "doc_title": "CFETS FX Trading Calendar (Foreign Exchange Services)",
+        "fetched_at": "2026-06-01T08:46:39Z",
+        "fetcher": "scripts/sources/cfets_cny.py@v2"
+      },
+      "note": "PRC public holiday — onshore CNY market closure affects offshore CNH clearing"
+    },
+    {
+      "date": "2027-02-06",
+      "name": "Lunar New Year’s Day",
+      "source": {
+        "url": "https://www.gov.hk/en/about/abouthk/holiday/2027.htm",
+        "doc_title": "GovHK: General holidays for 2027",
+        "fetched_at": "2026-06-01T08:46:39Z",
+        "fetcher": "scripts/sources/hkgov_general_holidays.py@v1"
+      },
+      "note": null
+    },
+    {
+      "date": "2027-02-08",
+      "name": "The third day of Lunar New Year",
+      "source": {
+        "url": "https://www.gov.hk/en/about/abouthk/holiday/2027.htm",
+        "doc_title": "GovHK: General holidays for 2027",
+        "fetched_at": "2026-06-01T08:46:39Z",
+        "fetcher": "scripts/sources/hkgov_general_holidays.py@v1"
+      },
+      "note": "HK general holiday; mainland PRC market also closed"
+    },
+    {
+      "date": "2027-02-09",
+      "name": "The fourth day of Lunar New Year",
+      "source": {
+        "url": "https://www.gov.hk/en/about/abouthk/holiday/2027.htm",
+        "doc_title": "GovHK: General holidays for 2027",
+        "fetched_at": "2026-06-01T08:46:39Z",
+        "fetcher": "scripts/sources/hkgov_general_holidays.py@v1"
+      },
+      "note": "HK general holiday; mainland PRC market also closed"
+    },
+    {
+      "date": "2027-02-10",
+      "name": "Chinese New Year (Spring Festival) (observed)",
+      "source": {
+        "url": "https://www.chinamoney.com.cn/english/svctcd/",
+        "doc_title": "CFETS FX Trading Calendar (Foreign Exchange Services)",
+        "fetched_at": "2026-06-01T08:46:39Z",
+        "fetcher": "scripts/sources/cfets_cny.py@v2"
+      },
+      "note": "PRC public holiday — onshore CNY market closure affects offshore CNH clearing"
+    },
+    {
+      "date": "2027-02-11",
+      "name": "CFETS CNY market closure",
+      "source": {
+        "url": "https://www.chinamoney.com.cn/english/svctcd/",
+        "doc_title": "CFETS FX Trading Calendar (Foreign Exchange Services)",
+        "fetched_at": "2026-06-01T08:46:39Z",
+        "fetcher": "scripts/sources/cfets_cny.py@v2"
+      },
+      "note": "PRC public holiday — onshore CNY market closure affects offshore CNH clearing"
+    },
+    {
+      "date": "2027-02-12",
+      "name": "CFETS CNY market closure",
+      "source": {
+        "url": "https://www.chinamoney.com.cn/english/svctcd/",
+        "doc_title": "CFETS FX Trading Calendar (Foreign Exchange Services)",
+        "fetched_at": "2026-06-01T08:46:39Z",
+        "fetcher": "scripts/sources/cfets_cny.py@v2"
+      },
+      "note": "PRC public holiday — onshore CNY market closure affects offshore CNH clearing"
+    },
+    {
+      "date": "2027-03-26",
+      "name": "Good Friday",
+      "source": {
+        "url": "https://www.gov.hk/en/about/abouthk/holiday/2027.htm",
+        "doc_title": "GovHK: General holidays for 2027",
+        "fetched_at": "2026-06-01T08:46:39Z",
+        "fetcher": "scripts/sources/hkgov_general_holidays.py@v1"
+      },
+      "note": null
+    },
+    {
+      "date": "2027-03-27",
+      "name": "The day following Good Friday",
+      "source": {
+        "url": "https://www.gov.hk/en/about/abouthk/holiday/2027.htm",
+        "doc_title": "GovHK: General holidays for 2027",
+        "fetched_at": "2026-06-01T08:46:39Z",
+        "fetcher": "scripts/sources/hkgov_general_holidays.py@v1"
+      },
+      "note": null
+    },
+    {
+      "date": "2027-03-29",
+      "name": "Easter Monday",
+      "source": {
+        "url": "https://www.gov.hk/en/about/abouthk/holiday/2027.htm",
+        "doc_title": "GovHK: General holidays for 2027",
+        "fetched_at": "2026-06-01T08:46:39Z",
+        "fetcher": "scripts/sources/hkgov_general_holidays.py@v1"
+      },
+      "note": null
+    },
+    {
+      "date": "2027-04-05",
+      "name": "Ching Ming Festival",
+      "source": {
+        "url": "https://www.gov.hk/en/about/abouthk/holiday/2027.htm",
+        "doc_title": "GovHK: General holidays for 2027",
+        "fetched_at": "2026-06-01T08:46:39Z",
+        "fetcher": "scripts/sources/hkgov_general_holidays.py@v1"
+      },
+      "note": "HK general holiday; mainland PRC market also closed"
+    },
+    {
+      "date": "2027-05-01",
+      "name": "Labour Day",
+      "source": {
+        "url": "https://www.gov.hk/en/about/abouthk/holiday/2027.htm",
+        "doc_title": "GovHK: General holidays for 2027",
+        "fetched_at": "2026-06-01T08:46:39Z",
+        "fetcher": "scripts/sources/hkgov_general_holidays.py@v1"
+      },
+      "note": null
+    },
+    {
+      "date": "2027-05-03",
+      "name": "Labor Day (observed)",
+      "source": {
+        "url": "https://www.chinamoney.com.cn/english/svctcd/",
+        "doc_title": "CFETS FX Trading Calendar (Foreign Exchange Services)",
+        "fetched_at": "2026-06-01T08:46:39Z",
+        "fetcher": "scripts/sources/cfets_cny.py@v2"
+      },
+      "note": "PRC public holiday — onshore CNY market closure affects offshore CNH clearing"
+    },
+    {
+      "date": "2027-05-04",
+      "name": "CFETS CNY market closure",
+      "source": {
+        "url": "https://www.chinamoney.com.cn/english/svctcd/",
+        "doc_title": "CFETS FX Trading Calendar (Foreign Exchange Services)",
+        "fetched_at": "2026-06-01T08:46:39Z",
+        "fetcher": "scripts/sources/cfets_cny.py@v2"
+      },
+      "note": "PRC public holiday — onshore CNY market closure affects offshore CNH clearing"
+    },
+    {
+      "date": "2027-05-05",
+      "name": "CFETS CNY market closure",
+      "source": {
+        "url": "https://www.chinamoney.com.cn/english/svctcd/",
+        "doc_title": "CFETS FX Trading Calendar (Foreign Exchange Services)",
+        "fetched_at": "2026-06-01T08:46:39Z",
+        "fetcher": "scripts/sources/cfets_cny.py@v2"
+      },
+      "note": "PRC public holiday — onshore CNY market closure affects offshore CNH clearing"
+    },
+    {
+      "date": "2027-05-13",
+      "name": "The Birthday of the Buddha",
+      "source": {
+        "url": "https://www.gov.hk/en/about/abouthk/holiday/2027.htm",
+        "doc_title": "GovHK: General holidays for 2027",
+        "fetched_at": "2026-06-01T08:46:39Z",
+        "fetcher": "scripts/sources/hkgov_general_holidays.py@v1"
+      },
+      "note": null
+    },
+    {
+      "date": "2027-06-09",
+      "name": "Tuen Ng Festival",
+      "source": {
+        "url": "https://www.gov.hk/en/about/abouthk/holiday/2027.htm",
+        "doc_title": "GovHK: General holidays for 2027",
+        "fetched_at": "2026-06-01T08:46:39Z",
+        "fetcher": "scripts/sources/hkgov_general_holidays.py@v1"
+      },
+      "note": "HK general holiday; mainland PRC market also closed"
+    },
+    {
+      "date": "2027-07-01",
+      "name": "Hong Kong Special Administrative Region Establishment Day",
+      "source": {
+        "url": "https://www.gov.hk/en/about/abouthk/holiday/2027.htm",
+        "doc_title": "GovHK: General holidays for 2027",
+        "fetched_at": "2026-06-01T08:46:39Z",
+        "fetcher": "scripts/sources/hkgov_general_holidays.py@v1"
+      },
+      "note": null
+    },
+    {
+      "date": "2027-09-15",
+      "name": "Mid-Autumn Festival",
+      "source": {
+        "url": "https://www.chinamoney.com.cn/english/svctcd/",
+        "doc_title": "CFETS FX Trading Calendar (Foreign Exchange Services)",
+        "fetched_at": "2026-06-01T08:46:39Z",
+        "fetcher": "scripts/sources/cfets_cny.py@v2"
+      },
+      "note": "PRC public holiday — onshore CNY market closure affects offshore CNH clearing"
+    },
+    {
+      "date": "2027-09-16",
+      "name": "The day following the Chinese Mid-Autumn Festival",
+      "source": {
+        "url": "https://www.gov.hk/en/about/abouthk/holiday/2027.htm",
+        "doc_title": "GovHK: General holidays for 2027",
+        "fetched_at": "2026-06-01T08:46:39Z",
+        "fetcher": "scripts/sources/hkgov_general_holidays.py@v1"
+      },
+      "note": null
+    },
+    {
+      "date": "2027-10-01",
+      "name": "National Day",
+      "source": {
+        "url": "https://www.gov.hk/en/about/abouthk/holiday/2027.htm",
+        "doc_title": "GovHK: General holidays for 2027",
+        "fetched_at": "2026-06-01T08:46:39Z",
+        "fetcher": "scripts/sources/hkgov_general_holidays.py@v1"
+      },
+      "note": "HK general holiday; mainland PRC market also closed"
+    },
+    {
+      "date": "2027-10-04",
+      "name": "National Day (observed)",
+      "source": {
+        "url": "https://www.chinamoney.com.cn/english/svctcd/",
+        "doc_title": "CFETS FX Trading Calendar (Foreign Exchange Services)",
+        "fetched_at": "2026-06-01T08:46:39Z",
+        "fetcher": "scripts/sources/cfets_cny.py@v2"
+      },
+      "note": "PRC public holiday — onshore CNY market closure affects offshore CNH clearing"
+    },
+    {
+      "date": "2027-10-05",
+      "name": "National Day (observed)",
+      "source": {
+        "url": "https://www.chinamoney.com.cn/english/svctcd/",
+        "doc_title": "CFETS FX Trading Calendar (Foreign Exchange Services)",
+        "fetched_at": "2026-06-01T08:46:39Z",
+        "fetcher": "scripts/sources/cfets_cny.py@v2"
+      },
+      "note": "PRC public holiday — onshore CNY market closure affects offshore CNH clearing"
+    },
+    {
+      "date": "2027-10-06",
+      "name": "CFETS CNY market closure",
+      "source": {
+        "url": "https://www.chinamoney.com.cn/english/svctcd/",
+        "doc_title": "CFETS FX Trading Calendar (Foreign Exchange Services)",
+        "fetched_at": "2026-06-01T08:46:39Z",
+        "fetcher": "scripts/sources/cfets_cny.py@v2"
+      },
+      "note": "PRC public holiday — onshore CNY market closure affects offshore CNH clearing"
+    },
+    {
+      "date": "2027-10-07",
+      "name": "CFETS CNY market closure",
+      "source": {
+        "url": "https://www.chinamoney.com.cn/english/svctcd/",
+        "doc_title": "CFETS FX Trading Calendar (Foreign Exchange Services)",
+        "fetched_at": "2026-06-01T08:46:39Z",
+        "fetcher": "scripts/sources/cfets_cny.py@v2"
+      },
+      "note": "PRC public holiday — onshore CNY market closure affects offshore CNH clearing"
+    },
+    {
+      "date": "2027-10-08",
+      "name": "Chung Yeung Festival",
+      "source": {
+        "url": "https://www.gov.hk/en/about/abouthk/holiday/2027.htm",
+        "doc_title": "GovHK: General holidays for 2027",
+        "fetched_at": "2026-06-01T08:46:39Z",
+        "fetcher": "scripts/sources/hkgov_general_holidays.py@v1"
+      },
+      "note": null
+    },
+    {
+      "date": "2027-12-25",
+      "name": "Christmas Day",
+      "source": {
+        "url": "https://www.gov.hk/en/about/abouthk/holiday/2027.htm",
+        "doc_title": "GovHK: General holidays for 2027",
+        "fetched_at": "2026-06-01T08:46:39Z",
+        "fetcher": "scripts/sources/hkgov_general_holidays.py@v1"
+      },
+      "note": null
+    },
+    {
+      "date": "2027-12-27",
+      "name": "The first weekday after Christmas Day",
+      "source": {
+        "url": "https://www.gov.hk/en/about/abouthk/holiday/2027.htm",
+        "doc_title": "GovHK: General holidays for 2027",
+        "fetched_at": "2026-06-01T08:46:39Z",
         "fetcher": "scripts/sources/hkgov_general_holidays.py@v1"
       },
       "note": null

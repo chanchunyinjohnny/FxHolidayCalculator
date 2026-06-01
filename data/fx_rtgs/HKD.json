@@ -5,11 +5,11 @@
   "calendar_name": "HKD CHATS",
   "operator": "HKICL (operator) / HKMA (settlement institution)",
   "valid_from": "2026-01-01",
-  "valid_until": "2026-12-31",
+  "valid_until": "2027-12-31",
   "default_source": {
     "url": "https://www.gov.hk/en/about/abouthk/holiday/index.htm",
     "doc_title": "GovHK: General holidays (annual index)",
-    "fetched_at": "2026-05-12T09:47:07Z",
+    "fetched_at": "2026-06-01T08:46:32Z",
     "fetcher": "scripts/sources/hkgov_general_holidays.py@v1"
   },
   "holidays": [
@@ -19,7 +19,7 @@
       "source": {
         "url": "https://www.gov.hk/en/about/abouthk/holiday/2026.htm",
         "doc_title": "GovHK: General holidays for 2026",
-        "fetched_at": "2026-05-12T09:47:07Z",
+        "fetched_at": "2026-06-01T08:46:32Z",
         "fetcher": "scripts/sources/hkgov_general_holidays.py@v1"
       },
       "note": null
@@ -30,7 +30,7 @@
       "source": {
         "url": "https://www.gov.hk/en/about/abouthk/holiday/2026.htm",
         "doc_title": "GovHK: General holidays for 2026",
-        "fetched_at": "2026-05-12T09:47:07Z",
+        "fetched_at": "2026-06-01T08:46:32Z",
         "fetcher": "scripts/sources/hkgov_general_holidays.py@v1"
       },
       "note": null
@@ -41,7 +41,7 @@
       "source": {
         "url": "https://www.gov.hk/en/about/abouthk/holiday/2026.htm",
         "doc_title": "GovHK: General holidays for 2026",
-        "fetched_at": "2026-05-12T09:47:07Z",
+        "fetched_at": "2026-06-01T08:46:32Z",
         "fetcher": "scripts/sources/hkgov_general_holidays.py@v1"
       },
       "note": null
@@ -52,7 +52,7 @@
       "source": {
         "url": "https://www.gov.hk/en/about/abouthk/holiday/2026.htm",
         "doc_title": "GovHK: General holidays for 2026",
-        "fetched_at": "2026-05-12T09:47:07Z",
+        "fetched_at": "2026-06-01T08:46:32Z",
         "fetcher": "scripts/sources/hkgov_general_holidays.py@v1"
       },
       "note": null
@@ -63,7 +63,7 @@
       "source": {
         "url": "https://www.gov.hk/en/about/abouthk/holiday/2026.htm",
         "doc_title": "GovHK: General holidays for 2026",
-        "fetched_at": "2026-05-12T09:47:07Z",
+        "fetched_at": "2026-06-01T08:46:32Z",
         "fetcher": "scripts/sources/hkgov_general_holidays.py@v1"
       },
       "note": null
@@ -74,7 +74,7 @@
       "source": {
         "url": "https://www.gov.hk/en/about/abouthk/holiday/2026.htm",
         "doc_title": "GovHK: General holidays for 2026",
-        "fetched_at": "2026-05-12T09:47:07Z",
+        "fetched_at": "2026-06-01T08:46:32Z",
         "fetcher": "scripts/sources/hkgov_general_holidays.py@v1"
       },
       "note": null
@@ -85,7 +85,7 @@
       "source": {
         "url": "https://www.gov.hk/en/about/abouthk/holiday/2026.htm",
         "doc_title": "GovHK: General holidays for 2026",
-        "fetched_at": "2026-05-12T09:47:07Z",
+        "fetched_at": "2026-06-01T08:46:32Z",
         "fetcher": "scripts/sources/hkgov_general_holidays.py@v1"
       },
       "note": null
@@ -96,7 +96,7 @@
       "source": {
         "url": "https://www.gov.hk/en/about/abouthk/holiday/2026.htm",
         "doc_title": "GovHK: General holidays for 2026",
-        "fetched_at": "2026-05-12T09:47:07Z",
+        "fetched_at": "2026-06-01T08:46:32Z",
         "fetcher": "scripts/sources/hkgov_general_holidays.py@v1"
       },
       "note": null
@@ -107,7 +107,7 @@
       "source": {
         "url": "https://www.gov.hk/en/about/abouthk/holiday/2026.htm",
         "doc_title": "GovHK: General holidays for 2026",
-        "fetched_at": "2026-05-12T09:47:07Z",
+        "fetched_at": "2026-06-01T08:46:32Z",
         "fetcher": "scripts/sources/hkgov_general_holidays.py@v1"
       },
       "note": null
@@ -118,7 +118,7 @@
       "source": {
         "url": "https://www.gov.hk/en/about/abouthk/holiday/2026.htm",
         "doc_title": "GovHK: General holidays for 2026",
-        "fetched_at": "2026-05-12T09:47:07Z",
+        "fetched_at": "2026-06-01T08:46:32Z",
         "fetcher": "scripts/sources/hkgov_general_holidays.py@v1"
       },
       "note": null
@@ -129,7 +129,7 @@
       "source": {
         "url": "https://www.gov.hk/en/about/abouthk/holiday/2026.htm",
         "doc_title": "GovHK: General holidays for 2026",
-        "fetched_at": "2026-05-12T09:47:07Z",
+        "fetched_at": "2026-06-01T08:46:32Z",
         "fetcher": "scripts/sources/hkgov_general_holidays.py@v1"
       },
       "note": null
@@ -140,7 +140,7 @@
       "source": {
         "url": "https://www.gov.hk/en/about/abouthk/holiday/2026.htm",
         "doc_title": "GovHK: General holidays for 2026",
-        "fetched_at": "2026-05-12T09:47:07Z",
+        "fetched_at": "2026-06-01T08:46:32Z",
         "fetcher": "scripts/sources/hkgov_general_holidays.py@v1"
       },
       "note": null
@@ -151,7 +151,7 @@
       "source": {
         "url": "https://www.gov.hk/en/about/abouthk/holiday/2026.htm",
         "doc_title": "GovHK: General holidays for 2026",
-        "fetched_at": "2026-05-12T09:47:07Z",
+        "fetched_at": "2026-06-01T08:46:32Z",
         "fetcher": "scripts/sources/hkgov_general_holidays.py@v1"
       },
       "note": null
@@ -162,7 +162,7 @@
       "source": {
         "url": "https://www.gov.hk/en/about/abouthk/holiday/2026.htm",
         "doc_title": "GovHK: General holidays for 2026",
-        "fetched_at": "2026-05-12T09:47:07Z",
+        "fetched_at": "2026-06-01T08:46:32Z",
         "fetcher": "scripts/sources/hkgov_general_holidays.py@v1"
       },
       "note": null
@@ -173,7 +173,7 @@
       "source": {
         "url": "https://www.gov.hk/en/about/abouthk/holiday/2026.htm",
         "doc_title": "GovHK: General holidays for 2026",
-        "fetched_at": "2026-05-12T09:47:07Z",
+        "fetched_at": "2026-06-01T08:46:32Z",
         "fetcher": "scripts/sources/hkgov_general_holidays.py@v1"
       },
       "note": null
@@ -184,7 +184,7 @@
       "source": {
         "url": "https://www.gov.hk/en/about/abouthk/holiday/2026.htm",
         "doc_title": "GovHK: General holidays for 2026",
-        "fetched_at": "2026-05-12T09:47:07Z",
+        "fetched_at": "2026-06-01T08:46:32Z",
         "fetcher": "scripts/sources/hkgov_general_holidays.py@v1"
       },
       "note": null
@@ -195,7 +195,194 @@
       "source": {
         "url": "https://www.gov.hk/en/about/abouthk/holiday/2026.htm",
         "doc_title": "GovHK: General holidays for 2026",
-        "fetched_at": "2026-05-12T09:47:07Z",
+        "fetched_at": "2026-06-01T08:46:32Z",
+        "fetcher": "scripts/sources/hkgov_general_holidays.py@v1"
+      },
+      "note": null
+    },
+    {
+      "date": "2027-01-01",
+      "name": "The first day of January",
+      "source": {
+        "url": "https://www.gov.hk/en/about/abouthk/holiday/2027.htm",
+        "doc_title": "GovHK: General holidays for 2027",
+        "fetched_at": "2026-06-01T08:46:32Z",
+        "fetcher": "scripts/sources/hkgov_general_holidays.py@v1"
+      },
+      "note": null
+    },
+    {
+      "date": "2027-02-06",
+      "name": "Lunar New Year’s Day",
+      "source": {
+        "url": "https://www.gov.hk/en/about/abouthk/holiday/2027.htm",
+        "doc_title": "GovHK: General holidays for 2027",
+        "fetched_at": "2026-06-01T08:46:32Z",
+        "fetcher": "scripts/sources/hkgov_general_holidays.py@v1"
+      },
+      "note": null
+    },
+    {
+      "date": "2027-02-08",
+      "name": "The third day of Lunar New Year",
+      "source": {
+        "url": "https://www.gov.hk/en/about/abouthk/holiday/2027.htm",
+        "doc_title": "GovHK: General holidays for 2027",
+        "fetched_at": "2026-06-01T08:46:32Z",
+        "fetcher": "scripts/sources/hkgov_general_holidays.py@v1"
+      },
+      "note": null
+    },
+    {
+      "date": "2027-02-09",
+      "name": "The fourth day of Lunar New Year",
+      "source": {
+        "url": "https://www.gov.hk/en/about/abouthk/holiday/2027.htm",
+        "doc_title": "GovHK: General holidays for 2027",
+        "fetched_at": "2026-06-01T08:46:32Z",
+        "fetcher": "scripts/sources/hkgov_general_holidays.py@v1"
+      },
+      "note": null
+    },
+    {
+      "date": "2027-03-26",
+      "name": "Good Friday",
+      "source": {
+        "url": "https://www.gov.hk/en/about/abouthk/holiday/2027.htm",
+        "doc_title": "GovHK: General holidays for 2027",
+        "fetched_at": "2026-06-01T08:46:32Z",
+        "fetcher": "scripts/sources/hkgov_general_holidays.py@v1"
+      },
+      "note": null
+    },
+    {
+      "date": "2027-03-27",
+      "name": "The day following Good Friday",
+      "source": {
+        "url": "https://www.gov.hk/en/about/abouthk/holiday/2027.htm",
+        "doc_title": "GovHK: General holidays for 2027",
+        "fetched_at": "2026-06-01T08:46:32Z",
+        "fetcher": "scripts/sources/hkgov_general_holidays.py@v1"
+      },
+      "note": null
+    },
+    {
+      "date": "2027-03-29",
+      "name": "Easter Monday",
+      "source": {
+        "url": "https://www.gov.hk/en/about/abouthk/holiday/2027.htm",
+        "doc_title": "GovHK: General holidays for 2027",
+        "fetched_at": "2026-06-01T08:46:32Z",
+        "fetcher": "scripts/sources/hkgov_general_holidays.py@v1"
+      },
+      "note": null
+    },
+    {
+      "date": "2027-04-05",
+      "name": "Ching Ming Festival",
+      "source": {
+        "url": "https://www.gov.hk/en/about/abouthk/holiday/2027.htm",
+        "doc_title": "GovHK: General holidays for 2027",
+        "fetched_at": "2026-06-01T08:46:32Z",
+        "fetcher": "scripts/sources/hkgov_general_holidays.py@v1"
+      },
+      "note": null
+    },
+    {
+      "date": "2027-05-01",
+      "name": "Labour Day",
+      "source": {
+        "url": "https://www.gov.hk/en/about/abouthk/holiday/2027.htm",
+        "doc_title": "GovHK: General holidays for 2027",
+        "fetched_at": "2026-06-01T08:46:32Z",
+        "fetcher": "scripts/sources/hkgov_general_holidays.py@v1"
+      },
+      "note": null
+    },
+    {
+      "date": "2027-05-13",
+      "name": "The Birthday of the Buddha",
+      "source": {
+        "url": "https://www.gov.hk/en/about/abouthk/holiday/2027.htm",
+        "doc_title": "GovHK: General holidays for 2027",
+        "fetched_at": "2026-06-01T08:46:32Z",
+        "fetcher": "scripts/sources/hkgov_general_holidays.py@v1"
+      },
+      "note": null
+    },
+    {
+      "date": "2027-06-09",
+      "name": "Tuen Ng Festival",
+      "source": {
+        "url": "https://www.gov.hk/en/about/abouthk/holiday/2027.htm",
+        "doc_title": "GovHK: General holidays for 2027",
+        "fetched_at": "2026-06-01T08:46:32Z",
+        "fetcher": "scripts/sources/hkgov_general_holidays.py@v1"
+      },
+      "note": null
+    },
+    {
+      "date": "2027-07-01",
+      "name": "Hong Kong Special Administrative Region Establishment Day",
+      "source": {
+        "url": "https://www.gov.hk/en/about/abouthk/holiday/2027.htm",
+        "doc_title": "GovHK: General holidays for 2027",
+        "fetched_at": "2026-06-01T08:46:32Z",
+        "fetcher": "scripts/sources/hkgov_general_holidays.py@v1"
+      },
+      "note": null
+    },
+    {
+      "date": "2027-09-16",
+      "name": "The day following the Chinese Mid-Autumn Festival",
+      "source": {
+        "url": "https://www.gov.hk/en/about/abouthk/holiday/2027.htm",
+        "doc_title": "GovHK: General holidays for 2027",
+        "fetched_at": "2026-06-01T08:46:32Z",
+        "fetcher": "scripts/sources/hkgov_general_holidays.py@v1"
+      },
+      "note": null
+    },
+    {
+      "date": "2027-10-01",
+      "name": "National Day",
+      "source": {
+        "url": "https://www.gov.hk/en/about/abouthk/holiday/2027.htm",
+        "doc_title": "GovHK: General holidays for 2027",
+        "fetched_at": "2026-06-01T08:46:32Z",
+        "fetcher": "scripts/sources/hkgov_general_holidays.py@v1"
+      },
+      "note": null
+    },
+    {
+      "date": "2027-10-08",
+      "name": "Chung Yeung Festival",
+      "source": {
+        "url": "https://www.gov.hk/en/about/abouthk/holiday/2027.htm",
+        "doc_title": "GovHK: General holidays for 2027",
+        "fetched_at": "2026-06-01T08:46:32Z",
+        "fetcher": "scripts/sources/hkgov_general_holidays.py@v1"
+      },
+      "note": null
+    },
+    {
+      "date": "2027-12-25",
+      "name": "Christmas Day",
+      "source": {
+        "url": "https://www.gov.hk/en/about/abouthk/holiday/2027.htm",
+        "doc_title": "GovHK: General holidays for 2027",
+        "fetched_at": "2026-06-01T08:46:32Z",
+        "fetcher": "scripts/sources/hkgov_general_holidays.py@v1"
+      },
+      "note": null
+    },
+    {
+      "date": "2027-12-27",
+      "name": "The first weekday after Christmas Day",
+      "source": {
+        "url": "https://www.gov.hk/en/about/abouthk/holiday/2027.htm",
+        "doc_title": "GovHK: General holidays for 2027",
+        "fetched_at": "2026-06-01T08:46:32Z",
         "fetcher": "scripts/sources/hkgov_general_holidays.py@v1"
       },
       "note": null
