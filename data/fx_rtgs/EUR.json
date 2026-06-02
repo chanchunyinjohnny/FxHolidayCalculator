@@ -9,7 +9,7 @@
   "default_source": {
     "url": "https://www.ecb.europa.eu/paym/target/t2/html/index.en.html",
     "doc_title": "T2 — Eurosystem RTGS service (operating days)",
-    "fetched_at": "2026-05-16T15:43:10Z",
+    "fetched_at": "2026-06-01T08:46:28Z",
     "fetcher": "scripts/sources/ecb_target2.py@v2"
   },
   "holidays": [
